@@ -1,0 +1,207 @@
+<div class="menu-container">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Menu Management</h1>
+      <p class="page-subtitle">Manage your restaurant menu items</p>
+    </div>
+    <button class="add-btn" (click)="openAddItemForm()">
+      <i class="fas fa-plus"></i>
+      Add New Item
+    </button>
+  </div>
+
+  <!-- Categories -->
+  <div class="categories">
+    <button
+      *ngFor="let category of categories"
+      class="category-btn"
+      [class.active]="selectedCategory === category.toLowerCase()"
+      (click)="selectCategory(category)"
+    >
+      {{ category }}
+    </button>
+  </div>
+
+  <!-- Menu Items Grid -->
+  <div class="menu-grid">
+    <div class="menu-card" *ngFor="let item of getFilteredItems()">
+      <div class="item-image">
+        <i class="fas fa-utensils"></i>
+      </div>
+      <div class="item-content">
+        <h3 class="item-name">{{ item.name }}</h3>
+        <p class="item-category">{{ item.category }}</p>
+        <div class="item-footer">
+          <span class="item-price">₹{{ item.price }}</span>
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              [checked]="item.available"
+              (change)="toggleAvailability(item.id)"
+            />
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="availability-status" [class.available]="item.available">
+          <i class="fas" [class.fa-check-circle]="item.available" [class.fa-times-circle]="!item.available"></i>
+          {{ item.available ? 'Available' : 'Unavailable' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Item Modal -->
+  <div class="modal-overlay" *ngIf="showAddItemForm" (click)="closeAddItemForm()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          <i class="fas fa-plus-circle"></i>
+          Add New Menu Item
+        </h2>
+        <button class="close-btn" (click)="closeAddItemForm()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form class="add-item-form" (ngSubmit)="saveNewItem()">
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="itemName">
+              <i class="fas fa-utensils"></i>
+              Item Name *
+            </label>
+            <input
+              id="itemName"
+              type="text"
+              [(ngModel)]="newItem.name"
+              name="name"
+              placeholder="Enter item name"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="itemCategory">
+              <i class="fas fa-list"></i>
+              Category *
+            </label>
+            <select id="itemCategory" [(ngModel)]="newItem.category" name="category" required>
+              <option value="Main Course">Main Course</option>
+              <option value="Starters">Starters</option>
+              <option value="Breads">Breads</option>
+              <option value="Desserts">Desserts</option>
+              <option value="Beverages">Beverages</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="itemPrice">
+              <i class="fas fa-rupee-sign"></i>
+              Price *
+            </label>
+            <input
+              id="itemPrice"
+              type="number"
+              [(ngModel)]="newItem.price"
+              name="price"
+              placeholder="0"
+              min="0"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group full-width">
+            <label for="itemDescription">
+              <i class="fas fa-align-left"></i>
+              Description
+            </label>
+            <textarea
+              id="itemDescription"
+              [(ngModel)]="newItem.description"
+              name="description"
+              rows="3"
+              placeholder="Enter item description"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="prepTime">
+              <i class="fas fa-clock"></i>
+              Prep Time (mins)
+            </label>
+            <input
+              id="prepTime"
+              type="number"
+              [(ngModel)]="newItem.preparationTime"
+              name="preparationTime"
+              min="1"
+              placeholder="15"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="spicyLevel">
+              <i class="fas fa-pepper-hot"></i>
+              Spicy Level
+            </label>
+            <select id="spicyLevel" [(ngModel)]="newItem.spicyLevel" name="spicyLevel">
+              <option value="mild">Mild</option>
+              <option value="medium">Medium</option>
+              <option value="spicy">Spicy</option>
+              <option value="extra-spicy">Extra Spicy</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="newItem.isVeg"
+                name="isVeg"
+              />
+              <span class="checkbox-custom"></span>
+              <span class="checkbox-text">
+                <i class="fas fa-leaf"></i>
+                Vegetarian
+              </span>
+            </label>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [(ngModel)]="newItem.available"
+                name="available"
+              />
+              <span class="checkbox-custom"></span>
+              <span class="checkbox-text">
+                <i class="fas fa-check-circle"></i>
+                Available Now
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" (click)="closeAddItemForm()">
+            <i class="fas fa-times"></i>
+            Cancel
+          </button>
+          <button type="submit" class="btn-save">
+            <i class="fas fa-save"></i>
+            Save Item
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,278 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: $sidebar-width;
+  background: $primary-gradient;
+  display: flex;
+  flex-direction: column;
+  z-index: $z-fixed;
+  transition: width $transition-base;
+  box-shadow: $shadow-lg;
+  @include custom-scrollbar;
+
+  &.collapsed {
+    width: $sidebar-collapsed-width;
+
+    .sidebar-header {
+      padding: $spacing-lg $spacing-sm;
+      justify-content: center;
+
+      .logo {
+        width: 40px;
+        height: 60px;
+        cursor: pointer;
+        transition: all $transition-fast;
+
+        &:hover {
+          transform: scale(1.1);
+          opacity: 0.8;
+        }
+      }
+
+      .brand {
+        display: none;
+      }
+    }
+
+    .nav-label,
+    .badge {
+      display: none;
+    }
+
+    .nav-link {
+      justify-content: center;
+      padding: $spacing-md;
+    }
+
+    .logout-btn {
+      justify-content: center;
+    }
+  }
+
+  @include mobile {
+    transform: translateX(-100%);
+    z-index: $z-modal;
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+
+  @include tablet {
+    width: $sidebar-width;
+    
+    &.collapsed {
+      width: $sidebar-collapsed-width;
+    }
+  }
+
+  @include laptop-up {
+    width: $sidebar-width;
+    
+    &.collapsed {
+      width: $sidebar-collapsed-width;
+    }
+  }
+}
+
+.sidebar-header {
+  padding: $spacing-xl;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  position: relative;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+  .toggle-btn {
+    width: 32px;
+    height: 32px;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.9);
+    cursor: pointer;
+    @include flex-center;
+    transition: all $transition-fast;
+    flex-shrink: 0;
+    margin-left: auto;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      opacity: 0;
+      transition: all $transition-fast;
+    }
+
+    &:hover {
+      color: $text-primary;
+      transform: translateX(-2px);
+
+      &::before {
+        opacity: 1;
+      }
+    }
+
+    &:active {
+      transform: translateX(-4px) scale(0.95);
+    }
+
+    i {
+      font-size: 1rem;
+      transition: all $transition-fast;
+    }
+  }
+
+  .logo {
+    width: 45px;
+    height: 60px;
+    flex-shrink: 0;
+    background-image: url('/images/nearbite_logo.png');
+    background-size: 200%;
+    background-repeat: no-repeat;
+    background-position: center;
+    overflow: hidden;
+  }
+
+  .brand {
+    flex: 1;
+    min-width: 0;
+
+    .brand-name {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $text-primary;
+      margin: 0 0 $spacing-xs;
+      line-height: 1;
+    }
+
+    .brand-tagline {
+      font-size: $font-size-xs;
+      color: rgba(255, 255, 255, 0.7);
+      margin: 0;
+      line-height: 1;
+    }
+  }
+}
+
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: $spacing-lg 0;
+
+  .nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .nav-item {
+    margin-bottom: $spacing-xs;
+    padding: 0 $spacing-md;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    padding: $spacing-md $spacing-lg;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    border-radius: $radius-md;
+    transition: all $transition-fast;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    position: relative;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: $text-primary;
+      transform: translateX(4px);
+    }
+
+    &.active {
+      background: rgba(255, 255, 255, 0.15);
+      color: $text-primary;
+      box-shadow: $shadow-sm;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 4px;
+        height: 70%;
+        background: $text-primary;
+        border-radius: 0 $radius-sm $radius-sm 0;
+      }
+    }
+
+    .nav-icon {
+      font-size: $font-size-lg;
+      flex-shrink: 0;
+      width: 24px;
+      text-align: center;
+    }
+
+    .nav-label {
+      flex: 1;
+      white-space: nowrap;
+    }
+
+    .badge {
+      background: $status-error;
+      color: $text-primary;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-bold;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $radius-full;
+      min-width: 24px;
+      text-align: center;
+      box-shadow: $shadow-sm;
+    }
+  }
+}
+
+.sidebar-footer {
+  padding: $spacing-lg $spacing-md;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+  .logout-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    padding: $spacing-md $spacing-lg;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: $text-primary;
+    border-radius: $radius-md;
+    font-size: $font-size-base;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    transition: all $transition-fast;
+    font-family: $font-family;
+
+    &:hover {
+      background: rgba($status-error, 0.3);
+      transform: translateY(-2px);
+      box-shadow: $shadow-sm;
+    }
+
+    .nav-icon {
+      font-size: $font-size-lg;
+      width: 24px;
+      text-align: center;
+    }
+  }
+}

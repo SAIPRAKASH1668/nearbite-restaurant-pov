@@ -1,0 +1,56 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.footer {
+  height: $footer-height;
+  background: $bg-secondary;
+  border-top: 1px solid $border-primary;
+  @include flex-center;
+  padding: 0 $spacing-xl;
+
+  @include mobile {
+    padding: 0 $spacing-md;
+    height: auto;
+    min-height: $footer-height;
+  }
+}
+
+.footer-content {
+  @include flex-between;
+  width: 100%;
+  gap: $spacing-lg;
+
+  @include mobile {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: $spacing-md 0;
+  }
+
+  .copyright {
+    @include text-muted;
+    font-size: $font-size-xs;
+    margin: 0;
+  }
+
+  .footer-links {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+
+    .footer-link {
+      @include link;
+      font-size: $font-size-xs;
+      color: $text-muted;
+
+      &:hover {
+        color: $accent-orange;
+      }
+    }
+
+    .divider {
+      color: $text-muted;
+      font-size: $font-size-xs;
+    }
+  }
+}

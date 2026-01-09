@@ -1,0 +1,211 @@
+// ====================================
+// NearBite - Global Styles
+// ====================================
+
+@use 'styles/variables' as *;
+@use 'styles/mixins' as *;
+
+// Global Reset and Base Styles
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: $font-family;
+  background: $bg-primary;
+  color: $text-primary;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// Typography
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-family;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  line-height: 1.3;
+}
+
+h1 { font-size: $font-size-4xl; }
+h2 { font-size: $font-size-3xl; }
+h3 { font-size: $font-size-2xl; }
+h4 { font-size: $font-size-xl; }
+h5 { font-size: $font-size-lg; }
+h6 { font-size: $font-size-base; }
+
+p {
+  font-family: $font-family;
+  font-size: $font-size-base;
+  color: $text-secondary;
+  line-height: 1.6;
+}
+
+a {
+  @include link;
+}
+
+// Buttons
+button {
+  font-family: $font-family;
+  outline: none;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+// Inputs
+input,
+textarea,
+select {
+  font-family: $font-family;
+  outline: none;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+// Custom Scrollbar
+body {
+  @include custom-scrollbar;
+}
+
+// Utility Classes
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-primary {
+  color: $text-primary;
+}
+
+.text-secondary {
+  color: $text-secondary;
+}
+
+.text-muted {
+  color: $text-muted;
+}
+
+.text-error {
+  color: $status-error;
+}
+
+.text-success {
+  color: $status-success;
+}
+
+.flex-center {
+  @include flex-center;
+}
+
+.flex-between {
+  @include flex-between;
+}
+
+.flex-start {
+  @include flex-start;
+}
+
+.mt-1 { margin-top: $spacing-sm; }
+.mt-2 { margin-top: $spacing-md; }
+.mt-3 { margin-top: $spacing-lg; }
+.mt-4 { margin-top: $spacing-xl; }
+
+.mb-1 { margin-bottom: $spacing-sm; }
+.mb-2 { margin-bottom: $spacing-md; }
+.mb-3 { margin-bottom: $spacing-lg; }
+.mb-4 { margin-bottom: $spacing-xl; }
+
+.ml-1 { margin-left: $spacing-sm; }
+.ml-2 { margin-left: $spacing-md; }
+.ml-3 { margin-left: $spacing-lg; }
+.ml-4 { margin-left: $spacing-xl; }
+
+.mr-1 { margin-right: $spacing-sm; }
+.mr-2 { margin-right: $spacing-md; }
+.mr-3 { margin-right: $spacing-lg; }
+.mr-4 { margin-right: $spacing-xl; }
+
+.p-1 { padding: $spacing-sm; }
+.p-2 { padding: $spacing-md; }
+.p-3 { padding: $spacing-lg; }
+.p-4 { padding: $spacing-xl; }
+
+// Animation keyframes
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn $transition-base;
+}
+
+.slide-in-up {
+  animation: slideInUp $transition-base;
+}
+
+.slide-in-left {
+  animation: slideInLeft $transition-base;
+}
+
+.slide-in-right {
+  animation: slideInRight $transition-base;
+}

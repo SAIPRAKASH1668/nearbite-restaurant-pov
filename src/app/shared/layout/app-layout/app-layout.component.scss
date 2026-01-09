@@ -1,0 +1,49 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: $bg-primary;
+}
+
+.main-wrapper {
+  flex: 1;
+  margin-left: $sidebar-width;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left $transition-base;
+  min-height: 100vh;
+
+  &.sidebar-collapsed {
+    margin-left: $sidebar-collapsed-width;
+  }
+
+  @include mobile {
+    margin-left: 0;
+  }
+}
+
+.content {
+  flex: 1;
+  padding: $spacing-xl;
+  margin-top: $navbar-height;
+  background: $bg-primary;
+  min-height: calc(100vh - #{$navbar-height} - #{$footer-height});
+
+  @include mobile {
+    padding: $spacing-md;
+  }
+
+  @include tablet {
+    padding: $spacing-lg;
+  }
+
+  @include laptop {
+    padding: $spacing-xl;
+  }
+
+  @include desktop {
+    padding: $spacing-2xl;
+  }
+}

@@ -1,0 +1,281 @@
+<div class="orders-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Orders</h1>
+      <p class="page-subtitle">Manage and track all your orders</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button
+      class="tab"
+      [class.active]="activeTab === 'new'"
+      (click)="setActiveTab('new')"
+    >
+      <i class="fas fa-bell"></i>
+      New Orders
+      <span class="badge" *ngIf="newOrders.length > 0">{{ newOrders.length }}</span>
+    </button>
+    <button
+      class="tab"
+      [class.active]="activeTab === 'preparing'"
+      (click)="setActiveTab('preparing')"
+    >
+      <i class="fas fa-fire"></i>
+      Preparing
+      <span class="badge" *ngIf="preparingOrders.length > 0">{{ preparingOrders.length }}</span>
+    </button>
+    <button
+      class="tab"
+      [class.active]="activeTab === 'ready'"
+      (click)="setActiveTab('ready')"
+    >
+      <i class="fas fa-box"></i>
+      Ready
+      <span class="badge" *ngIf="readyOrders.length > 0">{{ readyOrders.length }}</span>
+    </button>
+    <button
+      class="tab"
+      [class.active]="activeTab === 'completed'"
+      (click)="setActiveTab('completed')"
+    >
+      <i class="fas fa-check-circle"></i>
+      Completed
+    </button>
+    <button
+      class="tab"
+      [class.active]="activeTab === 'cancelled'"
+      (click)="setActiveTab('cancelled')"
+    >
+      <i class="fas fa-ban"></i>
+      Cancelled
+    </button>
+  </div>
+
+  <!-- Ready Tab Filter -->
+  <div class="ready-filters" *ngIf="activeTab === 'ready'">
+    <button
+      class="filter-btn"
+      [class.active]="readyFilter === 'all'"
+      (click)="setReadyFilter('all')"
+    >
+      <i class="fas fa-layer-group"></i>
+      All Orders
+    </button>
+    <button
+      class="filter-btn"
+      [class.active]="readyFilter === 'awaiting'"
+      (click)="setReadyFilter('awaiting')"
+    >
+      <i class="fas fa-clock"></i>
+      Awaiting Pickup
+    </button>
+    <button
+      class="filter-btn"
+      [class.active]="readyFilter === 'picked-up'"
+      (click)="setReadyFilter('picked-up')"
+    >
+      <i class="fas fa-motorcycle"></i>
+      Picked Up
+    </button>
+  </div>
+
+  <!-- Orders Grid -->
+  <div class="orders-grid">
+    <div class="order-card" *ngFor="let order of getOrders()">
+      <div class="order-header">
+        <div>
+          <h3 class="order-number">{{ order.orderNumber }}</h3>
+          <p class="customer-name">
+            <i class="fas fa-user"></i>
+            {{ order.customerName }}
+          </p>
+        </div>
+        <div class="header-actions">
+          <div class="order-time">
+            <i class="fas fa-clock"></i>
+            {{ order.time }}
+          </div>
+          <button class="btn-expand" (click)="expandOrder(order)" title="View Details">
+            <i class="fas fa-expand-alt"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="order-items">
+        <div class="item" *ngFor="let item of order.items">
+          <span class="item-name">{{ item.name }}</span>
+          <span class="item-qty">x{{ item.quantity }}</span>
+        </div>
+      </div>
+
+      <!-- Delivery Partner Info (Ready Tab Only) -->
+      <div class="delivery-info" *ngIf="activeTab === 'ready'">
+        <div class="delivery-partner" *ngIf="order.deliveryPartner">
+          <i class="fas fa-motorcycle"></i>
+          <span>{{ order.deliveryPartner }}</span>
+        </div>
+        <div class="delivery-partner awaiting" *ngIf="!order.deliveryPartner">
+          <i class="fas fa-hourglass-half"></i>
+          <span>Awaiting delivery partner assignment</span>
+        </div>
+        <span class="pickup-status" [class.picked-up]="order.isPickedUp">
+          <i class="fas" [class.fa-check-circle]="order.isPickedUp" [class.fa-clock]="!order.isPickedUp"></i>
+          {{ order.isPickedUp ? 'Picked Up - Out for Delivery' : 'Ready - Awaiting Pickup' }}
+        </span>
+      </div>
+
+      <div class="order-footer">
+        <div class="order-amount">
+          <span class="amount-label">Total</span>
+          <span class="amount-value">₹{{ order.amount }}</span>
+        </div>
+
+        <div class="order-actions">
+          <button
+            *ngIf="activeTab === 'new'"
+            class="btn btn-accept"
+            (click)="acceptOrder(order.id)"
+          >
+            <i class="fas fa-check"></i>
+            Accept
+          </button>
+          <button
+            *ngIf="activeTab === 'new'"
+            class="btn btn-reject"
+            (click)="rejectOrder(order.id)"
+          >
+            <i class="fas fa-times"></i>
+            Reject
+          </button>
+          <button
+            *ngIf="activeTab === 'preparing'"
+            class="btn btn-ready"
+            (click)="markReady(order.id)"
+          >
+            <i class="fas fa-check-double"></i>
+            Mark Ready
+          </button>
+          <button
+            *ngIf="activeTab === 'ready'"
+            class="btn btn-complete"
+            (click)="markReady(order.id)"
+          >
+            <i class="fas fa-check-circle"></i>
+            Mark Delivered
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="getOrders().length === 0">
+      <i class="fas fa-inbox"></i>
+      <p>No {{ activeTab }} orders</p>
+    </div>
+  </div>
+
+  <!-- Expanded Order Modal -->
+  <div class="expanded-modal-backdrop" *ngIf="expandedOrder" (click)="closeExpandedOrder()">
+    <div class="expanded-modal" (click)="$event.stopPropagation()">
+      <button class="close-btn" (click)="closeExpandedOrder()">
+        <i class="fas fa-times"></i>
+      </button>
+      
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-order-number">{{ expandedOrder.orderNumber }}</h2>
+          <p class="modal-customer">
+            <i class="fas fa-user"></i>
+            {{ expandedOrder.customerName }}
+          </p>
+        </div>
+        <div class="modal-header-right">
+          <span class="modal-status" [class]="'status-' + expandedOrder.status.toLowerCase()">
+            {{ getStatusLabel(expandedOrder.status) }}
+          </span>
+          <div class="modal-time">
+            <i class="fas fa-clock"></i>
+            {{ expandedOrder.time }}
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-items">
+        <h3 class="section-title">
+          <i class="fas fa-shopping-bag"></i>
+          Order Items
+        </h3>
+        <div class="items-list">
+          <div class="modal-item" *ngFor="let item of expandedOrder.items">
+            <div class="item-details">
+              <span class="item-icon">🍽️</span>
+              <span class="item-name">{{ item.name }}</span>
+            </div>
+            <span class="item-qty">x{{ item.quantity }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-delivery" *ngIf="activeTab === 'ready' && expandedOrder.deliveryPartner">
+        <h3 class="section-title">
+          <i class="fas fa-motorcycle"></i>
+          Delivery Information
+        </h3>
+        <div class="delivery-details">
+          <div class="delivery-partner">
+            <i class="fas fa-user-circle"></i>
+            <span>{{ expandedOrder.deliveryPartner }}</span>
+          </div>
+          <span class="pickup-status" [class.picked-up]="expandedOrder.isPickedUp">
+            <i class="fas" [class.fa-check-circle]="expandedOrder.isPickedUp" [class.fa-clock]="!expandedOrder.isPickedUp"></i>
+            {{ expandedOrder.isPickedUp ? 'Picked Up - Out for Delivery' : 'Ready - Awaiting Pickup' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-total">
+          <span class="total-label">Total Amount</span>
+          <span class="total-value">₹{{ expandedOrder.amount }}</span>
+        </div>
+        <div class="modal-actions">
+          <button
+            *ngIf="activeTab === 'new'"
+            class="btn btn-accept"
+            (click)="acceptOrder(expandedOrder.id); closeExpandedOrder()"
+          >
+            <i class="fas fa-check"></i>
+            Accept Order
+          </button>
+          <button
+            *ngIf="activeTab === 'new'"
+            class="btn btn-reject"
+            (click)="rejectOrder(expandedOrder.id); closeExpandedOrder()"
+          >
+            <i class="fas fa-times"></i>
+            Reject Order
+          </button>
+          <button
+            *ngIf="activeTab === 'preparing'"
+            class="btn btn-ready"
+            (click)="markReady(expandedOrder.id); closeExpandedOrder()"
+          >
+            <i class="fas fa-check-double"></i>
+            Mark Ready
+          </button>
+          <button
+            *ngIf="activeTab === 'ready'"
+            class="btn btn-complete"
+            (click)="markReady(expandedOrder.id); closeExpandedOrder()"
+          >
+            <i class="fas fa-check-circle"></i>
+            Mark Delivered
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

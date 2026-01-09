@@ -1,0 +1,323 @@
+// ====================================
+// NearBite Design System - Mixins
+// ====================================
+
+@use 'sass:color';
+@use 'variables' as *;
+
+// Primary Button
+@mixin button-primary {
+  background: $primary-gradient;
+  color: $text-primary;
+  border: none;
+  padding: $spacing-sm $spacing-xl;
+  border-radius: $radius-md;
+  font-family: $font-family;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $transition-base;
+  box-shadow: $shadow-sm;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+    background: linear-gradient(135deg, color.adjust($primary-dark, $lightness: 5%) 0%, color.adjust($primary-light, $lightness: 5%) 100%);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Secondary Button
+@mixin button-secondary {
+  background: transparent;
+  color: $text-primary;
+  border: 2px solid $border-secondary;
+  padding: $spacing-sm $spacing-xl;
+  border-radius: $radius-md;
+  font-family: $font-family;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $transition-base;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+
+  &:hover:not(:disabled) {
+    border-color: $primary-light;
+    background: rgba($primary-light, 0.1);
+    transform: translateY(-2px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: $border-primary;
+  }
+}
+
+// Text Input
+@mixin input-text {
+  background: $bg-tertiary;
+  color: $text-primary;
+  border: 2px solid $border-primary;
+  padding: $spacing-md;
+  border-radius: $radius-md;
+  font-family: $font-family;
+  font-size: $font-size-base;
+  width: 100%;
+  transition: all $transition-base;
+  outline: none;
+
+  &::placeholder {
+    color: $text-muted;
+  }
+
+  &:focus {
+    border-color: $border-focus;
+    background: color.adjust($bg-tertiary, $lightness: 3%);
+    box-shadow: 0 0 0 3px rgba($primary-light, 0.1);
+  }
+
+  &.error {
+    border-color: $status-error;
+
+    &:focus {
+      box-shadow: 0 0 0 3px rgba($status-error, 0.1);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: $bg-secondary;
+  }
+}
+
+// Card Container
+@mixin card {
+  background: $bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  box-shadow: $shadow-md;
+  transition: all $transition-base;
+  border: 1px solid $border-primary;
+}
+
+// Card Hover State
+@mixin card-hover {
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-lg;
+    background: $bg-card-hover;
+    border-color: $border-secondary;
+  }
+}
+
+// Link
+@mixin link {
+  color: $accent-orange;
+  text-decoration: none;
+  font-family: $font-family;
+  transition: all $transition-fast;
+  cursor: pointer;
+
+  &:hover {
+    color: $accent-orange-light;
+    text-decoration: underline;
+  }
+
+  &.disabled {
+    color: $text-disabled;
+    pointer-events: none;
+    cursor: not-allowed;
+  }
+}
+
+// Typography Mixins
+@mixin text-title {
+  font-family: $font-family;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+  margin: 0;
+  line-height: 1.3;
+}
+
+@mixin text-subtitle {
+  font-family: $font-family;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $text-secondary;
+  margin: 0;
+  line-height: 1.4;
+}
+
+@mixin text-body {
+  font-family: $font-family;
+  font-size: $font-size-base;
+  font-weight: $font-weight-normal;
+  color: $text-secondary;
+  margin: 0;
+  line-height: 1.6;
+}
+
+@mixin text-muted {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-normal;
+  color: $text-muted;
+  margin: 0;
+  line-height: 1.5;
+}
+
+// Error Message
+@mixin text-error {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $status-error;
+  margin: $spacing-xs 0 0;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+// Success Message
+@mixin text-success {
+  font-family: $font-family;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $status-success;
+  margin: $spacing-xs 0 0;
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+// Gradient Background
+@mixin gradient-background {
+  background: $primary-gradient;
+}
+
+// Scrollbar
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $bg-secondary;
+    border-radius: $radius-sm;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $border-secondary;
+    border-radius: $radius-sm;
+
+    &:hover {
+      background: $primary-light;
+    }
+  }
+}
+
+// Status Badge
+@mixin badge($color) {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-xs $spacing-md;
+  border-radius: $radius-full;
+  font-family: $font-family;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  background: rgba($color, 0.15);
+  color: color.adjust($color, $lightness: 15%);
+  border: 1px solid rgba($color, 0.3);
+}
+
+// Flexbox helpers
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+// Truncate text
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Responsive breakpoints
+@mixin mobile {
+  @media (max-width: 767px) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (min-width: 768px) and (max-width: 1023px) {
+    @content;
+  }
+}
+
+@mixin laptop {
+  @media (min-width: 1024px) and (max-width: 1439px) {
+    @content;
+  }
+}
+
+@mixin desktop {
+  @media (min-width: 1440px) {
+    @content;
+  }
+}
+
+@mixin tablet-up {
+  @media (min-width: 768px) {
+    @content;
+  }
+}
+
+@mixin laptop-up {
+  @media (min-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin desktop-up {
+  @media (min-width: 1440px) {
+    @content;
+  }
+}

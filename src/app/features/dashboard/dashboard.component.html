@@ -1,0 +1,142 @@
+<div class="dashboard-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Welcome back! Here's what's happening today.</p>
+    </div>
+    <button class="refresh-btn">
+      <i class="fas fa-sync-alt"></i>
+      Refresh
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Loading dashboard...</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid" *ngIf="!isLoading && stats">
+    <div class="stat-card card-1 slide-in-up">
+      <div class="stat-icon">
+        <i class="fas fa-shopping-cart"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Today's Orders</p>
+        <h2 class="stat-value">{{ stats.todayOrders }}</h2>
+        <p class="stat-change positive">
+          <i class="fas fa-arrow-up"></i> 12% from yesterday
+        </p>
+      </div>
+    </div>
+
+    <div class="stat-card card-2 slide-in-up" style="animation-delay: 0.1s">
+      <div class="stat-icon">
+        <i class="fas fa-rupee-sign"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Today's Revenue</p>
+        <h2 class="stat-value">₹{{ stats.todayRevenue | number }}</h2>
+        <p class="stat-change positive">
+          <i class="fas fa-arrow-up"></i> 8% from yesterday
+        </p>
+      </div>
+    </div>
+
+    <div class="stat-card card-3 slide-in-up" style="animation-delay: 0.2s">
+      <div class="stat-icon">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Avg Order Value</p>
+        <h2 class="stat-value">₹{{ stats.avgOrderValue }}</h2>
+        <p class="stat-change positive">
+          <i class="fas fa-arrow-up"></i> 5% from last week
+        </p>
+      </div>
+    </div>
+
+    <div class="stat-card card-4 slide-in-up" style="animation-delay: 0.3s">
+      <div class="stat-icon">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="stat-content">
+        <p class="stat-label">Pending Orders</p>
+        <h2 class="stat-value">{{ stats.pendingOrders }}</h2>
+        <p class="stat-change">
+          Awaiting action
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Placeholder -->
+  <div class="charts-section" *ngIf="!isLoading">
+    <div class="chart-card">
+      <h3 class="chart-title">
+        <i class="fas fa-chart-bar"></i>
+        Revenue Overview
+      </h3>
+      <div class="chart-placeholder">
+        <i class="fas fa-chart-area"></i>
+        <p>Chart visualization coming soon</p>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <h3 class="chart-title">
+        <i class="fas fa-chart-pie"></i>
+        Order Distribution
+      </h3>
+      <div class="chart-placeholder">
+        <i class="fas fa-chart-pie"></i>
+        <p>Chart visualization coming soon</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Orders -->
+  <div class="recent-orders-section" *ngIf="!isLoading">
+    <div class="section-header">
+      <h2 class="section-title">
+        <i class="fas fa-list"></i>
+        Recent Orders
+      </h2>
+      <a href="/orders" class="view-all-link">
+        View All
+        <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="orders-list">
+      <div class="order-card" *ngFor="let order of recentOrders">
+        <div class="order-header">
+          <div class="order-info">
+            <h4 class="order-number">{{ order.orderNumber }}</h4>
+            <p class="order-customer">{{ order.customerName }}</p>
+          </div>
+          <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+            {{ getStatusLabel(order.status) }}
+          </span>
+        </div>
+        <div class="order-footer">
+          <div class="order-details">
+            <span class="detail-item">
+              <i class="fas fa-shopping-bag"></i>
+              {{ order.items }} items
+            </span>
+            <span class="detail-item">
+              <i class="fas fa-clock"></i>
+              {{ order.time }}
+            </span>
+          </div>
+          <div class="order-amount">
+            ₹{{ order.amount }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,105 @@
+<div class="login-container">
+  <div class="login-card fade-in">
+    <!-- Logo and Title -->
+    <div class="logo-section">
+      <div class="logo">
+        <i class="fas fa-utensils"></i>
+      </div>
+      <h1 class="brand-title">NearBite</h1>
+      <p class="brand-subtitle">Restaurant Partner Dashboard</p>
+    </div>
+
+    <!-- Login Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Username Input -->
+      <div class="form-group">
+        <label for="username">Email / Mobile / Username</label>
+        <div class="input-wrapper">
+          <i class="fas fa-user input-icon"></i>
+          <input
+            id="username"
+            type="text"
+            formControlName="username"
+            placeholder="Enter your email, mobile or username"
+            [class.error]="f['username'].invalid && f['username'].touched"
+          />
+        </div>
+        <div class="error-message" *ngIf="f['username'].invalid && f['username'].touched">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>This field is required</span>
+        </div>
+      </div>
+
+      <!-- Password Input -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <div class="input-wrapper">
+          <i class="fas fa-lock input-icon"></i>
+          <input
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            placeholder="Enter your password"
+            [class.error]="f['password'].invalid && f['password'].touched"
+          />
+          <i
+            class="fas password-toggle"
+            [class.fa-eye]="!showPassword"
+            [class.fa-eye-slash]="showPassword"
+            (click)="togglePasswordVisibility()"
+          ></i>
+        </div>
+        <div class="error-message" *ngIf="f['password'].invalid && f['password'].touched">
+          <i class="fas fa-exclamation-circle"></i>
+          <span *ngIf="f['password'].errors?.['required']">Password is required</span>
+          <span *ngIf="f['password'].errors?.['minlength']">Password must be at least 6 characters</span>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div class="error-banner" *ngIf="errorMessage">
+        <i class="fas fa-exclamation-triangle"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <!-- Login Button -->
+      <button
+        type="submit"
+        class="login-button"
+        [disabled]="isLoading"
+      >
+        <span *ngIf="!isLoading">
+          <i class="fas fa-sign-in-alt"></i>
+          Login to Dashboard
+        </span>
+        <span *ngIf="isLoading">
+          <i class="fas fa-spinner fa-spin"></i>
+          Logging in...
+        </span>
+      </button>
+
+      <!-- Forgot Password -->
+      <div class="forgot-password">
+        <a (click)="onForgotPassword()">
+          <i class="fas fa-question-circle"></i>
+          Forgot Password?
+        </a>
+      </div>
+    </form>
+
+    <!-- Demo Credentials Info -->
+    <div class="demo-info">
+      <p class="demo-title">
+        <i class="fas fa-info-circle"></i>
+        Demo Credentials
+      </p>
+      <p class="demo-text">Email: <strong>demo@restaurant.com</strong></p>
+      <p class="demo-text">Password: <strong>demo123</strong></p>
+    </div>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p>© 2026 NearBite. All rights reserved.</p>
+    </div>
+  </div>
+</div>

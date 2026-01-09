@@ -1,0 +1,402 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.navbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: $sidebar-width;
+  height: $navbar-height;
+  background: $bg-card;
+  border-bottom: 1px solid $border-primary;
+  z-index: $z-sticky;
+  transition: left $transition-base;
+  box-shadow: $shadow-sm;
+
+  @include mobile {
+    left: 0;
+  }
+}
+
+.navbar-content {
+  height: 100%;
+  padding: 0 $spacing-xl;
+  @include flex-between;
+  gap: $spacing-xl;
+
+  @include mobile {
+    padding: 0 $spacing-md;
+    gap: $spacing-md;
+  }
+}
+
+.search-section {
+  flex: 1;
+  max-width: 600px;
+
+  @include mobile {
+    max-width: none;
+    flex: 0 1 auto;
+  }
+
+  @include tablet {
+    max-width: 400px;
+  }
+
+  @include laptop {
+    max-width: 500px;
+  }
+
+  @include desktop {
+    max-width: 600px;
+  }
+
+  .search-bar {
+    position: relative;
+    width: 100%;
+
+    .search-icon {
+      position: absolute;
+      left: $spacing-md;
+      top: 50%;
+      transform: translateY(-50%);
+      color: $text-muted;
+      font-size: $font-size-base;
+    }
+
+    input {
+      @include input-text;
+      padding-left: calc(#{$spacing-md} * 3);
+      background: $bg-tertiary;
+      border-color: $border-primary;
+
+      &:focus {
+        border-color: $primary-light;
+      }
+    }
+  }
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+
+  @include mobile {
+    gap: $spacing-md;
+  }
+}
+
+.action-btn {
+  position: relative;
+  background: transparent;
+  border: none;
+  color: $text-secondary;
+  font-size: $font-size-xl;
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-md;
+  @include flex-center;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $bg-tertiary;
+    color: $text-primary;
+  }
+
+  .badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: $status-error;
+    color: $text-primary;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    padding: 2px 6px;
+    border-radius: $radius-full;
+    min-width: 18px;
+    text-align: center;
+    box-shadow: $shadow-sm;
+  }
+}
+
+.notification-btn {
+  position: relative;
+}
+
+.notifications-dropdown {
+  position: absolute;
+  top: calc(100% + #{$spacing-sm});
+  right: 120px;
+  width: 380px;
+  max-height: 500px;
+  background: $bg-card;
+  border: 1px solid $border-primary;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xl;
+  z-index: $z-dropdown;
+  animation: slideInUp $transition-fast;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  @include mobile {
+    right: 0;
+    width: calc(100vw - 32px);
+    max-height: 70vh;
+  }
+
+  .notifications-header {
+    @include flex-between;
+    padding: $spacing-lg;
+    border-bottom: 1px solid $border-primary;
+    background: $bg-secondary;
+
+    h3 {
+      @include text-subtitle;
+      font-size: $font-size-base;
+      margin: 0;
+    }
+
+    .mark-read-btn {
+      background: transparent;
+      border: none;
+      color: $accent-orange;
+      font-family: $font-family;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-medium;
+      cursor: pointer;
+      transition: color $transition-fast;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: $radius-sm;
+
+      &:hover {
+        color: $accent-orange-light;
+        background: rgba($accent-orange, 0.1);
+      }
+    }
+  }
+
+  .notifications-list {
+    overflow-y: auto;
+    max-height: 400px;
+    @include custom-scrollbar;
+  }
+
+  .notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-md;
+    padding: $spacing-md $spacing-lg;
+    border-bottom: 1px solid $border-primary;
+    cursor: pointer;
+    transition: all $transition-fast;
+    position: relative;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background: $bg-tertiary;
+    }
+
+    &.unread {
+      background: rgba($primary-light, 0.05);
+
+      .notification-content h4 {
+        color: $text-primary;
+        font-weight: $font-weight-semibold;
+      }
+    }
+
+    .notification-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: $radius-md;
+      @include flex-center;
+      flex-shrink: 0;
+      font-size: $font-size-lg;
+
+      &.type-order {
+        background: rgba($status-new, 0.15);
+        color: $status-new;
+      }
+
+      &.type-payment {
+        background: rgba($status-success, 0.15);
+        color: $status-success;
+      }
+
+      &.type-review {
+        background: rgba($status-warning, 0.15);
+        color: $status-warning;
+      }
+
+      &.type-system {
+        background: rgba($text-muted, 0.15);
+        color: $text-secondary;
+      }
+    }
+
+    .notification-content {
+      flex: 1;
+      min-width: 0;
+
+      h4 {
+        @include text-body;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-medium;
+        margin: 0 0 $spacing-xs;
+        color: $text-secondary;
+      }
+
+      p {
+        @include text-muted;
+        font-size: $font-size-xs;
+        margin: 0 0 $spacing-xs;
+        @include truncate;
+      }
+
+      .notification-time {
+        @include text-muted;
+        font-size: $font-size-xs;
+        opacity: 0.7;
+      }
+    }
+
+    .read-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: $primary-light;
+      flex-shrink: 0;
+      margin-top: $spacing-xs;
+    }
+  }
+
+  .empty-notifications {
+    @include flex-center;
+    flex-direction: column;
+    gap: $spacing-md;
+    padding: $spacing-3xl;
+    color: $text-muted;
+
+    i {
+      font-size: $font-size-4xl;
+      opacity: 0.3;
+    }
+
+    p {
+      font-size: $font-size-sm;
+    }
+  }
+}
+
+.user-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $bg-tertiary;
+  }
+
+  @include mobile {
+    .user-info {
+      display: none;
+    }
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-md;
+    background: $primary-gradient;
+    @include flex-center;
+    font-size: $font-size-lg;
+    color: $text-primary;
+    flex-shrink: 0;
+    box-shadow: $shadow-sm;
+  }
+
+  .user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .user-name {
+      @include text-body;
+      font-weight: $font-weight-semibold;
+      font-size: $font-size-sm;
+      color: $text-primary;
+      line-height: 1;
+      margin: 0;
+    }
+
+    .restaurant-name {
+      @include text-muted;
+      font-size: $font-size-xs;
+      line-height: 1;
+      margin: 0;
+    }
+  }
+
+  .dropdown-icon {
+    color: $text-muted;
+    font-size: $font-size-sm;
+    transition: transform $transition-fast;
+  }
+
+  &:hover .dropdown-icon {
+    transform: rotate(180deg);
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: calc(100% + #{$spacing-sm});
+    right: 0;
+    min-width: 220px;
+    background: $bg-card;
+    border: 1px solid $border-primary;
+    border-radius: $radius-md;
+    box-shadow: $shadow-lg;
+    padding: $spacing-sm 0;
+    z-index: $z-dropdown;
+    animation: slideInUp $transition-fast;
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+      padding: $spacing-md $spacing-lg;
+      color: $text-secondary;
+      text-decoration: none;
+      transition: all $transition-fast;
+      font-size: $font-size-sm;
+
+      &:hover {
+        background: $bg-tertiary;
+        color: $text-primary;
+      }
+
+      i {
+        width: 20px;
+        text-align: center;
+        font-size: $font-size-base;
+      }
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: $border-primary;
+      margin: $spacing-sm 0;
+    }
+  }
+}
