@@ -1,0 +1,28 @@
+<div class="notification-container">
+  <div 
+    *ngFor="let notification of notifications"
+    class="notification"
+    [class.success]="notification.type === NotificationType.SUCCESS"
+    [class.error]="notification.type === NotificationType.ERROR"
+    [class.warning]="notification.type === NotificationType.WARNING"
+    [class.info]="notification.type === NotificationType.INFO"
+    [@slideIn]
+  >
+    <div class="notification-content">
+      <div class="notification-icon">
+        <i class="fas" [class]="getIcon(notification.type)"></i>
+      </div>
+      <div class="notification-message">
+        {{ notification.message }}
+      </div>
+      <button 
+        class="notification-close" 
+        (click)="removeNotification(notification.id)"
+        aria-label="Close notification"
+      >
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="notification-progress" [style.animation-duration.ms]="notification.duration"></div>
+  </div>
+</div>

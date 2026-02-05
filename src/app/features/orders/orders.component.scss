@@ -90,7 +90,7 @@
 
 .orders-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
   gap: $spacing-xl;
 
   @include mobile {
@@ -99,16 +99,7 @@
   }
 
   @include tablet {
-    grid-template-columns: repeat(2, 1fr);
     gap: $spacing-lg;
-  }
-
-  @include laptop {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @include desktop {
-    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -125,13 +116,61 @@
     margin-bottom: $spacing-lg;
     gap: $spacing-md;
     flex-shrink: 0;
+    align-items: flex-start;
+
+    .order-id-section {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .order-number-wrapper {
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+      margin-bottom: $spacing-xs;
+    }
 
     .order-number {
       @include text-body;
       font-weight: $font-weight-bold;
       font-size: $font-size-lg;
-      margin-bottom: $spacing-xs;
       color: $accent-orange;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .btn-copy {
+      background: rgba($accent-orange, 0.1);
+      border: 1px solid rgba($accent-orange, 0.3);
+      color: $accent-orange;
+      padding: $spacing-xs;
+      border-radius: $radius-sm;
+      cursor: pointer;
+      transition: all $transition-fast;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: $font-size-xs;
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+
+      &:hover {
+        background: rgba($accent-orange, 0.2);
+        transform: scale(1.1);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      i {
+        font-size: $font-size-xs;
+      }
     }
 
     .customer-name {
@@ -150,6 +189,60 @@
       display: flex;
       align-items: center;
       gap: $spacing-sm;
+      flex-shrink: 0;
+    }
+
+    .status-badge {
+      padding: $spacing-xs $spacing-md;
+      border-radius: $radius-md;
+      font-size: $font-size-xs;
+      font-weight: $font-weight-semibold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+      border: 1px solid;
+
+      &[data-status="PENDING"] {
+        background: rgba(234, 179, 8, 0.1);
+        border-color: rgba(234, 179, 8, 0.3);
+        color: #eab308;
+      }
+
+      &[data-status="CONFIRMED"] {
+        background: rgba(99, 102, 241, 0.1);
+        border-color: rgba(99, 102, 241, 0.3);
+        color: #6366f1;
+      }
+
+      &[data-status="PREPARING"] {
+        background: rgba(168, 85, 247, 0.1);
+        border-color: rgba(168, 85, 247, 0.3);
+        color: #a855f7;
+      }
+
+      &[data-status="READY"] {
+        background: rgba(34, 197, 94, 0.1);
+        border-color: rgba(34, 197, 94, 0.3);
+        color: #22c55e;
+      }
+
+      &[data-status="OUT_FOR_DELIVERY"] {
+        background: rgba(20, 184, 166, 0.1);
+        border-color: rgba(20, 184, 166, 0.3);
+        color: #14b8a6;
+      }
+
+      &[data-status="DELIVERED"] {
+        background: rgba(156, 163, 175, 0.1);
+        border-color: rgba(156, 163, 175, 0.3);
+        color: #9ca3af;
+      }
+
+      &[data-status="CANCELLED"] {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+      }
     }
 
     .order-time {

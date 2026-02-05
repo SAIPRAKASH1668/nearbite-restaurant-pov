@@ -1,0 +1,368 @@
+/*
+================================================================================
+FINANCIAL DASHBOARD MODAL - LAYOUT ANATOMY
+================================================================================
+
+Visual structure breakdown with inline design rationale
+
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                         MODAL BACKDROP (blur effect)                        │
+│  ┌──────────────────────────────────────────────────────────────────────┐  │
+│  │                      MODAL CONTAINER (max-width: 1200px)              │  │
+│  │  ┌────────────────────────────────────────────────────────────────┐  │  │
+│  │  │  HEADER (fixed, border-bottom)                                  │  │  │
+│  │  │  ┌──────────────────────────────┬─────────────────────────┐    │  │  │
+│  │  │  │ Financial Dashboard          │              [X] Close  │    │  │  │
+│  │  │  └──────────────────────────────┴─────────────────────────┘    │  │  │
+│  │  └────────────────────────────────────────────────────────────────┘  │  │
+│  │                                                                        │  │
+│  │  ┌────────────────────────────────────────────────────────────────┐  │  │
+│  │  │  BODY (scrollable, custom scrollbar)                           │  │  │
+│  │  │                                                                 │  │  │
+│  │  │  ┌─────────────────────────────────────────────────────────┐  │  │  │
+│  │  │  │ SECTION 1: EARNINGS SUMMARY (4-column grid)              │  │  │
+│  │  │  │ ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐    │  │  │
+│  │  │  │ │ Today's  │ │   This   │ │   This   │ │ Pending  │    │  │  │
+│  │  │  │ │ Earnings │ │   Week   │ │  Month   │ │Settlement│    │  │  │
+│  │  │  │ │ ₹2,450   │ │ ₹18,230  │ │ ₹78,450  │ │ ₹12,340  │    │  │  │
+│  │  │  │ └──────────┘ └──────────┘ └──────────┘ └──────────┘    │  │  │
+│  │  │  │   ^compact     ^compact     ^compact    ^highlighted  │  │  │
+│  │  │  │    card         card         card         (orange)    │  │  │
+│  │  │  └─────────────────────────────────────────────────────────┘  │  │
+│  │  │                                                                 │  │  │
+│  │  │  ┌─────────────────────────────────────────────────────────┐  │  │  │
+│  │  │  │ SECTION 2: COMMISSION BREAKDOWN                          │  │  │
+│  │  │  │ Commission Breakdown                                     │  │  │
+│  │  │  │ ┌───────────────────────────────────────────────────┐   │  │  │
+│  │  │  │ │ Gross Revenue                        ₹45,230.00   │   │  │  │
+│  │  │  │ │ Platform Commission (18.0%)        - ₹8,141.40   │   │  │  │
+│  │  │  │ │ Tax & Charges                      - ₹1,465.45   │   │  │  │
+│  │  │  │ │ ───────────────────────────────────────────────   │   │  │  │
+│  │  │  │ │ Net Payout to Restaurant             ₹35,623.15   │   │  │  │
+│  │  │  │ └───────────────────────────────────────────────────┘   │  │  │
+│  │  │  │   ^negative amounts in red, net in green              │  │  │
+│  │  │  └─────────────────────────────────────────────────────────┘  │  │
+│  │  │                                                                 │  │  │
+│  │  │  ┌─────────────────────────────────────────────────────────┐  │  │
+│  │  │  │ SECTION 3: STATUS INDICATORS (2-column grid)             │  │  │
+│  │  │  │ Status Overview                                          │  │  │
+│  │  │  │ ┌────────────────────┐ ┌────────────────────────┐       │  │  │
+│  │  │  │ │ PAYMENT STATUS     │ │ SETTLEMENT STATUS      │       │  │  │
+│  │  │  │ │ [✓Successful  102] │ │ [✓Settled         78]  │       │  │  │
+│  │  │  │ │ [⏱Pending      12] │ │ [⏳In Progress    15]  │       │  │  │
+│  │  │  │ │ [✗Failed        6] │ │ [○Not Initiated   27]  │       │  │  │
+│  │  │  │ └────────────────────┘ └────────────────────────┘       │  │  │
+│  │  │  │   ^color-coded chips with counts                        │  │  │
+│  │  │  └─────────────────────────────────────────────────────────┘  │  │
+│  │  │                                                                 │  │  │
+│  │  │  ┌─────────────────────────────────────────────────────────┐  │  │
+│  │  │  │ SECTION 4: FILTERS & EXPORT (compact controls)           │  │  │
+│  │  │  │ ┌───────────────────────────────────────────────────┐   │  │  │
+│  │  │  │ │ [Date: __→__] [Payment▼] [Settlement▼] [Method▼] │   │  │  │
+│  │  │  │ │                              [Clear Filters]      │   │  │  │
+│  │  │  │ │ ───────────────────────────────────────────────── │   │  │  │
+│  │  │  │ │ Export 120 transactions: [CSV] [PDF]             │   │  │  │
+│  │  │  │ └───────────────────────────────────────────────────┘   │  │  │
+│  │  │  │   ^inline filters, minimal height                       │  │  │
+│  │  │  └─────────────────────────────────────────────────────────┘  │  │
+│  │  │                                                                 │  │  │
+│  │  │  ┌─────────────────────────────────────────────────────────┐  │  │
+│  │  │  │ SECTION 5: TRANSACTION TABLE (scrollable)                │  │  │
+│  │  │  │ Transaction History (120 records)                        │  │  │
+│  │  │  │ ┌─────────────────────────────────────────────────────┐ │  │  │
+│  │  │  │ │ Date↓│Order ID│Method│Gross│Comm│Net│Pay│Settle│    │ │  │  │
+│  │  │  │ │ ─────┼────────┼──────┼─────┼────┼───┼───┼──────┤    │ │  │  │
+│  │  │  │ │ 8 Jan│ORD_123 │ UPI  │ 850 │153 │669│ ✓ │  ✓   │    │ │  │  │
+│  │  │  │ │ 7 Jan│ORD_456 │ CARD │1200 │216 │948│ ✓ │  ⏳  │    │ │  │  │
+│  │  │  │ │ 7 Jan│ORD_789 │ CASH │ 650 │117 │512│ ✓ │  ○   │    │ │  │  │
+│  │  │  │ │ ...more rows (scrollable)                           │ │  │  │
+│  │  │  │ └─────────────────────────────────────────────────────┘ │  │  │
+│  │  │  │   ^fixed header, sortable columns, color-coded badges   │  │  │
+│  │  │  └─────────────────────────────────────────────────────────┘  │  │
+│  │  │                                                                 │  │  │
+│  │  └────────────────────────────────────────────────────────────────┘  │  │
+│  └──────────────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+SPACING & DENSITY DECISIONS
+================================================================================
+
+COMPACT DESIGN PRINCIPLES:
+1. Card padding: 12-16px (not 20-24px like marketing sites)
+2. Section spacing: 20px (not 40-60px)
+3. Table row height: ~40px (not 56-64px)
+4. Font sizes: 12-14px for body, 10-11px for labels
+5. No large hero images or decorative elements
+6. Functional icons only (12-16px)
+
+WHY SO COMPACT?
+- Restaurant owners scan data quickly
+- More info visible without scrolling
+- Professional dashboard aesthetic
+- Laptop-optimized (most common device)
+
+
+================================================================================
+COLOR-CODING LOGIC
+================================================================================
+
+STATUS COLORS (with opacity for subtle backgrounds):
+
+Success (Green) - #2ECC71
+├─ Payment: Successful
+├─ Settlement: Settled
+└─ Used for: Net payout amounts
+
+Warning (Orange) - #F39C12
+├─ Payment: Pending
+├─ Settlement: In Progress
+└─ Used for: Pending settlements highlight
+
+Error (Red) - #E74C3C
+├─ Payment: Failed
+├─ Settlement: (not applicable)
+└─ Used for: Negative amounts (commission, tax)
+
+Muted (Gray) - #999999
+├─ Settlement: Not Initiated
+└─ Used for: Non-critical info
+
+BACKGROUND OPACITY:
+- Chip backgrounds: rgba(color, 0.1)
+- Chip borders: rgba(color, 0.2)
+- Status badge backgrounds: rgba(color, 0.1)
+
+
+================================================================================
+TYPOGRAPHY HIERARCHY
+================================================================================
+
+Level 1: Modal Title
+- Font: 18px / 1.125rem
+- Weight: 600 (Semi-bold)
+- Color: $text-primary (#FFFFFF)
+- Usage: "Financial Dashboard"
+
+Level 2: Section Titles
+- Font: 14px / 0.875rem
+- Weight: 600 (Semi-bold)
+- Color: $text-secondary (#D1D1D1)
+- Transform: UPPERCASE
+- Spacing: 0.05em letter-spacing
+- Usage: "Commission Breakdown", "Status Overview"
+
+Level 3: Card Labels
+- Font: 12px / 0.75rem
+- Weight: 500 (Medium)
+- Color: $text-muted (#999999)
+- Transform: UPPERCASE
+- Usage: "Today's Earnings", "Gross Revenue"
+
+Level 4: Card Values
+- Font: 24px / 1.5rem (large) or 18px / 1.125rem (medium)
+- Weight: 700 (Bold)
+- Color: $text-primary or status color
+- Variant: Tabular nums (monospace numbers)
+- Usage: ₹2,450, ₹35,623.15
+
+Level 5: Table Headers
+- Font: 12px / 0.75rem
+- Weight: 600 (Semi-bold)
+- Color: $text-muted (#999999)
+- Transform: UPPERCASE
+- Usage: Column headers
+
+Level 6: Table Body
+- Font: 14px / 0.875rem
+- Weight: 400 (Normal) or 600 (amounts)
+- Color: $text-secondary (#D1D1D1)
+- Usage: Table cell content
+
+
+================================================================================
+RESPONSIVE BEHAVIOR
+================================================================================
+
+DESKTOP (1200px+)
+├─ Earnings Grid: 4 columns
+├─ Status Grid: 2 columns
+├─ Filters: Horizontal row
+└─ Table: Full width, all columns visible
+
+LAPTOP (1024px - 1199px)
+├─ Modal: 95% viewport width
+├─ Earnings Grid: 4 columns (tighter spacing)
+├─ Status Grid: 2 columns
+└─ Table: Slightly compressed columns
+
+TABLET (768px - 1023px)
+├─ Earnings Grid: 2 columns
+├─ Status Grid: 2 columns
+├─ Filters: Stack vertically
+└─ Table: Horizontal scroll required
+
+MOBILE (<768px)
+├─ Modal: Full screen (no border radius)
+├─ Earnings Grid: 1 column
+├─ Status Grid: 1 column
+├─ Filters: Full width, stacked
+└─ Table: Horizontal scroll, min-width 900px
+
+
+================================================================================
+INTERACTION STATES
+================================================================================
+
+HOVER STATES:
+- Cards: Background lightens slightly
+- Buttons: Border color changes to primary
+- Table Rows: Background highlights
+- Sort Headers: Text color brightens
+
+ACTIVE STATES:
+- Filter Dropdowns: Border highlights
+- Selected Filters: Checkboxes checked
+- Active Sort: Arrow indicator (↑/↓)
+
+LOADING STATES:
+- Overlay with spinner
+- Semi-transparent background
+- Spinner uses primary color
+
+EMPTY STATES:
+- Icon + message
+- Centered layout
+- Muted colors
+
+
+================================================================================
+ACCESSIBILITY CONSIDERATIONS
+================================================================================
+
+KEYBOARD NAVIGATION:
+- Tab through all interactive elements
+- Enter/Space to activate buttons
+- Escape to close modal
+- Arrow keys in dropdowns (future enhancement)
+
+ARIA LABELS:
+- Close button: aria-label="Close"
+- Sortable headers: Implicit via click behavior
+- Filter dropdowns: Associated labels
+
+COLOR CONTRAST:
+- All text meets WCAG AA standards
+- Status colors have sufficient contrast
+- Border colors visible against backgrounds
+
+SEMANTIC HTML:
+- <table> for tabular data (not divs)
+- <button> for clickable actions
+- <section> for content sections
+- <label> for form inputs
+
+
+================================================================================
+ANIMATION & TRANSITIONS
+================================================================================
+
+MODAL ENTRANCE:
+- Backdrop: Fade in (0.2s)
+- Container: Slide up + fade (0.25s)
+- Effect: Professional, not jarring
+
+FILTER DROPDOWNS:
+- Slide down (0.15s)
+- Fade in
+- Effect: Smooth reveal
+
+HOVER TRANSITIONS:
+- Duration: 0.15s
+- Easing: ease
+- Effect: Subtle, responsive feel
+
+NO ANIMATIONS FOR:
+- Data updates (instant)
+- Sorting (instant)
+- Filtering (instant)
+- Reason: Data changes should feel immediate
+
+
+================================================================================
+PERFORMANCE OPTIMIZATIONS
+================================================================================
+
+CHANGE DETECTION:
+- Strategy: OnPush
+- Triggers: Manual markForCheck()
+- Benefit: 50-80% fewer render cycles
+
+RENDERING:
+- Virtual scrolling: Not needed yet (120 rows)
+- Future: Implement at 500+ rows
+- Benefit: Maintain 60fps scrolling
+
+FILTERING & SORTING:
+- Client-side for <1000 records
+- Server-side for 1000+ records
+- Current: Instant client-side
+
+MEMORY:
+- No subscriptions stored (use async pipe or unsubscribe)
+- Modal content only when visible
+- Benefit: No memory leaks
+
+
+================================================================================
+INTEGRATION POINTS
+================================================================================
+
+DASHBOARD BUTTON:
+Location: Page header, right side
+Style: Primary gradient button
+Icon: fa-chart-line
+Action: Opens modal via ViewChild reference
+
+MODAL COMPONENT:
+Selector: <app-financial-dashboard-modal>
+Placement: End of dashboard template
+Visibility: Controlled by isVisible property
+Backdrop: Click to close enabled
+
+
+================================================================================
+FUTURE ENHANCEMENTS READY FOR
+================================================================================
+
+CHARTS:
+- Revenue trend line chart (Chart.js)
+- Payment method pie chart
+- Settlement timeline
+- Location: Above or beside commission breakdown
+
+ADVANCED FILTERS:
+- Custom date presets (last 7 days, etc.)
+- Search by Order ID
+- Amount range slider
+- Location: Expanded filter section
+
+BULK ACTIONS:
+- Select multiple transactions
+- Bulk export
+- Request settlement
+- Location: Table header toolbar
+
+REAL-TIME UPDATES:
+- WebSocket integration
+- Live transaction notifications
+- Auto-refresh indicator
+- Location: Top-right of modal
+
+
+================================================================================
+END OF LAYOUT ANATOMY
+================================================================================
+*/

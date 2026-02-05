@@ -64,7 +64,8 @@
               "buildTarget": "restaurant-dashboard:build:production"
             },
             "development": {
-              "buildTarget": "restaurant-dashboard:build:development"
+              "buildTarget": "restaurant-dashboard:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

@@ -1,0 +1,370 @@
+<!-- Financial Dashboard Modal - Compact, Data-Dense Layout -->
+<div class="modal-backdrop" *ngIf="isVisible" (click)="onBackdropClick($event)">
+  <div class="modal-container">
+    
+    <!-- Modal Header: Minimal, functional -->
+    <div class="modal-header">
+      <h2 class="modal-title">Financial Dashboard</h2>
+      <button class="close-btn" (click)="close()" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Modal Body: Scrollable content -->
+    <div class="modal-body" [class.loading]="isLoading">
+      
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="loading-overlay">
+        <div class="spinner"></div>
+      </div>
+
+      <!-- Section 1: Earnings Summary Cards (Top Row) -->
+      <section class="section-earnings" *ngIf="earnings">
+        <div class="earnings-grid">
+          <div class="stat-card">
+            <div class="stat-label">Today's Earnings</div>
+            <div class="stat-value">{{ formatCurrency(earnings.todayEarnings) }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">This Week</div>
+            <div class="stat-value">{{ formatCurrency(earnings.weekEarnings) }}</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">This Month</div>
+            <div class="stat-value">{{ formatCurrency(earnings.monthEarnings) }}</div>
+          </div>
+          <div class="stat-card highlight">
+            <div class="stat-label">Pending Settlements (All Time)</div>
+            <div class="stat-value pending">{{ formatCurrency(earnings.pendingSettlements) }}</div>
+            <div class="stat-hint">Money earned but not yet received</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Commission Breakdown -->
+      <section class="section-commission" *ngIf="commission">
+        <h3 class="section-title">Commission Breakdown</h3>
+        <div class="commission-grid">
+          <div class="commission-row">
+            <span class="label">Gross Revenue</span>
+            <span class="value">{{ formatCurrency(commission.grossRevenue) }}</span>
+          </div>
+          <div class="commission-row negative">
+            <span class="label">Platform Commission ({{ commission.commissionPercentage.toFixed(1) }}%)</span>
+            <span class="value">- {{ formatCurrency(commission.platformCommission) }}</span>
+          </div>
+          <div class="commission-row negative">
+            <span class="label">Tax & Charges</span>
+            <span class="value">- {{ formatCurrency(commission.taxCharges) }}</span>
+          </div>
+          <div class="commission-row total">
+            <span class="label">Net Payout to Restaurant (Filtered Period)</span>
+            <span class="value">{{ formatCurrency(commission.netPayout) }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Payment & Settlement Status Indicators -->
+      <section class="section-status" *ngIf="statusCounts">
+        <h3 class="section-title">Status Overview</h3>
+        <div class="status-grid">
+          <div class="status-group">
+            <div class="group-label">Payment Status</div>
+            <div class="status-chips">
+              <div class="chip success">
+                <span class="chip-label">Successful</span>
+                <span class="chip-count">{{ statusCounts.successful }}</span>
+              </div>
+              <div class="chip pending">
+                <span class="chip-label">Pending</span>
+                <span class="chip-count">{{ statusCounts.pending }}</span>
+              </div>
+              <div class="chip failed">
+                <span class="chip-label">Failed</span>
+                <span class="chip-count">{{ statusCounts.failed }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="status-group">
+            <div class="group-label">Settlement Status</div>
+            <div class="status-chips">
+              <div class="chip settled">
+                <span class="chip-label">Settled</span>
+                <span class="chip-count">{{ statusCounts.settledSettlements }}</span>
+              </div>
+              <div class="chip in-progress">
+                <span class="chip-label">In Progress</span>
+                <span class="chip-count">{{ statusCounts.inProgressSettlements }}</span>
+              </div>
+              <div class="chip not-initiated">
+                <span class="chip-label">Not Initiated</span>
+                <span class="chip-count">{{ statusCounts.notInitiatedSettlements }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 4: Filters & Export Controls -->
+      <section class="section-controls">
+        <div class="controls-row">
+          
+          <!-- Date Range Filter -->
+          <div class="filter-group">
+            <label class="filter-label">Date Range</label>
+            <div class="date-inputs">
+              <input 
+                type="date" 
+                class="date-input"
+                [(ngModel)]="startDate"
+                (change)="applyDateFilter()"
+              />
+              <span class="date-separator">to</span>
+              <input 
+                type="date" 
+                class="date-input"
+                [(ngModel)]="endDate"
+                (change)="applyDateFilter()"
+              />
+            </div>
+          </div>
+
+          <!-- Payment Status Filter -->
+          <div class="filter-group">
+            <label class="filter-label">Payment Status</label>
+            <div class="filter-dropdown">
+              <button class="filter-toggle" (click)="showPaymentStatusFilter = !showPaymentStatusFilter">
+                {{ selectedPaymentStatuses.length > 0 ? selectedPaymentStatuses.length + ' selected' : 'All' }}
+                <span class="arrow">▼</span>
+              </button>
+              <div class="dropdown-menu" *ngIf="showPaymentStatusFilter">
+                <div 
+                  *ngFor="let status of paymentStatuses" 
+                  class="dropdown-item"
+                  (click)="togglePaymentStatus(status)"
+                >
+                  <input 
+                    type="checkbox" 
+                    [checked]="isPaymentStatusSelected(status)"
+                    readonly
+                  />
+                  <span>{{ formatStatusLabel(status) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settlement Status Filter -->
+          <div class="filter-group">
+            <label class="filter-label">Settlement Status</label>
+            <div class="filter-dropdown">
+              <button class="filter-toggle" (click)="showSettlementStatusFilter = !showSettlementStatusFilter">
+                {{ selectedSettlementStatuses.length > 0 ? selectedSettlementStatuses.length + ' selected' : 'All' }}
+                <span class="arrow">▼</span>
+              </button>
+              <div class="dropdown-menu" *ngIf="showSettlementStatusFilter">
+                <div 
+                  *ngFor="let status of settlementStatuses" 
+                  class="dropdown-item"
+                  (click)="toggleSettlementStatus(status)"
+                >
+                  <input 
+                    type="checkbox" 
+                    [checked]="isSettlementStatusSelected(status)"
+                    readonly
+                  />
+                  <span>{{ formatStatusLabel(status) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Payment Method Filter -->
+          <div class="filter-group">
+            <label class="filter-label">Payment Method</label>
+            <div class="filter-dropdown">
+              <button class="filter-toggle" (click)="showPaymentMethodFilter = !showPaymentMethodFilter">
+                {{ selectedPaymentMethods.length > 0 ? selectedPaymentMethods.length + ' selected' : 'All' }}
+                <span class="arrow">▼</span>
+              </button>
+              <div class="dropdown-menu" *ngIf="showPaymentMethodFilter">
+                <div 
+                  *ngFor="let method of paymentMethods" 
+                  class="dropdown-item"
+                  (click)="togglePaymentMethod(method)"
+                >
+                  <input 
+                    type="checkbox" 
+                    [checked]="isPaymentMethodSelected(method)"
+                    readonly
+                  />
+                  <span>{{ method }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clear Filters Button -->
+          <button class="btn-secondary" (click)="clearFilters()">
+            Clear Filters
+          </button>
+
+        </div>
+
+        <!-- Export Controls -->
+        <div class="export-row">
+          <span class="export-label">Export {{ filteredPayments.length }} transactions:</span>
+          <button class="btn-export" (click)="exportCSV()" [disabled]="isExporting">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 11L4 7H7V1H9V7H12L8 11Z" fill="currentColor"/>
+              <path d="M2 13H14V15H2V13Z" fill="currentColor"/>
+            </svg>
+            CSV
+          </button>
+          <button class="btn-export" (click)="exportPDF()" [disabled]="isExporting">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 11L4 7H7V1H9V7H12L8 11Z" fill="currentColor"/>
+              <path d="M2 13H14V15H2V13Z" fill="currentColor"/>
+            </svg>
+            PDF
+          </button>
+        </div>
+      </section>
+
+      <!-- Section 5: Transaction History Table (Paginated, Dense) -->
+      <section class="section-table">
+        <div class="table-header">
+          <h3 class="section-title">
+            Transaction History
+            <span class="count">({{ pagination.totalItems }} records, showing page {{ pagination.currentPage }} of {{ pagination.totalPages }})</span>
+          </h3>
+          
+          <!-- Search by Order ID -->
+          <div class="search-box">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M7 12C9.76142 12 12 9.76142 12 7C12 4.23858 9.76142 2 7 2C4.23858 2 2 4.23858 2 7C2 9.76142 4.23858 12 7 12Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M14 14L10.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <input 
+              type="text" 
+              class="search-input"
+              placeholder="Search by Order ID"
+              [(ngModel)]="searchOrderId"
+              (input)="onSearchChange()"
+            />
+            <button 
+              *ngIf="searchOrderId" 
+              class="clear-search"
+              (click)="clearSearch()"
+              title="Clear search"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+        
+        <div class="table-wrapper">
+          <table class="transactions-table">
+            <thead>
+              <tr>
+                <th (click)="sortBy('createdAt')" class="sortable">
+                  Date {{ getSortIcon('createdAt') }}
+                </th>
+                <th (click)="sortBy('orderId')" class="sortable">
+                  Order ID {{ getSortIcon('orderId') }}
+                </th>
+                <th>Payment Method</th>
+                <th (click)="sortBy('grossAmount')" class="sortable amount">
+                  Gross {{ getSortIcon('grossAmount') }}
+                </th>
+                <th (click)="sortBy('commissionAmount')" class="sortable amount">
+                  Commission {{ getSortIcon('commissionAmount') }}
+                </th>
+                <th (click)="sortBy('netPayoutAmount')" class="sortable amount">
+                  Net Payout {{ getSortIcon('netPayoutAmount') }}
+                </th>
+                <th>Payment Status</th>
+                <th>Settlement</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let payment of displayedPayments">
+                <td class="date">{{ formatDate(payment.createdAt) }}</td>
+                <td class="order-id">{{ payment.orderId }}</td>
+                <td class="method">
+                  <span class="method-badge">{{ payment.paymentMethod }}</span>
+                </td>
+                <td class="amount">{{ formatCurrency(payment.grossAmount) }}</td>
+                <td class="amount negative">{{ formatCurrency(payment.commissionAmount) }}</td>
+                <td class="amount strong">{{ formatCurrency(payment.netPayoutAmount) }}</td>
+                <td>
+                  <span class="status-badge" [ngClass]="getPaymentStatusClass(payment.paymentStatus)">
+                    {{ formatStatusLabel(payment.paymentStatus) }}
+                  </span>
+                </td>
+                <td>
+                  <span class="status-badge" [ngClass]="getSettlementStatusClass(payment.settlementStatus)">
+                    {{ formatStatusLabel(payment.settlementStatus) }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="displayedPayments.length === 0 && !isLoading">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2"/>
+              <path d="M18 24H30M24 18V30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p>No transactions found for the selected filters</p>
+          </div>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div class="pagination-controls" *ngIf="pagination.totalPages > 1">
+          <div class="pagination-info">
+            Showing {{ (pagination.currentPage - 1) * pagination.pageSize + 1 }} 
+            to {{ Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems) }} 
+            of {{ pagination.totalItems }} transactions
+          </div>
+          
+          <div class="pagination-buttons">
+            <button 
+              class="page-btn"
+              (click)="previousPage()"
+              [disabled]="pagination.currentPage === 1"
+              aria-label="Previous page"
+            >
+              ‹
+            </button>
+
+            <ng-container *ngFor="let page of getPageNumbers()">
+              <button 
+                *ngIf="page > 0"
+                class="page-btn"
+                [class.active]="page === pagination.currentPage"
+                (click)="goToPage(page)"
+              >
+                {{ page }}
+              </button>
+              <span *ngIf="page === -1" class="page-ellipsis">...</span>
+            </ng-container>
+
+            <button 
+              class="page-btn"
+              (click)="nextPage()"
+              [disabled]="pagination.currentPage === pagination.totalPages"
+              aria-label="Next page"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>

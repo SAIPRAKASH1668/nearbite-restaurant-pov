@@ -16,7 +16,7 @@
     >
       <i class="fas fa-bell"></i>
       New Orders
-      <span class="badge" *ngIf="newOrders.length > 0">{{ newOrders.length }}</span>
+      <span class="badge" *ngIf="getTabCount('new') > 0">{{ getTabCount('new') }}</span>
     </button>
     <button
       class="tab"
@@ -25,7 +25,7 @@
     >
       <i class="fas fa-fire"></i>
       Preparing
-      <span class="badge" *ngIf="preparingOrders.length > 0">{{ preparingOrders.length }}</span>
+      <span class="badge" *ngIf="getTabCount('preparing') > 0">{{ getTabCount('preparing') }}</span>
     </button>
     <button
       class="tab"
@@ -34,7 +34,7 @@
     >
       <i class="fas fa-box"></i>
       Ready
-      <span class="badge" *ngIf="readyOrders.length > 0">{{ readyOrders.length }}</span>
+      <span class="badge" *ngIf="getTabCount('ready') > 0">{{ getTabCount('ready') }}</span>
     </button>
     <button
       class="tab"
@@ -54,50 +54,36 @@
     </button>
   </div>
 
-  <!-- Ready Tab Filter -->
-  <div class="ready-filters" *ngIf="activeTab === 'ready'">
-    <button
-      class="filter-btn"
-      [class.active]="readyFilter === 'all'"
-      (click)="setReadyFilter('all')"
-    >
-      <i class="fas fa-layer-group"></i>
-      All Orders
-    </button>
-    <button
-      class="filter-btn"
-      [class.active]="readyFilter === 'awaiting'"
-      (click)="setReadyFilter('awaiting')"
-    >
-      <i class="fas fa-clock"></i>
-      Awaiting Pickup
-    </button>
-    <button
-      class="filter-btn"
-      [class.active]="readyFilter === 'picked-up'"
-      (click)="setReadyFilter('picked-up')"
-    >
-      <i class="fas fa-motorcycle"></i>
-      Picked Up
-    </button>
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Loading orders...</p>
   </div>
 
   <!-- Orders Grid -->
   <div class="orders-grid">
     <div class="order-card" *ngFor="let order of getOrders()">
       <div class="order-header">
-        <div>
-          <h3 class="order-number">{{ order.orderNumber }}</h3>
+        <div class="order-id-section">
+          <div class="order-number-wrapper">
+            <h3 class="order-number" [title]="order.orderId">{{ order.orderId }}</h3>
+            <button class="btn-copy" (click)="copyOrderId(order.orderId)" title="Copy Order ID">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
           <p class="customer-name">
-            <i class="fas fa-user"></i>
-            {{ order.customerName }}
+            <i class="fas fa-phone"></i>
+            {{ order.customerPhone }}
           </p>
         </div>
         <div class="header-actions">
           <div class="order-time">
             <i class="fas fa-clock"></i>
-            {{ order.time }}
+            {{ getRelativeTime(order.createdAt) }}
           </div>
+          <span class="status-badge" [attr.data-status]="order.status">
+            {{ getStatusLabel(order.status) }}
+          </span>
           <button class="btn-expand" (click)="expandOrder(order)" title="View Details">
             <i class="fas fa-expand-alt"></i>
           </button>
@@ -107,61 +93,79 @@
       <div class="order-items">
         <div class="item" *ngFor="let item of order.items">
           <span class="item-name">{{ item.name }}</span>
-          <span class="item-qty">x{{ item.quantity }}</span>
+          <span class="item-qty">x{{ item.quantity }} @ ₹{{ item.price }}</span>
         </div>
       </div>
 
-      <!-- Delivery Partner Info (Ready Tab Only) -->
-      <div class="delivery-info" *ngIf="activeTab === 'ready'">
-        <div class="delivery-partner" *ngIf="order.deliveryPartner">
+      <!-- Delivery Address -->
+      <div class="delivery-info">
+        <div class="delivery-address">
+          <i class="fas fa-map-marker-alt"></i>
+          <span>{{ order.deliveryAddress }}</span>
+        </div>
+        <div class="delivery-partner" *ngIf="order.riderId">
           <i class="fas fa-motorcycle"></i>
-          <span>{{ order.deliveryPartner }}</span>
+          <span>Rider ID: {{ order.riderId }}</span>
         </div>
-        <div class="delivery-partner awaiting" *ngIf="!order.deliveryPartner">
-          <i class="fas fa-hourglass-half"></i>
-          <span>Awaiting delivery partner assignment</span>
-        </div>
-        <span class="pickup-status" [class.picked-up]="order.isPickedUp">
-          <i class="fas" [class.fa-check-circle]="order.isPickedUp" [class.fa-clock]="!order.isPickedUp"></i>
-          {{ order.isPickedUp ? 'Picked Up - Out for Delivery' : 'Ready - Awaiting Pickup' }}
-        </span>
       </div>
 
       <div class="order-footer">
         <div class="order-amount">
-          <span class="amount-label">Total</span>
-          <span class="amount-value">₹{{ order.amount }}</span>
+          <div class="amount-breakdown">
+            <span>Food: ₹{{ order.foodTotal }}</span>
+            <span>Delivery: ₹{{ order.deliveryFee }}</span>
+          </div>
+          <div class="grand-total">
+            <span class="amount-label">Grand Total</span>
+            <span class="amount-value">₹{{ order.grandTotal }}</span>
+          </div>
         </div>
 
         <div class="order-actions">
           <button
-            *ngIf="activeTab === 'new'"
+            *ngIf="order.status === OrderStatus.PENDING"
             class="btn btn-accept"
-            (click)="acceptOrder(order.id)"
+            (click)="acceptOrder(order)"
           >
             <i class="fas fa-check"></i>
             Accept
           </button>
           <button
-            *ngIf="activeTab === 'new'"
+            *ngIf="order.status === OrderStatus.PENDING"
             class="btn btn-reject"
-            (click)="rejectOrder(order.id)"
+            (click)="rejectOrder(order)"
           >
             <i class="fas fa-times"></i>
             Reject
           </button>
           <button
-            *ngIf="activeTab === 'preparing'"
+            *ngIf="order.status === OrderStatus.CONFIRMED"
+            class="btn btn-preparing"
+            (click)="markPreparing(order)"
+          >
+            <i class="fas fa-fire"></i>
+            Start Preparing
+          </button>
+          <button
+            *ngIf="order.status === OrderStatus.PREPARING"
             class="btn btn-ready"
-            (click)="markReady(order.id)"
+            (click)="markReady(order)"
           >
             <i class="fas fa-check-double"></i>
             Mark Ready
           </button>
           <button
-            *ngIf="activeTab === 'ready'"
+            *ngIf="order.status === OrderStatus.READY"
+            class="btn btn-out-delivery"
+            (click)="markOutForDelivery(order)"
+          >
+            <i class="fas fa-motorcycle"></i>
+            Out for Delivery
+          </button>
+          <button
+            *ngIf="order.status === OrderStatus.OUT_FOR_DELIVERY"
             class="btn btn-complete"
-            (click)="markReady(order.id)"
+            (click)="markDelivered(order)"
           >
             <i class="fas fa-check-circle"></i>
             Mark Delivered
@@ -186,19 +190,19 @@
       
       <div class="modal-header">
         <div>
-          <h2 class="modal-order-number">{{ expandedOrder.orderNumber }}</h2>
+          <h2 class="modal-order-number">{{ expandedOrder.orderId }}</h2>
           <p class="modal-customer">
-            <i class="fas fa-user"></i>
-            {{ expandedOrder.customerName }}
+            <i class="fas fa-phone"></i>
+            {{ expandedOrder.customerPhone }}
           </p>
         </div>
         <div class="modal-header-right">
-          <span class="modal-status" [class]="'status-' + expandedOrder.status.toLowerCase()">
+          <span class="modal-status" [style.background-color]="getStatusColor(expandedOrder.status)">
             {{ getStatusLabel(expandedOrder.status) }}
           </span>
           <div class="modal-time">
             <i class="fas fa-clock"></i>
-            {{ expandedOrder.time }}
+            {{ getRelativeTime(expandedOrder.createdAt) }}
           </div>
         </div>
       </div>
@@ -214,62 +218,93 @@
               <span class="item-icon">🍽️</span>
               <span class="item-name">{{ item.name }}</span>
             </div>
-            <span class="item-qty">x{{ item.quantity }}</span>
+            <div class="item-price-qty">
+              <span class="item-qty">x{{ item.quantity }}</span>
+              <span class="item-price">₹{{ item.price * item.quantity }}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="modal-delivery" *ngIf="activeTab === 'ready' && expandedOrder.deliveryPartner">
+      <div class="modal-delivery">
         <h3 class="section-title">
-          <i class="fas fa-motorcycle"></i>
+          <i class="fas fa-map-marker-alt"></i>
           Delivery Information
         </h3>
         <div class="delivery-details">
-          <div class="delivery-partner">
-            <i class="fas fa-user-circle"></i>
-            <span>{{ expandedOrder.deliveryPartner }}</span>
+          <div class="delivery-address">
+            <strong>{{ expandedOrder.deliveryAddress }}</strong>
+            <p>{{ expandedOrder.formattedAddress }}</p>
           </div>
-          <span class="pickup-status" [class.picked-up]="expandedOrder.isPickedUp">
-            <i class="fas" [class.fa-check-circle]="expandedOrder.isPickedUp" [class.fa-clock]="!expandedOrder.isPickedUp"></i>
-            {{ expandedOrder.isPickedUp ? 'Picked Up - Out for Delivery' : 'Ready - Awaiting Pickup' }}
-          </span>
+          <div class="delivery-partner" *ngIf="expandedOrder.riderId">
+            <i class="fas fa-motorcycle"></i>
+            <span>Rider ID: {{ expandedOrder.riderId }}</span>
+          </div>
         </div>
       </div>
 
       <div class="modal-footer">
         <div class="modal-total">
-          <span class="total-label">Total Amount</span>
-          <span class="total-value">₹{{ expandedOrder.amount }}</span>
+          <div class="total-breakdown">
+            <div class="total-line">
+              <span>Food Total:</span>
+              <span>₹{{ expandedOrder.foodTotal }}</span>
+            </div>
+            <div class="total-line">
+              <span>Delivery Fee:</span>
+              <span>₹{{ expandedOrder.deliveryFee }}</span>
+            </div>
+            <div class="total-line grand">
+              <span class="total-label">Grand Total:</span>
+              <span class="total-value">₹{{ expandedOrder.grandTotal }}</span>
+            </div>
+          </div>
         </div>
         <div class="modal-actions">
           <button
-            *ngIf="activeTab === 'new'"
+            *ngIf="expandedOrder.status === OrderStatus.PENDING"
             class="btn btn-accept"
-            (click)="acceptOrder(expandedOrder.id); closeExpandedOrder()"
+            (click)="acceptOrder(expandedOrder); closeExpandedOrder()"
           >
             <i class="fas fa-check"></i>
             Accept Order
           </button>
           <button
-            *ngIf="activeTab === 'new'"
+            *ngIf="expandedOrder.status === OrderStatus.PENDING"
             class="btn btn-reject"
-            (click)="rejectOrder(expandedOrder.id); closeExpandedOrder()"
+            (click)="rejectOrder(expandedOrder); closeExpandedOrder()"
           >
             <i class="fas fa-times"></i>
             Reject Order
           </button>
           <button
-            *ngIf="activeTab === 'preparing'"
+            *ngIf="expandedOrder.status === OrderStatus.CONFIRMED"
+            class="btn btn-preparing"
+            (click)="markPreparing(expandedOrder); closeExpandedOrder()"
+          >
+            <i class="fas fa-fire"></i>
+            Start Preparing
+          </button>
+          <button
+            *ngIf="expandedOrder.status === OrderStatus.PREPARING"
             class="btn btn-ready"
-            (click)="markReady(expandedOrder.id); closeExpandedOrder()"
+            (click)="markReady(expandedOrder); closeExpandedOrder()"
           >
             <i class="fas fa-check-double"></i>
             Mark Ready
           </button>
           <button
-            *ngIf="activeTab === 'ready'"
+            *ngIf="expandedOrder.status === OrderStatus.READY"
+            class="btn btn-out-delivery"
+            (click)="markOutForDelivery(expandedOrder); closeExpandedOrder()"
+          >
+            <i class="fas fa-motorcycle"></i>
+            Out for Delivery
+          </button>
+          <button
+            *ngIf="expandedOrder.status === OrderStatus.OUT_FOR_DELIVERY"
             class="btn btn-complete"
-            (click)="markReady(expandedOrder.id); closeExpandedOrder()"
+            (click)="markDelivered(expandedOrder); closeExpandedOrder()"
           >
             <i class="fas fa-check-circle"></i>
             Mark Delivered

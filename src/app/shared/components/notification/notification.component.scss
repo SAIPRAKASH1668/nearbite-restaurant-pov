@@ -1,0 +1,218 @@
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+.notification-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  max-width: 400px;
+  pointer-events: none;
+
+  @include mobile {
+    bottom: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+  }
+}
+
+.notification {
+  @include card;
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  pointer-events: all;
+  min-width: 350px;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  @include mobile {
+    min-width: unset;
+  }
+
+  // Type-specific styles with premium gradients
+  &.success {
+    background: linear-gradient(135deg, 
+      rgba($status-success, 0.15) 0%, 
+      rgba($status-success, 0.05) 100%
+    );
+    border-left: 4px solid $status-success;
+    
+    .notification-icon {
+      background: linear-gradient(135deg, $status-success, lighten($status-success, 10%));
+      box-shadow: 0 4px 12px rgba($status-success, 0.4);
+    }
+    
+    .notification-progress {
+      background: linear-gradient(90deg, 
+        $status-success, 
+        lighten($status-success, 15%)
+      );
+    }
+  }
+
+  &.error {
+    background: linear-gradient(135deg, 
+      rgba($status-error, 0.15) 0%, 
+      rgba($status-error, 0.05) 100%
+    );
+    border-left: 4px solid $status-error;
+    
+    .notification-icon {
+      background: linear-gradient(135deg, $status-error, lighten($status-error, 10%));
+      box-shadow: 0 4px 12px rgba($status-error, 0.4);
+    }
+    
+    .notification-progress {
+      background: linear-gradient(90deg, 
+        $status-error, 
+        lighten($status-error, 15%)
+      );
+    }
+  }
+
+  &.warning {
+    background: linear-gradient(135deg, 
+      rgba($status-warning, 0.15) 0%, 
+      rgba($status-warning, 0.05) 100%
+    );
+    border-left: 4px solid $status-warning;
+    
+    .notification-icon {
+      background: linear-gradient(135deg, $status-warning, lighten($status-warning, 10%));
+      box-shadow: 0 4px 12px rgba($status-warning, 0.4);
+    }
+    
+    .notification-progress {
+      background: linear-gradient(90deg, 
+        $status-warning, 
+        lighten($status-warning, 15%)
+      );
+    }
+  }
+
+  &.info {
+    background: linear-gradient(135deg, 
+      rgba($status-info, 0.15) 0%, 
+      rgba($status-info, 0.05) 100%
+    );
+    border-left: 4px solid $status-info;
+    
+    .notification-icon {
+      background: linear-gradient(135deg, $status-info, lighten($status-info, 10%));
+      box-shadow: 0 4px 12px rgba($status-info, 0.4);
+    }
+    
+    .notification-progress {
+      background: linear-gradient(90deg, 
+        $status-info, 
+        lighten($status-info, 15%)
+      );
+    }
+  }
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-lg;
+  position: relative;
+}
+
+.notification-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-lg;
+  @include flex-center;
+  flex-shrink: 0;
+  color: $text-primary;
+  font-size: $font-size-lg;
+  
+  i {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  }
+}
+
+.notification-message {
+  flex: 1;
+  @include text-body;
+  font-size: $font-size-sm;
+  line-height: 1.5;
+  color: $text-primary;
+  font-weight: $font-weight-medium;
+  padding-right: $spacing-sm;
+}
+
+.notification-close {
+  background: transparent;
+  border: none;
+  color: $text-muted;
+  cursor: pointer;
+  padding: $spacing-xs;
+  width: 28px;
+  height: 28px;
+  border-radius: $radius-md;
+  @include flex-center;
+  transition: all $transition-fast;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: $text-primary;
+    transform: rotate(90deg);
+  }
+
+  &:active {
+    transform: rotate(90deg) scale(0.9);
+  }
+
+  i {
+    font-size: $font-size-sm;
+  }
+}
+
+.notification-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: left;
+  animation: shrink linear forwards;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+// Premium hover effect
+.notification {
+  transition: all $transition-base;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+      0 12px 40px rgba(0, 0, 0, 0.5),
+      0 4px 12px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    
+    .notification-progress {
+      animation-play-state: paused;
+    }
+  }
+}

@@ -1,15 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService, DashboardStats, RecentOrder } from './dashboard.service';
+import { FinancialDashboardModalComponent } from '../payments/financial-dashboard-modal.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FinancialDashboardModalComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
+  
+  @ViewChild(FinancialDashboardModalComponent) financialModal!: FinancialDashboardModalComponent;
+  
   stats: DashboardStats | null = null;
   recentOrders: RecentOrder[] = [];
   isLoading = true;
@@ -43,5 +47,9 @@ export class DashboardComponent implements OnInit {
 
   getStatusLabel(status: string): string {
     return status.charAt(0).toUpperCase() + status.slice(1);
+  }
+
+  openFinancialDashboard(): void {
+    this.financialModal.open();
   }
 }

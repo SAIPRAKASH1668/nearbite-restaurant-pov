@@ -27,6 +27,38 @@
     color: $text-muted;
   }
 
+  .header-actions {
+    display: flex;
+    gap: $spacing-md;
+    align-items: center;
+
+    @include mobile {
+      width: 100%;
+      flex-direction: column;
+    }
+  }
+
+  .financial-btn {
+    @include button-primary;
+    padding: $spacing-md $spacing-lg;
+    background: $primary-gradient;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    font-weight: 600;
+    transition: all $transition-base;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-lg;
+    }
+
+    i {
+      font-size: $font-size-base;
+    }
+  }
+
   .refresh-btn {
     @include button-secondary;
     padding: $spacing-md $spacing-lg;

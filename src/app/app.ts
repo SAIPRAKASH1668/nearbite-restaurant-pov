@@ -1,12 +1,13 @@
 import { Component, signal, OnInit, ApplicationRef, NgZone } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { OrderNotificationModalComponent } from './shared/components/order-notification-modal/order-notification-modal.component';
+import { NotificationComponent } from './shared/components/notification/notification.component';
 import { WebSocketService } from './core/services/websocket.service';
 import { OrderNotificationService, IncomingOrder } from './core/services/order-notification.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, OrderNotificationModalComponent],
+  imports: [RouterOutlet, OrderNotificationModalComponent, NotificationComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

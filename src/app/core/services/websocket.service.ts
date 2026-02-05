@@ -13,6 +13,7 @@ import { Subject, Observable } from 'rxjs';
 export class WebSocketService {
   private stompClient: Client | null = null;
   private orderSubject = new Subject<any>();
+  public messages$ = this.orderSubject.asObservable(); // Public observable for messages
   private connected = false;
 
   constructor(private ngZone: NgZone) {}
