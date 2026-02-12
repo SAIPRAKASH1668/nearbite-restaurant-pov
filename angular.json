@@ -62,10 +62,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "nearbite-restaurant-dashboard:build:production"
+              "buildTarget": "yumdude-restaurant:build:production"
             },
             "development": {
-              "buildTarget": "restaurant-dashboard:build:development",
+              "buildTarget": "yumdude-restaurant:build:development",
               "proxyConfig": "proxy.conf.json"
             }
           },

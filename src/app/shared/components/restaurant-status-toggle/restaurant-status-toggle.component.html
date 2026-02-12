@@ -1,0 +1,61 @@
+<!-- Restaurant Status Toggle Component -->
+<div class="status-toggle-container">
+  <!-- Toggle Switch -->
+  <div 
+    class="toggle-wrapper"
+    (click)="onToggleClick()"
+    role="switch"
+    [attr.aria-checked]="isOpen"
+    [attr.aria-label]="isOpen ? 'Restaurant is online' : 'Restaurant is offline'"
+    tabindex="0"
+  >
+    <!-- Status Label -->
+    <span class="status-label" [class.online]="isOpen" [class.offline]="!isOpen">
+      {{ isOpen ? 'Online' : 'Offline' }}
+    </span>
+    
+    <!-- Toggle Switch -->
+    <div class="toggle-switch" [class.checked]="isOpen">
+      <div class="toggle-slider"></div>
+    </div>
+  </div>
+  
+  <!-- Confirmation Modal Overlay -->
+  <div 
+    class="modal-overlay" 
+    *ngIf="showConfirmationModal" 
+    (click)="cancelGoOffline()"
+  >
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="header-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3>Go Offline?</h3>
+      </div>
+      
+      <!-- Modal Body -->
+      <div class="modal-body">
+        <p>Are you sure you want to go offline?</p>
+        <p class="warning-text">You will stop receiving new orders until you come back online.</p>
+      </div>
+      
+      <!-- Modal Actions -->
+      <div class="modal-actions">
+        <button 
+          class="btn btn-secondary" 
+          (click)="cancelGoOffline()"
+        >
+          Cancel
+        </button>
+        <button 
+          class="btn btn-danger" 
+          (click)="confirmGoOffline()"
+        >
+          Go Offline
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

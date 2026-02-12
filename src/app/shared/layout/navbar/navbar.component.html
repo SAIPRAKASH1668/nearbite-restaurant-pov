@@ -10,6 +10,12 @@
 
     <!-- Right Section -->
     <div class="navbar-actions">
+      <!-- Restaurant Status Toggle -->
+      <app-restaurant-status-toggle
+        [isOpen]="isRestaurantOpen"
+        (isOpenChange)="onRestaurantStatusChange($event)">
+      </app-restaurant-status-toggle>
+
       <!-- Notifications -->
       <button class="action-btn notification-btn" (click)="toggleNotifications()">
         <i class="fas fa-bell"></i>

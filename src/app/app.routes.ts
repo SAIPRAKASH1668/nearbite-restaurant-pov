@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { loginGuard } from './core/guards/login.guard';
 import { LoginComponent } from './features/login/login.component';
+import { LandingComponent } from './features/landing/landing.component';
 import { AppLayoutComponent } from './shared/layout/app-layout/app-layout.component';
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { OrdersComponent } from './features/orders/orders.component';
@@ -14,22 +15,22 @@ import { SupportComponent } from './features/support/support.component';
 
 export const routes: Routes = [
   {
+    path: '',
+    component: LandingComponent,
+    canActivate: [loginGuard]
+  },
+  {
     path: 'login',
     component: LoginComponent,
     canActivate: [loginGuard]
   },
   {
-    path: '',
+    path: 'dashboard',
     component: AppLayoutComponent,
     canActivate: [authGuard],
     children: [
       {
         path: '',
-        redirectTo: 'dashboard',
-        pathMatch: 'full'
-      },
-      {
-        path: 'dashboard',
         component: DashboardComponent
       },
       {
@@ -64,6 +65,6 @@ export const routes: Routes = [
   },
   {
     path: '**',
-    redirectTo: 'dashboard'
+    redirectTo: ''
   }
 ];

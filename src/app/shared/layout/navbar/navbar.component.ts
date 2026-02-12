@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { AuthService, User } from '../../../core/auth/auth.service';
+import { RestaurantContextService } from '../../../core/services/restaurant-context.service';
+import { RestaurantStatusToggleComponent } from '../../components/restaurant-status-toggle/restaurant-status-toggle.component';
 
 interface Notification {
   id: string;
@@ -14,14 +17,16 @@ interface Notification {
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RestaurantStatusToggleComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss'
 })
 export class NavbarComponent implements OnInit {
+  private readonly API_BASE_URL = 'api/v1';
   currentUser: User | null = null;
   showUserMenu = false;
   showNotifications = false;
+  isRestaurantOpen: boolean = true;
   notifications: Notification[] = [
     {
       id: '1',
@@ -65,7 +70,11 @@ export class NavbarComponent implements OnInit {
     }
   ];
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private http: HttpClient,
+    private restaurantContext: RestaurantContextService
+  ) {}
 
   ngOnInit(): void {
     this.authService.currentUser.subscribe(user => {
@@ -101,5 +110,23 @@ export class NavbarComponent implements OnInit {
   logout(): void {
     this.showUserMenu = false;
     this.authService.logout();
+  }
+
+  onRestaurantStatusChange(status: boolean): void {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    
+    this.http.put(`${this.API_BASE_URL}/restaurants/${restaurantId}`, {
+      isOpen: status
+    }).subscribe({
+      next: () => {
+        this.isRestaurantOpen = status;
+        console.log(`✅ Restaurant is now ${status ? 'Online' : 'Offline'}`);
+      },
+      error: (error) => {
+        console.error('Failed to update restaurant status:', error);
+        // Revert the toggle on error
+        this.isRestaurantOpen = !status;
+      }
+    });
   }
 }

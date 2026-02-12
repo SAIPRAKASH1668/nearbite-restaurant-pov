@@ -1,0 +1,287 @@
+// ====================================
+// Restaurant Status Toggle Component
+// Styled to match the existing dark theme
+// ====================================
+
+@use '../../../../styles/variables' as *;
+@use '../../../../styles/mixins' as *;
+
+// Container
+.status-toggle-container {
+  display: inline-block;
+}
+
+// Toggle Wrapper - Main Container
+.toggle-wrapper {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  background: $bg-card;
+  border-radius: $radius-lg;
+  border: 2px solid $border-primary;
+  cursor: pointer;
+  transition: all $transition-base;
+  user-select: none;
+  
+  &:hover {
+    border-color: $border-secondary;
+    background: $bg-card-hover;
+    transform: translateY(-2px);
+    box-shadow: $shadow-sm;
+  }
+  
+  &:focus {
+    outline: 2px solid $border-focus;
+    outline-offset: 2px;
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Status Label
+.status-label {
+  font-family: $font-family;
+  font-size: $font-size-base;
+  font-weight: $font-weight-semibold;
+  transition: color $transition-base;
+  min-width: 60px;
+  
+  &.online {
+    color: $status-success;
+  }
+  
+  &.offline {
+    color: $text-muted;
+  }
+}
+
+// Toggle Switch - Material Design Switch
+
+// Toggle Switch
+.toggle-switch {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  background: rgba($status-error, 0.15);
+  border-radius: $radius-full;
+  border: 2px solid rgba($status-error, 0.3);
+  transition: all $transition-base;
+  
+  // Slider
+  .toggle-slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: rgba($status-error, 0.6);
+    border-radius: $radius-full;
+    transition: all $transition-base;
+    box-shadow: $shadow-sm;
+  }
+  
+  // Checked State (Online)
+  &.checked {
+    background: rgba($status-success, 0.2);
+    border-color: $status-success;
+    
+    .toggle-slider {
+      left: calc(100% - 24px);
+      background: $status-success;
+      box-shadow: $shadow-md;
+    }
+  }
+}
+
+// Modal Overlay
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-modal;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+// Modal Card
+.modal-card {
+  background: $bg-card;
+  border-radius: $radius-xl;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: $shadow-xl;
+  border: 1px solid $border-secondary;
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from { 
+    transform: translateY(20px) scale(0.95); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0) scale(1); 
+    opacity: 1; 
+  }
+}
+
+// Modal Header
+.modal-header {
+  padding: $spacing-lg;
+  border-bottom: 1px solid $border-primary;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  background: $bg-secondary;
+  
+  .header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: $radius-full;
+    background: rgba($status-warning, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    i {
+      font-size: $font-size-xl;
+      color: $status-warning;
+    }
+  }
+  
+  h3 {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+  }
+}
+
+// Modal Body
+.modal-body {
+  padding: $spacing-xl;
+  
+  p {
+    margin: 0 0 $spacing-md 0;
+    font-size: $font-size-base;
+    color: $text-secondary;
+    line-height: 1.6;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  .warning-text {
+    color: $text-muted;
+    font-size: $font-size-sm;
+  }
+}
+
+// Modal Actions
+.modal-actions {
+  padding: $spacing-lg;
+  border-top: 1px solid $border-primary;
+  display: flex;
+  justify-content: flex-end;
+  gap: $spacing-md;
+  background: $bg-secondary;
+}
+
+// Button Styles
+.btn {
+  padding: $spacing-sm $spacing-xl;
+  border-radius: $radius-md;
+  font-family: $font-family;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $transition-base;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-sm;
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.btn-secondary {
+  background: transparent;
+  color: $text-primary;
+  border: 2px solid $border-secondary;
+  
+  &:hover {
+    border-color: $text-muted;
+    background: rgba($text-muted, 0.1);
+  }
+}
+
+.btn-danger {
+  background: $status-error;
+  color: $text-primary;
+  box-shadow: $shadow-sm;
+  
+  &:hover {
+    background: darken($status-error, 5%);
+    box-shadow: $shadow-md;
+  }
+}
+
+// Responsive Design
+@media (max-width: $breakpoint-mobile) {
+  .modal-card {
+    max-width: 95%;
+  }
+  
+  .toggle-wrapper {
+    gap: $spacing-sm;
+    padding: $spacing-xs $spacing-sm;
+  }
+  
+  .status-label {
+    font-size: $font-size-sm;
+    min-width: 50px;
+  }
+  
+  .toggle-switch {
+    width: 46px;
+    height: 24px;
+    
+    .toggle-slider {
+      width: 18px;
+      height: 18px;
+    }
+    
+    &.checked .toggle-slider {
+      left: calc(100% - 22px);
+    }
+  }
+  
+  .modal-actions {
+    flex-direction: column-reverse;
+    
+    .btn {
+      width: 100%;
+    }
+  }
+}

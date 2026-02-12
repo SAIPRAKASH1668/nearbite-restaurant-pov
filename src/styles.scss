@@ -17,6 +17,15 @@ body {
   height: 100%;
   width: 100%;
   overflow-x: hidden;
+  scroll-behavior: smooth;
+  
+  // Hide scrollbar for all browsers
+  -ms-overflow-style: none;  // IE and Edge
+  scrollbar-width: none;  // Firefox
+  
+  &::-webkit-scrollbar {
+    display: none;  // Chrome, Safari, Opera
+  }
 }
 
 body {
@@ -76,25 +85,25 @@ select {
   }
 }
 
-// Custom Scrollbar - Applied Globally
-body {
-  @include custom-scrollbar;
-}
+// Custom Scrollbar - Disabled globally (scrollbars hidden)
+// body {
+//   @include custom-scrollbar;
+// }
 
-// Apply custom scrollbar to all scrollable elements
-* {
-  @include custom-scrollbar;
-}
+// Apply custom scrollbar to all scrollable elements - Disabled (scrollbars hidden)
+// * {
+//   @include custom-scrollbar;
+// }
 
-// Special handling for specific container types
-.overflow-auto,
-.overflow-y-auto,
-.overflow-x-auto,
-[style*="overflow"],
-textarea,
-.scrollable {
-  @include custom-scrollbar;
-}
+// Special handling for specific container types - Disabled (scrollbars hidden)
+// .overflow-auto,
+// .overflow-y-auto,
+// .overflow-x-auto,
+// [style*="overflow"],
+// textarea,
+// .scrollable {
+//   @include custom-scrollbar;
+// }
 
 // Utility Classes
 .text-center {

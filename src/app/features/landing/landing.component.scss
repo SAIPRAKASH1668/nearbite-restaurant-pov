@@ -1,0 +1,1527 @@
+@use '../../../styles/variables' as *;
+@use '../../../styles/mixins' as *;
+
+// ====================================
+// Premium Landing Page Styles
+// ====================================
+
+// Section Divider
+.section-divider {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    $primary-light 20%,
+    $primary-light 80%,
+    transparent 100%
+  );
+  margin: $spacing-2xl auto;
+  max-width: 1200px;
+  position: relative;
+  opacity: 0.3;
+  box-shadow: 0 0 8px rgba($primary-light, 0.3);
+}
+
+// Animation keyframes
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Scroll reveal animation
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+
+  &.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// ====================================
+// Sticky Navbar
+// ====================================
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: $navbar-height;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  z-index: $z-sticky;
+  transition: all $transition-base;
+
+  &.scrolled {
+    background: rgba($bg-card, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom-color: $border-primary;
+    box-shadow: $shadow-md;
+  }
+
+  .navbar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    height: 100%;
+    padding: 0 $spacing-xl;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    cursor: pointer;
+    transition: transform $transition-fast;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+
+    .brand-icon {
+      font-size: $font-size-2xl;
+      color: $primary-light;
+    }
+
+    .brand-name {
+      font-size: $font-size-xl;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      letter-spacing: -0.5px;
+    }
+  }
+
+  .navbar-nav {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    list-style: none;
+    margin: 0;
+
+    @include tablet {
+      display: none;
+    }
+
+    .nav-item {
+      position: relative;
+
+      .nav-link {
+        padding: $spacing-sm $spacing-md;
+        font-size: $font-size-xs;
+        font-weight: $font-weight-medium;
+        color: $text-secondary;
+        cursor: pointer;
+        transition: color $transition-fast;
+        text-decoration: none;
+        white-space: nowrap;
+
+        &:hover {
+          color: $text-primary;
+        }
+      }
+
+      &.active {
+        .nav-link {
+          color: $primary-light;
+        }
+
+        &::after {
+          content: '';
+          position: absolute;
+          bottom: -2px;
+          left: $spacing-md;
+          right: $spacing-md;
+          height: 2px;
+          background: $primary-light;
+          border-radius: $radius-full;
+        }
+      }
+    }
+  }
+
+  .navbar-cta {
+    padding: $spacing-sm $spacing-lg;
+    background: $primary-gradient;
+    color: $text-primary;
+    border: none;
+    border-radius: $radius-md;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+    transition: all $transition-fast;
+    box-shadow: $shadow-md;
+
+    i {
+      font-size: $font-size-sm;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-lg;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+// ====================================
+// Hero Section
+// ====================================
+
+.hero-section {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $navbar-height $spacing-xl $spacing-3xl;
+  overflow: hidden;
+
+  .hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+
+    .screenshot-collage {
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(135deg, rgba($primary-dark, 0.85) 0%, rgba($bg-primary, 0.75) 100%),
+        url('/images/landing.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-blend-mode: multiply, normal;
+      
+      .collage-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+          radial-gradient(circle at 30% 50%, rgba($primary-light, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 70% 70%, rgba($primary-dark, 0.2) 0%, transparent 40%);
+        mix-blend-mode: overlay;
+      }
+    }
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+    margin-top: 200px;
+
+    .hero-title {
+      font-size: $font-size-4xl;
+      font-weight: $font-weight-bold;
+      color: $text-primary;
+      margin-bottom: $spacing-lg;
+      line-height: 1.2;
+      letter-spacing: -1px;
+
+      @include tablet {
+        font-size: $font-size-3xl;
+      }
+
+      @include mobile {
+        font-size: $font-size-2xl;
+      }
+    }
+
+    .hero-subtitle {
+      font-size: $font-size-lg;
+      color: $text-secondary;
+      margin-bottom: $spacing-3xl;
+      line-height: 1.6;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+
+      @include tablet {
+        font-size: $font-size-base;
+      }
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: $spacing-lg;
+      justify-content: center;
+      flex-wrap: wrap;
+
+      button {
+        padding: $spacing-md $spacing-2xl;
+        font-size: $font-size-base;
+        font-weight: $font-weight-medium;
+        border-radius: $radius-md;
+        cursor: pointer;
+        transition: all $transition-fast;
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        border: none;
+
+        i {
+          font-size: $font-size-base;
+        }
+
+        &.btn-primary {
+          background: $primary-gradient;
+          color: $text-primary;
+          box-shadow: $shadow-lg;
+
+          &:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba($primary-light, 0.3);
+          }
+        }
+
+        &.btn-secondary {
+          background: rgba($bg-card, 0.6);
+          color: $text-primary;
+          border: 1px solid $border-primary;
+          backdrop-filter: blur(10px);
+
+          &:hover {
+            background: $bg-card;
+            border-color: $primary-light;
+            transform: translateY(-2px);
+          }
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+  }
+}
+
+// ====================================
+// Features Section
+// ====================================
+
+.features-section {
+  padding: $spacing-3xl $spacing-xl;
+  background: $bg-secondary;
+
+  .section-container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: $spacing-3xl;
+
+    .section-title {
+      font-size: $font-size-3xl;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      margin-bottom: $spacing-md;
+      letter-spacing: -0.5px;
+
+      @include tablet {
+        font-size: $font-size-2xl;
+      }
+    }
+
+    .section-subtitle {
+      font-size: $font-size-base;
+      color: $text-secondary;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: $spacing-xl;
+
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+
+    .feature-card {
+      background: $bg-card;
+      border: 1px solid $border-primary;
+      border-radius: $radius-lg;
+      padding: $spacing-2xl;
+      transition: all $transition-base;
+      cursor: default;
+
+      &:hover {
+        transform: translateY(-4px);
+        border-color: $primary-light;
+        box-shadow: $shadow-lg;
+      }
+
+      .feature-icon {
+        width: 56px;
+        height: 56px;
+        background: $primary-gradient;
+        border-radius: $radius-lg;
+        @include flex-center;
+        margin-bottom: $spacing-lg;
+        box-shadow: $shadow-md;
+
+        i {
+          font-size: $font-size-2xl;
+          color: $text-primary;
+        }
+      }
+
+      .feature-title {
+        font-size: $font-size-xl;
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+        margin-bottom: $spacing-md;
+      }
+
+      .feature-description {
+        font-size: $font-size-sm;
+        color: $text-secondary;
+        line-height: 1.6;
+      }
+    }
+  }
+}
+
+// ====================================
+// Screenshots Section
+// ====================================
+
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.screenshots-section {
+  padding: $spacing-3xl 0;
+  background: $bg-primary;
+  overflow: hidden;
+
+  .section-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 $spacing-xl;
+  }
+
+  .section-header {
+    margin-bottom: $spacing-3xl;
+    padding: 0;
+  }
+
+  .screenshots-scroll-container {
+    width: 100%;
+    overflow: hidden;
+    padding: $spacing-lg 0;
+    position: relative;
+
+    // Fade edges for premium effect
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    &::before {
+      left: 0;
+      background: linear-gradient(to right, $bg-primary 0%, transparent 100%);
+    }
+
+    &::after {
+      right: 0;
+      background: linear-gradient(to left, $bg-primary 0%, transparent 100%);
+    }
+  }
+
+  .screenshots-track {
+    display: flex;
+    gap: $spacing-xl;
+    animation: scrollLeft 30s linear infinite;
+    width: fit-content;
+
+    // Pause animation on hover
+    &:hover {
+      animation-play-state: paused;
+    }
+  }
+
+  .screenshot-item {
+    flex-shrink: 0;
+    width: 280px;
+    position: relative;
+    overflow: hidden;
+    border-radius: $radius-lg;
+    border: 1px solid $border-primary;
+    transition: all $transition-base;
+    cursor: pointer;
+
+    @include mobile {
+      width: 220px;
+    }
+
+    &:hover {
+      transform: scale(1.05) translateY(-8px);
+      border-color: $primary-light;
+      box-shadow: $shadow-xl;
+      z-index: 1;
+    }
+
+    .screenshot-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      aspect-ratio: 9 / 16;
+      display: block;
+      background: $bg-card;
+    }
+  }
+}
+
+// ====================================
+// About Section
+// ====================================
+
+.about-section {
+  padding: $spacing-3xl $spacing-xl;
+  background: $bg-primary;
+
+  .about-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: $spacing-xl;
+    margin-top: $spacing-2xl;
+
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+
+    .about-card {
+      background: $bg-card;
+      border: 1px solid $border-primary;
+      border-radius: $radius-lg;
+      padding: $spacing-2xl;
+      text-align: center;
+      transition: all $transition-base;
+
+      &:hover {
+        transform: translateY(-4px);
+        border-color: $primary-light;
+        box-shadow: $shadow-lg;
+      }
+
+      .about-icon {
+        width: 64px;
+        height: 64px;
+        background: $primary-gradient;
+        border-radius: $radius-lg;
+        @include flex-center;
+        margin: 0 auto $spacing-lg;
+        box-shadow: $shadow-md;
+
+        i {
+          font-size: $font-size-3xl;
+          color: $text-primary;
+        }
+      }
+
+      h3 {
+        font-size: $font-size-xl;
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+        margin-bottom: $spacing-md;
+      }
+
+      p {
+        font-size: $font-size-sm;
+        color: $text-secondary;
+        line-height: 1.6;
+      }
+    }
+  }
+
+  // Features Wrapper within About Section
+  .features-wrapper {
+    margin-top: $spacing-3xl;
+    padding-top: $spacing-3xl;
+    border-top: 1px solid $border-secondary;
+
+    .subsection-title {
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      margin-bottom: $spacing-md;
+      letter-spacing: -0.5px;
+
+      @include tablet {
+        font-size: $font-size-xl;
+      }
+    }
+
+    .feature-category {
+      margin-bottom: $spacing-3xl;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .category-title {
+        font-size: $font-size-xl;
+        font-weight: $font-weight-semibold;
+        color: $text-primary;
+        margin-bottom: $spacing-xl;
+        display: flex;
+        align-items: center;
+        gap: $spacing-md;
+
+        i {
+          color: $primary-light;
+          font-size: $font-size-xl;
+        }
+
+        @include tablet {
+          font-size: $font-size-lg;
+        }
+      }
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: $spacing-xl;
+
+      @include mobile {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-card {
+        background: $bg-card;
+        border: 1px solid $border-primary;
+        border-radius: $radius-lg;
+        padding: $spacing-xl;
+        transition: all $transition-base;
+
+        &:hover {
+          transform: translateY(-4px);
+          border-color: $primary-light;
+          box-shadow: $shadow-lg;
+        }
+
+        .feature-icon {
+          width: 48px;
+          height: 48px;
+          background: rgba($primary-light, 0.1);
+          border: 1px solid $border-secondary;
+          border-radius: $radius-md;
+          @include flex-center;
+          margin-bottom: $spacing-md;
+
+          i {
+            font-size: $font-size-xl;
+            color: $primary-light;
+          }
+        }
+
+        .feature-title {
+          font-size: $font-size-base;
+          font-weight: $font-weight-semibold;
+          color: $text-primary;
+          margin-bottom: $spacing-sm;
+        }
+
+        .feature-description {
+          font-size: $font-size-xs;
+          color: $text-secondary;
+          line-height: 1.6;
+        }
+      }
+    }
+  }
+}
+
+// ====================================
+// Features Section (Legacy - Hidden)
+// ====================================
+
+.features-section {
+  padding: $spacing-3xl $spacing-xl;
+  background: $bg-secondary;
+
+  .section-container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .feature-category {
+    margin-bottom: $spacing-3xl;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .category-title {
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      margin-bottom: $spacing-xl;
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+
+      i {
+        color: $primary-light;
+        font-size: $font-size-2xl;
+      }
+
+      @include tablet {
+        font-size: $font-size-xl;
+      }
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: $spacing-xl;
+
+      @include mobile {
+        grid-template-columns: 1fr;
+      }
+
+      .feature-card {
+        background: $bg-card;
+        border: 1px solid $border-primary;
+        border-radius: $radius-lg;
+        padding: $spacing-xl;
+        transition: all $transition-base;
+
+        &:hover {
+          transform: translateY(-4px);
+          border-color: $primary-light;
+          box-shadow: $shadow-lg;
+        }
+
+        .feature-icon {
+          width: 48px;
+          height: 48px;
+          background: $primary-gradient;
+          border-radius: $radius-md;
+          @include flex-center;
+          margin-bottom: $spacing-md;
+          box-shadow: $shadow-sm;
+
+          i {
+            font-size: $font-size-xl;
+            color: $text-primary;
+          }
+        }
+
+        .feature-title {
+          font-size: $font-size-lg;
+          font-weight: $font-weight-semibold;
+          color: $text-primary;
+          margin-bottom: $spacing-sm;
+        }
+
+        .feature-description {
+          font-size: $font-size-sm;
+          color: $text-secondary;
+          line-height: 1.6;
+        }
+      }
+    }
+  }
+}
+
+// ====================================
+// Register Restaurant Section
+// ====================================
+
+.register-section {
+  padding: $spacing-3xl $spacing-xl;
+  background: $bg-primary;
+
+  .steps-container {
+    display: flex;
+    gap: $spacing-lg;
+    margin: 0 auto $spacing-3xl;
+    justify-content: center;
+
+    @include tablet {
+      flex-direction: column;
+    }
+
+    .step-item {
+      position: relative;
+      flex: 1;
+      max-width: 250px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: $spacing-lg;
+
+      @include tablet {
+        flex-direction: row;
+        text-align: left;
+        gap: $spacing-lg;
+        align-items: flex-start;
+        max-width: none;
+      }
+
+      .step-number {
+        flex-shrink: 0;
+        width: 64px;
+        height: 64px;
+        background: $primary-gradient;
+        border-radius: $radius-lg;
+        @include flex-center;
+        font-size: $font-size-2xl;
+        font-weight: $font-weight-bold;
+        color: $text-primary;
+        box-shadow: $shadow-lg;
+        margin-bottom: $spacing-md;
+
+        @include tablet {
+          width: 56px;
+          height: 56px;
+          font-size: $font-size-xl;
+          margin-bottom: 0;
+        }
+      }
+
+      .step-content {
+        flex: 1;
+
+        .step-title {
+          font-size: $font-size-lg;
+          font-weight: $font-weight-semibold;
+          color: $text-primary;
+          margin-bottom: $spacing-sm;
+
+          @include tablet {
+            font-size: $font-size-xl;
+          }
+        }
+
+        .step-description {
+          font-size: $font-size-sm;
+          color: $text-secondary;
+          line-height: 1.6;
+
+          @include tablet {
+            font-size: $font-size-base;
+          }
+        }
+      }
+
+      .step-connector {
+        position: absolute;
+        top: 32px;
+        left: calc(100% - 8px);
+        width: $spacing-lg;
+        height: 2px;
+        background: linear-gradient(90deg, $primary-light 0%, transparent 100%);
+
+        @include tablet {
+          display: none;
+        }
+      }
+
+      &:last-child .step-connector {
+        display: none;
+      }
+    }
+  }
+
+  .benefits-grid {
+    text-align: center;
+
+    .benefits-title {
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      margin-bottom: $spacing-2xl;
+    }
+
+    .benefits-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: $spacing-lg;
+
+      @include mobile {
+        grid-template-columns: 1fr;
+      }
+
+      .benefit-card {
+        background: $bg-card;
+        border: 1px solid $border-primary;
+        border-radius: $radius-lg;
+        padding: $spacing-xl;
+        transition: all $transition-base;
+
+        &:hover {
+          transform: translateY(-4px);
+          border-color: $primary-light;
+          box-shadow: $shadow-lg;
+        }
+
+        i {
+          font-size: $font-size-3xl;
+          color: $primary-light;
+          margin-bottom: $spacing-md;
+        }
+
+        h4 {
+          font-size: $font-size-lg;
+          font-weight: $font-weight-semibold;
+          color: $text-primary;
+          margin-bottom: $spacing-sm;
+        }
+
+        p {
+          font-size: $font-size-sm;
+          color: $text-secondary;
+          line-height: 1.6;
+        }
+      }
+    }
+  }
+}
+
+// ====================================
+// Download App Section
+// ====================================
+
+.download-section {
+  padding: $spacing-3xl $spacing-xl;
+  background: $bg-primary;
+
+  .steps-container {
+    display: flex;
+    gap: $spacing-lg;
+    margin: 0 auto $spacing-3xl;
+    justify-content: center;
+
+    @include tablet {
+      flex-direction: column;
+    }
+
+    .step-item {
+      position: relative;
+      flex: 1;
+      max-width: 250px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: $spacing-lg;
+
+      @include tablet {
+        flex-direction: row;
+        text-align: left;
+        gap: $spacing-lg;
+        align-items: flex-start;
+        max-width: none;
+      }
+
+      .step-number {
+        flex-shrink: 0;
+        width: 64px;
+        height: 64px;
+        background: $primary-gradient;
+        border-radius: $radius-lg;
+        @include flex-center;
+        font-size: $font-size-2xl;
+        font-weight: $font-weight-bold;
+        color: $text-primary;
+        box-shadow: $shadow-lg;
+        margin-bottom: $spacing-md;
+
+        @include tablet {
+          width: 56px;
+          height: 56px;
+          font-size: $font-size-xl;
+          margin-bottom: 0;
+        }
+      }
+
+      .step-content {
+        flex: 1;
+
+        .step-title {
+          font-size: $font-size-lg;
+          font-weight: $font-weight-semibold;
+          color: $text-primary;
+          margin-bottom: $spacing-sm;
+
+          @include tablet {
+            font-size: $font-size-xl;
+          }
+        }
+
+        .step-description {
+          font-size: $font-size-sm;
+          color: $text-secondary;
+          line-height: 1.6;
+
+          @include tablet {
+            font-size: $font-size-base;
+          }
+        }
+      }
+
+      .step-connector {
+        position: absolute;
+        top: 32px;
+        left: calc(100% - 8px);
+        width: $spacing-lg;
+        height: 2px;
+        background: linear-gradient(90deg, $primary-light 0%, transparent 100%);
+
+        @include tablet {
+          display: none;
+        }
+      }
+
+      &:last-child .step-connector {
+        display: none;
+      }
+    }
+  }
+
+  .app-stores {
+    display: flex;
+    justify-content: center;
+    gap: $spacing-xl;
+    flex-wrap: wrap;
+
+    .store-badge {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+      background: $bg-card;
+      border: 1px solid $border-primary;
+      border-radius: $radius-lg;
+      padding: $spacing-md $spacing-xl;
+      cursor: pointer;
+      transition: all $transition-base;
+
+      &:hover {
+        transform: translateY(-4px);
+        border-color: $primary-light;
+        box-shadow: $shadow-lg;
+      }
+
+      i {
+        font-size: $font-size-3xl;
+        color: $primary-light;
+      }
+
+      .store-text {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+
+        .store-label {
+          font-size: $font-size-xs;
+          color: $text-muted;
+        }
+
+        .store-name {
+          font-size: $font-size-lg;
+          font-weight: $font-weight-semibold;
+          color: $text-primary;
+        }
+      }
+    }
+  }
+}
+
+// ====================================
+// Rider Section
+// ====================================
+
+.rider-section {
+  padding: $spacing-3xl $spacing-xl;
+  background: $bg-primary;
+
+  .steps-container {
+    display: flex;
+    gap: $spacing-lg;
+    margin: 0 auto $spacing-3xl;
+    justify-content: center;
+
+    @include tablet {
+      flex-direction: column;
+    }
+
+    .step-item {
+      position: relative;
+      flex: 1;
+      max-width: 250px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: $spacing-lg;
+
+      @include tablet {
+        flex-direction: row;
+        text-align: left;
+        gap: $spacing-lg;
+        align-items: flex-start;
+        max-width: none;
+      }
+
+      .step-number {
+        flex-shrink: 0;
+        width: 64px;
+        height: 64px;
+        background: $primary-gradient;
+        border-radius: $radius-lg;
+        @include flex-center;
+        font-size: $font-size-2xl;
+        font-weight: $font-weight-bold;
+        color: $text-primary;
+        box-shadow: $shadow-lg;
+        margin-bottom: $spacing-md;
+
+        @include tablet {
+          width: 56px;
+          height: 56px;
+          font-size: $font-size-xl;
+          margin-bottom: 0;
+        }
+      }
+
+      .step-content {
+        flex: 1;
+
+        .step-title {
+          font-size: $font-size-lg;
+          font-weight: $font-weight-semibold;
+          color: $text-primary;
+          margin-bottom: $spacing-sm;
+
+          @include tablet {
+            font-size: $font-size-xl;
+          }
+        }
+
+        .step-description {
+          font-size: $font-size-sm;
+          color: $text-secondary;
+          line-height: 1.6;
+
+          @include tablet {
+            font-size: $font-size-base;
+          }
+        }
+      }
+
+      .step-connector {
+        position: absolute;
+        top: 32px;
+        left: calc(100% - 8px);
+        width: $spacing-lg;
+        height: 2px;
+        background: linear-gradient(90deg, $primary-light 0%, transparent 100%);
+
+        @include tablet {
+          display: none;
+        }
+      }
+
+      &:last-child .step-connector {
+        display: none;
+      }
+    }
+  }
+
+  .rider-benefits {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+
+    .benefits-title {
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      margin-bottom: $spacing-2xl;
+    }
+
+    .benefits-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: $spacing-lg;
+
+      @include mobile {
+        grid-template-columns: 1fr;
+      }
+
+      .benefit-item {
+        display: flex;
+        align-items: center;
+        gap: $spacing-md;
+        background: $bg-card;
+        border: 1px solid $border-primary;
+        border-radius: $radius-md;
+        padding: $spacing-md $spacing-lg;
+        transition: all $transition-base;
+
+        &:hover {
+          border-color: $primary-light;
+          transform: translateX(4px);
+        }
+
+        i {
+          color: $status-success;
+          font-size: $font-size-xl;
+        }
+
+        span {
+          font-size: $font-size-base;
+          color: $text-secondary;
+          font-weight: $font-weight-medium;
+        }
+      }
+    }
+  }
+}
+
+// ====================================
+// How It Works Section (Kept for compatibility)
+// ====================================
+
+.how-it-works-section {
+  padding: $spacing-3xl $spacing-xl;
+  background: $bg-secondary;
+
+  .steps-container {
+    display: flex;
+    gap: $spacing-lg;
+    margin: 0 auto;
+    justify-content: center;
+
+    @include tablet {
+      flex-direction: column;
+    }
+
+    .step-item {
+      position: relative;
+      flex: 1;
+      max-width: 250px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: $spacing-lg;
+
+      @include tablet {
+        flex-direction: row;
+        text-align: left;
+        gap: $spacing-lg;
+        align-items: flex-start;
+        max-width: none;
+      }
+
+      .step-number {
+        flex-shrink: 0;
+        width: 64px;
+        height: 64px;
+        background: $primary-gradient;
+        border-radius: $radius-lg;
+        @include flex-center;
+        font-size: $font-size-2xl;
+        font-weight: $font-weight-bold;
+        color: $text-primary;
+        box-shadow: $shadow-lg;
+        margin-bottom: $spacing-md;
+
+        @include tablet {
+          width: 56px;
+          height: 56px;
+          font-size: $font-size-xl;
+          margin-bottom: 0;
+        }
+      }
+
+      .step-content {
+        flex: 1;
+
+        .step-title {
+          font-size: $font-size-lg;
+          font-weight: $font-weight-semibold;
+          color: $text-primary;
+          margin-bottom: $spacing-sm;
+
+          @include tablet {
+            font-size: $font-size-xl;
+          }
+        }
+
+        .step-description {
+          font-size: $font-size-sm;
+          color: $text-secondary;
+          line-height: 1.6;
+
+          @include tablet {
+            font-size: $font-size-base;
+          }
+        }
+      }
+
+      .step-connector {
+        position: absolute;
+        top: 32px;
+        left: calc(100% - 8px);
+        width: $spacing-lg;
+        height: 2px;
+        background: linear-gradient(90deg, $primary-light 0%, transparent 100%);
+
+        @include tablet {
+          display: none;
+        }
+      }
+
+      &:last-child .step-connector {
+        display: none;
+      }
+    }
+  }
+}
+
+// ====================================
+// Contact Section
+// ====================================
+
+.contact-section {
+  padding: $spacing-3xl $spacing-xl;
+  background: $bg-primary;
+
+  .contact-content {
+    text-align: center;
+    max-width: 700px;
+    margin: 0 auto;
+
+    .section-title {
+      font-size: $font-size-3xl;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      margin-bottom: $spacing-md;
+      letter-spacing: -0.5px;
+
+      @include tablet {
+        font-size: $font-size-2xl;
+      }
+    }
+
+    .section-subtitle {
+      font-size: $font-size-base;
+      color: $text-secondary;
+      margin-bottom: $spacing-2xl;
+      line-height: 1.6;
+    }
+
+    .contact-actions {
+      margin-bottom: $spacing-2xl;
+
+      .btn-primary {
+        padding: $spacing-md $spacing-2xl;
+        background: $primary-gradient;
+        color: $text-primary;
+        border: none;
+        border-radius: $radius-md;
+        font-size: $font-size-base;
+        font-weight: $font-weight-medium;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: $spacing-sm;
+        transition: all $transition-fast;
+        box-shadow: $shadow-lg;
+
+        i {
+          font-size: $font-size-base;
+        }
+
+        &:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 12px 32px rgba($primary-light, 0.3);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+      }
+    }
+
+    .contact-info {
+      display: flex;
+      justify-content: center;
+      gap: $spacing-3xl;
+      flex-wrap: wrap;
+
+      .contact-item {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        color: $text-secondary;
+        font-size: $font-size-sm;
+
+        i {
+          color: $primary-light;
+          font-size: $font-size-base;
+        }
+      }
+    }
+  }
+}
+
+// ====================================
+// Login Section
+// ====================================
+
+.login-section {
+  padding: $spacing-3xl $spacing-xl;
+  background: $bg-secondary;
+
+  .login-wrapper {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}
+
+// ====================================
+// Footer
+// ====================================
+
+.footer {
+  background: $bg-primary;
+  border-top: 1px solid $border-primary;
+  padding: $spacing-2xl $spacing-xl;
+
+  .footer-container {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: $spacing-lg;
+
+    @include mobile {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+
+      i {
+        color: $primary-light;
+        font-size: $font-size-xl;
+      }
+    }
+
+    .footer-text {
+      font-size: $font-size-sm;
+      color: $text-muted;
+    }
+  }
+}
+
+// ====================================
+// Responsive Adjustments
+// ====================================
+
+@include tablet {
+  .navbar {
+    .navbar-container {
+      padding: 0 $spacing-lg;
+    }
+  }
+
+  .hero-section,
+  .about-section,
+  .features-section,
+  .screenshots-section,
+  .register-section,
+  .download-section,
+  .rider-section,
+  .login-section {
+    padding-left: $spacing-lg;
+    padding-right: $spacing-lg;
+  }
+}
+
+@include mobile {
+  .hero-section {
+    min-height: auto;
+    padding-top: calc($navbar-height + $spacing-2xl);
+    padding-bottom: $spacing-2xl;
+  }
+
+  .about-section,
+  .features-section,
+  .screenshots-section,
+  .register-section,
+  .download-section,
+  .rider-section,
+  .login-section {
+    padding-top: $spacing-2xl;
+    padding-bottom: $spacing-2xl;
+  }
+}
