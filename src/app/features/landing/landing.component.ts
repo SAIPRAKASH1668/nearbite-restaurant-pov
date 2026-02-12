@@ -15,6 +15,7 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   // Navbar state
   isScrolled = false;
   activeSection = 'home';
+  isMobileMenuOpen = false;
   
   // Navbar height for scroll offset
   private readonly NAVBAR_HEIGHT = 70;
@@ -408,6 +409,27 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   navigateToRegisterRestaurant(event?: Event): void {
     this.scrollToSection('register-restaurant', event);
+  }
+
+  /**
+   * Toggle mobile menu
+   */
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    // Prevent body scroll when menu is open
+    if (this.isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+
+  /**
+   * Close mobile menu
+   */
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
+    document.body.style.overflow = '';
   }
 
   /**
