@@ -217,25 +217,58 @@
   background: $primary-gradient;
 }
 
-// Scrollbar
+// Classic Custom Scrollbar - Thumb Only, Visible on Hover
 @mixin custom-scrollbar {
+  // Webkit browsers (Chrome, Safari, Edge)
   &::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   &::-webkit-scrollbar-track {
-    background: $bg-secondary;
+    background: transparent;
     border-radius: $radius-sm;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: $border-secondary;
+    background: transparent;
     border-radius: $radius-sm;
+    transition: background-color $transition-base;
+  }
 
-    &:hover {
-      background: $primary-light;
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  // Show only the thumb on hover
+  &:hover {
+    &::-webkit-scrollbar-track {
+      background: transparent;
     }
+
+    &::-webkit-scrollbar-thumb {
+      background: $border-secondary;
+      
+      &:hover {
+        background: lighten($border-secondary, 15%);
+      }
+
+      &:active {
+        background: lighten($border-secondary, 25%);
+      }
+    }
+
+    &::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+  }
+
+  // Firefox scrollbar - hidden by default, visible on hover
+  scrollbar-width: none;
+  
+  &:hover {
+    scrollbar-width: thin;
+    scrollbar-color: $border-secondary transparent;
   }
 }
 

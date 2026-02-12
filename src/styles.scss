@@ -76,8 +76,23 @@ select {
   }
 }
 
-// Custom Scrollbar
+// Custom Scrollbar - Applied Globally
 body {
+  @include custom-scrollbar;
+}
+
+// Apply custom scrollbar to all scrollable elements
+* {
+  @include custom-scrollbar;
+}
+
+// Special handling for specific container types
+.overflow-auto,
+.overflow-y-auto,
+.overflow-x-auto,
+[style*="overflow"],
+textarea,
+.scrollable {
   @include custom-scrollbar;
 }
 

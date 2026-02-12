@@ -10,7 +10,7 @@ import { WebSocketService } from './websocket.service';
   providedIn: 'root'
 })
 export class OrderService {
-  private readonly API_BASE_URL = 'https://w02o2vcti9.execute-api.ap-south-1.amazonaws.com/default/api/v1';
+  private readonly API_BASE_URL = 'api/v1';
   private readonly POLLING_INTERVAL = 30000; // 30 seconds fallback polling
   
   private ordersSubject = new BehaviorSubject<Order[]>([]);
@@ -109,10 +109,11 @@ export class OrderService {
    * Update order status
    * @param orderId - Order ID to update
    * @param status - New status
+   * @param additionalData - Optional additional data (e.g., cancellationReason)
    * @returns Observable of updated order
    */
-  updateOrderStatus(orderId: string, status: OrderStatus): Observable<UpdateOrderStatusResponse> {
-    const payload: UpdateOrderStatusRequest = { status };
+  updateOrderStatus(orderId: string, status: OrderStatus, additionalData?: Partial<UpdateOrderStatusRequest>): Observable<UpdateOrderStatusResponse> {
+    const payload: UpdateOrderStatusRequest = { status, ...additionalData };
     
     return this.http.put<UpdateOrderStatusResponse>(
       `${this.API_BASE_URL}/orders/${orderId}/status`,
@@ -165,9 +166,14 @@ export class OrderService {
     const orders = this.ordersSubject.value;
     return {
       pending: orders.filter(o => o.status === OrderStatus.PENDING).length,
-      confirmed: orders.filter(o => o.status === OrderStatus.CONFIRMED).length,
+      confirmed: orders.filter(o => o.status === OrderStatus.CONFIRMED || o.status === OrderStatus.ACCEPTED).length,
       preparing: orders.filter(o => o.status === OrderStatus.PREPARING).length,
-      ready: orders.filter(o => o.status === OrderStatus.READY).length,
+      ready: orders.filter(o => 
+        o.status === OrderStatus.READY_FOR_PICKUP || 
+        o.status === OrderStatus.AWAITING_RIDER_ASSIGNMENT ||
+        o.status === OrderStatus.OFFERED_TO_RIDER ||
+        o.status === OrderStatus.RIDER_ASSIGNED
+      ).length,
       total: orders.length
     };
   }

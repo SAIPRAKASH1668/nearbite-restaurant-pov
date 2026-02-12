@@ -1,9 +1,15 @@
 // ============================================
 // Payment Model - Financial Transaction Types
+// Synced with AWS Payment model
 // ============================================
 
-export type PaymentMethod = 'UPI' | 'CARD' | 'CASH' | 'WALLET';
-export type PaymentStatus = 'SUCCESS' | 'PENDING' | 'FAILED';
+// Payment statuses from AWS Payment model
+export type PaymentStatus = 'INITIATED' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
+
+// Payment methods from AWS Payment model
+export type PaymentMethod = 'UPI' | 'CARD' | 'WALLET' | 'NETBANKING';
+
+// Settlement status (restaurant-specific)
 export type SettlementStatus = 'NOT_INITIATED' | 'IN_PROGRESS' | 'SETTLED';
 
 export interface Payment {

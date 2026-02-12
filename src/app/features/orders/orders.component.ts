@@ -4,11 +4,12 @@ import { OrderNotificationService } from '../../core/services/order-notification
 import { OrderService } from '../../core/services/order.service';
 import { Order, OrderStatus } from '../../core/models/order.model';
 import { Subscription } from 'rxjs';
+import { OrderRejectionModalComponent } from '../../shared/components/order-rejection-modal/order-rejection-modal.component';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, OrderRejectionModalComponent],
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.scss'
 })
@@ -23,6 +24,10 @@ export class OrdersComponent implements OnInit, OnDestroy {
   // Orders state
   allOrders: Order[] = [];
   loading = true;
+  
+  // Rejection modal state
+  showRejectionModal = false;
+  selectedOrderForRejection: Order | null = null;
   
   // Status enum for template
   OrderStatus = OrderStatus;
@@ -66,15 +71,19 @@ export class OrdersComponent implements OnInit, OnDestroy {
   getOrders(): Order[] {
     switch (this.activeTab) {
       case 'new':
-        return this.allOrders.filter(o => o.status === OrderStatus.PENDING);
+        return this.allOrders.filter(o => o.status === OrderStatus.CONFIRMED);
       case 'preparing':
         return this.allOrders.filter(o => 
-          o.status === OrderStatus.CONFIRMED || 
+          o.status === OrderStatus.ACCEPTED || 
           o.status === OrderStatus.PREPARING
         );
       case 'ready':
         return this.allOrders.filter(o => 
-          o.status === OrderStatus.READY || 
+          o.status === OrderStatus.READY_FOR_PICKUP || 
+          o.status === OrderStatus.AWAITING_RIDER_ASSIGNMENT ||
+          o.status === OrderStatus.OFFERED_TO_RIDER ||
+          o.status === OrderStatus.RIDER_ASSIGNED ||
+          o.status === OrderStatus.PICKED_UP ||
           o.status === OrderStatus.OUT_FOR_DELIVERY
         );
       case 'completed':
@@ -92,15 +101,17 @@ export class OrdersComponent implements OnInit, OnDestroy {
   getTabCount(tab: string): number {
     switch (tab) {
       case 'new':
-        return this.allOrders.filter(o => o.status === OrderStatus.PENDING).length;
+        return this.allOrders.filter(o => o.status === OrderStatus.CONFIRMED).length;
       case 'preparing':
-        return this.allOrders.filter(o => 
-          o.status === OrderStatus.CONFIRMED || 
+        return this.allOrders.filter(o =>  
           o.status === OrderStatus.PREPARING
         ).length;
       case 'ready':
         return this.allOrders.filter(o => 
-          o.status === OrderStatus.READY || 
+          o.status === OrderStatus.READY_FOR_PICKUP || 
+          o.status === OrderStatus.AWAITING_RIDER_ASSIGNMENT ||
+          o.status === OrderStatus.OFFERED_TO_RIDER ||
+          o.status === OrderStatus.RIDER_ASSIGNED ||
           o.status === OrderStatus.OUT_FOR_DELIVERY
         ).length;
       case 'completed':
@@ -129,10 +140,16 @@ export class OrdersComponent implements OnInit, OnDestroy {
    */
   getStatusLabel(status: OrderStatus): string {
     const statusMap: Record<OrderStatus, string> = {
-      [OrderStatus.PENDING]: 'Pending',
-      [OrderStatus.CONFIRMED]: 'Confirmed',
+      [OrderStatus.INITIATED]: 'Payment Initiated',
+      [OrderStatus.PENDING]: 'Payment Pending',
+      [OrderStatus.CONFIRMED]: 'New Order',
+      [OrderStatus.ACCEPTED]: 'Accepted',
       [OrderStatus.PREPARING]: 'Preparing',
-      [OrderStatus.READY]: 'Ready',
+      [OrderStatus.READY_FOR_PICKUP]: 'Ready for Pickup',
+      [OrderStatus.AWAITING_RIDER_ASSIGNMENT]: 'Awaiting Rider',
+      [OrderStatus.OFFERED_TO_RIDER]: 'Offered to Rider',
+      [OrderStatus.RIDER_ASSIGNED]: 'Rider Assigned',
+      [OrderStatus.PICKED_UP]: 'Picked Up',
       [OrderStatus.OUT_FOR_DELIVERY]: 'Out for Delivery',
       [OrderStatus.DELIVERED]: 'Delivered',
       [OrderStatus.CANCELLED]: 'Cancelled'
@@ -145,10 +162,16 @@ export class OrdersComponent implements OnInit, OnDestroy {
    */
   getStatusColor(status: OrderStatus): string {
     const colorMap: Record<OrderStatus, string> = {
+      [OrderStatus.INITIATED]: 'gray',
       [OrderStatus.PENDING]: 'orange',
       [OrderStatus.CONFIRMED]: 'blue',
+      [OrderStatus.ACCEPTED]: 'blue',
       [OrderStatus.PREPARING]: 'purple',
-      [OrderStatus.READY]: 'green',
+      [OrderStatus.READY_FOR_PICKUP]: 'green',
+      [OrderStatus.AWAITING_RIDER_ASSIGNMENT]: 'yellow',
+      [OrderStatus.OFFERED_TO_RIDER]: 'teal',
+      [OrderStatus.RIDER_ASSIGNED]: 'teal',
+      [OrderStatus.PICKED_UP]: 'teal',
       [OrderStatus.OUT_FOR_DELIVERY]: 'teal',
       [OrderStatus.DELIVERED]: 'gray',
       [OrderStatus.CANCELLED]: 'red'
@@ -185,19 +208,15 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Accept order (move from PENDING to CONFIRMED)
+   * Accept order (CONFIRMED → PREPARING, backend starts 5-min timer for rider notification)
    */
   acceptOrder(order: Order): void {
-    this.orderService.updateOrderStatus(order.orderId, OrderStatus.CONFIRMED).subscribe({
-      next: (updatedOrder) => {
+    this.orderService.updateOrderStatus(order.orderId, OrderStatus.PREPARING).subscribe({
+      next: () => {
         console.log('✅ Order accepted:', order.orderId);
         this.orderNotificationService.notifyOrderAccepted(order.orderId);
-        // Manually update local state to ensure UI refresh
-        const index = this.allOrders.findIndex(o => o.orderId === order.orderId);
-        if (index !== -1) {
-          this.allOrders[index] = updatedOrder;
-          this.cdr.detectChanges();
-        }
+        // Refresh orders to get updated status from backend
+        this.orderService.fetchOrders();
       },
       error: (err) => {
         console.error('❌ Error accepting order:', err);
@@ -207,27 +226,45 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Reject order (move to CANCELLED)
+   * Reject order - show modal for reason
    */
   rejectOrder(order: Order): void {
-    if (confirm('Are you sure you want to reject this order?')) {
-      this.orderService.updateOrderStatus(order.orderId, OrderStatus.CANCELLED).subscribe({
-        next: (updatedOrder) => {
-          console.log('❌ Order rejected:', order.orderId);
-          this.orderNotificationService.notifyOrderRejected(order.orderId);
-          // Manually update local state to ensure UI refresh
-          const index = this.allOrders.findIndex(o => o.orderId === order.orderId);
-          if (index !== -1) {
-            this.allOrders[index] = updatedOrder;
-            this.cdr.detectChanges();
-          }
-        },
-        error: (err) => {
-          console.error('❌ Error rejecting order:', err);
-          alert('Failed to reject order. Please try again.');
-        }
-      });
-    }
+    this.selectedOrderForRejection = order;
+    this.showRejectionModal = true;
+  }
+
+  /**
+   * Confirm rejection with reason
+   */
+  onRejectConfirm(reason: string): void {
+    if (!this.selectedOrderForRejection) return;
+    
+    this.orderService.updateOrderStatus(
+      this.selectedOrderForRejection.orderId, 
+      OrderStatus.CANCELLED,
+      { cancellationReason: reason }
+    ).subscribe({
+      next: () => {
+        console.log('❌ Order rejected:', this.selectedOrderForRejection!.orderId, 'Reason:', reason);
+        this.orderNotificationService.notifyOrderRejected(this.selectedOrderForRejection!.orderId);
+        // Refresh orders to get updated status from backend
+        this.orderService.fetchOrders();
+        this.showRejectionModal = false;
+        this.selectedOrderForRejection = null;
+      },
+      error: (err) => {
+        console.error('❌ Error rejecting order:', err);
+        alert('Failed to reject order. Please try again.');
+      }
+    });
+  }
+
+  /**
+   * Cancel rejection modal
+   */
+  onRejectCancel(): void {
+    this.showRejectionModal = false;
+    this.selectedOrderForRejection = null;
   }
 
   /**
@@ -254,15 +291,11 @@ export class OrdersComponent implements OnInit, OnDestroy {
    * Mark order as ready
    */
   markReady(order: Order): void {
-    this.orderService.updateOrderStatus(order.orderId, OrderStatus.READY).subscribe({
-      next: (updatedOrder) => {
+    this.orderService.updateOrderStatus(order.orderId, OrderStatus.READY_FOR_PICKUP).subscribe({
+      next: () => {
         console.log('✅ Order marked as ready:', order.orderId);
-        alert('Order marked as ready for pickup!');
-        const index = this.allOrders.findIndex(o => o.orderId === order.orderId);
-        if (index !== -1) {
-          this.allOrders[index] = updatedOrder;
-          this.cdr.detectChanges();
-        }
+        // Refresh orders to get updated status from backend
+        this.orderService.fetchOrders();
       },
       error: (err) => {
         console.error('❌ Error updating order:', err);
@@ -316,16 +349,11 @@ export class OrdersComponent implements OnInit, OnDestroy {
    */
   getAvailableActions(order: Order): string[] {
     switch (order.status) {
-      case OrderStatus.PENDING:
-        return ['accept', 'reject'];
       case OrderStatus.CONFIRMED:
-        return ['preparing'];
+        return ['accept', 'reject'];
+      case OrderStatus.ACCEPTED:
       case OrderStatus.PREPARING:
         return ['ready'];
-      case OrderStatus.READY:
-        return ['outForDelivery'];
-      case OrderStatus.OUT_FOR_DELIVERY:
-        return ['delivered'];
       default:
         return [];
     }

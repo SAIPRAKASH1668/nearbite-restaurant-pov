@@ -1,6 +1,6 @@
 {
   "/api": {
-    "target": "https://w02o2vcti9.execute-api.ap-south-1.amazonaws.com/default",
+    "target": "https://htgicpllf2.execute-api.ap-south-1.amazonaws.com/default",
     "secure": true,
     "changeOrigin": true,
     "pathRewrite": {

@@ -123,53 +123,35 @@
 
         <div class="order-actions">
           <button
-            *ngIf="order.status === OrderStatus.PENDING"
+            *ngIf="order.status === OrderStatus.CONFIRMED"
             class="btn btn-accept"
-            (click)="acceptOrder(order)"
+            (click)="acceptOrder(order); $event.stopPropagation()"
           >
-            <i class="fas fa-check"></i>
-            Accept
-          </button>
-          <button
-            *ngIf="order.status === OrderStatus.PENDING"
-            class="btn btn-reject"
-            (click)="rejectOrder(order)"
-          >
-            <i class="fas fa-times"></i>
-            Reject
+            <i class="fas fa-check-circle"></i>
+            Accept Order
           </button>
           <button
             *ngIf="order.status === OrderStatus.CONFIRMED"
-            class="btn btn-preparing"
-            (click)="markPreparing(order)"
+            class="btn btn-reject"
+            (click)="rejectOrder(order); $event.stopPropagation()"
           >
-            <i class="fas fa-fire"></i>
-            Start Preparing
+            <i class="fas fa-times-circle"></i>
+            Reject
           </button>
           <button
-            *ngIf="order.status === OrderStatus.PREPARING"
+            *ngIf="order.status === OrderStatus.ACCEPTED || order.status === OrderStatus.PREPARING"
             class="btn btn-ready"
-            (click)="markReady(order)"
+            (click)="markReady(order); $event.stopPropagation()"
           >
             <i class="fas fa-check-double"></i>
-            Mark Ready
+            Mark Ready for Pickup
           </button>
-          <button
-            *ngIf="order.status === OrderStatus.READY"
-            class="btn btn-out-delivery"
-            (click)="markOutForDelivery(order)"
-          >
-            <i class="fas fa-motorcycle"></i>
-            Out for Delivery
-          </button>
-          <button
-            *ngIf="order.status === OrderStatus.OUT_FOR_DELIVERY"
-            class="btn btn-complete"
-            (click)="markDelivered(order)"
-          >
-            <i class="fas fa-check-circle"></i>
-            Mark Delivered
-          </button>
+        </div>
+        
+        <!-- Show cancellation reason for cancelled orders -->
+        <div class="cancellation-info" *ngIf="order.status === OrderStatus.CANCELLED && order.cancellationReason">
+          <i class="fas fa-info-circle"></i>
+          <span>Reason: {{order.cancellationReason}}</span>
         </div>
       </div>
     </div>
@@ -262,39 +244,31 @@
         </div>
         <div class="modal-actions">
           <button
-            *ngIf="expandedOrder.status === OrderStatus.PENDING"
+            *ngIf="expandedOrder.status === OrderStatus.CONFIRMED"
             class="btn btn-accept"
             (click)="acceptOrder(expandedOrder); closeExpandedOrder()"
           >
-            <i class="fas fa-check"></i>
+            <i class="fas fa-check-circle"></i>
             Accept Order
           </button>
           <button
-            *ngIf="expandedOrder.status === OrderStatus.PENDING"
+            *ngIf="expandedOrder.status === OrderStatus.CONFIRMED"
             class="btn btn-reject"
             (click)="rejectOrder(expandedOrder); closeExpandedOrder()"
           >
-            <i class="fas fa-times"></i>
-            Reject Order
+            <i class="fas fa-times-circle"></i>
+            Reject
           </button>
           <button
-            *ngIf="expandedOrder.status === OrderStatus.CONFIRMED"
-            class="btn btn-preparing"
-            (click)="markPreparing(expandedOrder); closeExpandedOrder()"
-          >
-            <i class="fas fa-fire"></i>
-            Start Preparing
-          </button>
-          <button
-            *ngIf="expandedOrder.status === OrderStatus.PREPARING"
+            *ngIf="expandedOrder.status === OrderStatus.ACCEPTED || expandedOrder.status === OrderStatus.PREPARING"
             class="btn btn-ready"
             (click)="markReady(expandedOrder); closeExpandedOrder()"
           >
             <i class="fas fa-check-double"></i>
-            Mark Ready
+            Mark Ready for Pickup
           </button>
           <button
-            *ngIf="expandedOrder.status === OrderStatus.READY"
+            *ngIf="expandedOrder.status === OrderStatus.READY_FOR_PICKUP"
             class="btn btn-out-delivery"
             (click)="markOutForDelivery(expandedOrder); closeExpandedOrder()"
           >
@@ -314,3 +288,10 @@
     </div>
   </div>
 </div>
+
+<!-- Rejection Modal -->
+<app-order-rejection-modal
+  [isVisible]="showRejectionModal"
+  (reject)="onRejectConfirm($event)"
+  (cancel)="onRejectCancel()"
+></app-order-rejection-modal>

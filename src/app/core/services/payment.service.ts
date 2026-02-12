@@ -26,7 +26,7 @@ export class PaymentService {
    * In production: fetch from backend API
    */
   getPaymentMethods(): Observable<PaymentMethod[]> {
-    return of(['UPI', 'CARD', 'CASH', 'WALLET']);
+    return of(['UPI', 'CARD', 'WALLET', 'NETBANKING']);
   }
 
   /**
@@ -34,7 +34,7 @@ export class PaymentService {
    * In production: fetch from backend API
    */
   getPaymentStatuses(): Observable<PaymentStatus[]> {
-    return of(['SUCCESS', 'PENDING', 'FAILED']);
+    return of(['INITIATED', 'SUCCESS', 'FAILED', 'REFUNDED']);
   }
 
   /**
@@ -57,8 +57,8 @@ export class PaymentService {
     }
 
     const payments: Payment[] = [];
-    const paymentMethods: PaymentMethod[] = ['UPI', 'CARD', 'CASH', 'WALLET'];
-    const gateways = ['Razorpay', 'Paytm', 'PhonePe', 'Cash'];
+    const paymentMethods: PaymentMethod[] = ['UPI', 'CARD', 'WALLET', 'NETBANKING'];
+    const gateways = ['Razorpay', 'Paytm', 'PhonePe'];
 
     // Generate 150 transactions over 90 days for better data density
     for (let i = 0; i < 150; i++) {
@@ -74,7 +74,7 @@ export class PaymentService {
       const netPayoutAmount = grossAmount - commissionAmount - taxAmount;
 
       // Payment method distribution (realistic for India):
-      // 50% UPI, 30% Card, 15% Wallet, 5% Cash
+      // 50% UPI, 30% Card, 15% Wallet, 5% Netbanking
       const methodRand = Math.random();
       let paymentMethod: PaymentMethod;
       if (methodRand < 0.50) {
@@ -84,19 +84,19 @@ export class PaymentService {
       } else if (methodRand < 0.95) {
         paymentMethod = 'WALLET';
       } else {
-        paymentMethod = 'CASH';
+        paymentMethod = 'NETBANKING';
       }
       
       // Realistic status distribution for RESTAURANT VIEW:
       // - 92% SUCCESS (completed orders with successful payment)
-      // - 7% PENDING (COD not collected yet, or payment gateway processing)
+      // - 7% INITIATED (payment started but not completed)
       // - 1% FAILED (rare cases: chargebacks, refunds, disputes - order was delivered but payment disputed later)
       let paymentStatus: PaymentStatus;
       const statusRand = Math.random();
       if (statusRand < 0.92) {
         paymentStatus = 'SUCCESS';
       } else if (statusRand < 0.99) {
-        paymentStatus = 'PENDING';
+        paymentStatus = 'INITIATED';
       } else {
         // FAILED in restaurant context means:
         // - Customer initiated chargeback after receiving order
@@ -128,8 +128,8 @@ export class PaymentService {
           // Very recent payments (<3 days): 70% not initiated, 30% in progress
           settlementStatus = Math.random() > 0.30 ? 'NOT_INITIATED' : 'IN_PROGRESS';
         }
-      } else if (paymentStatus === 'PENDING') {
-        // PENDING = Cash on Delivery (COD) not collected yet, or payment gateway still processing
+      } else if (paymentStatus === 'INITIATED') {
+        // INITIATED = Payment started but not completed yet, or payment gateway still processing
         // Settlement can't start until payment is confirmed
         settlementStatus = 'NOT_INITIATED';
       } else {
@@ -147,8 +147,8 @@ export class PaymentService {
 
       // Select appropriate payment gateway
       let paymentGateway: string;
-      if (paymentMethod === 'CASH') {
-        paymentGateway = 'Cash';
+      if (paymentMethod === 'NETBANKING') {
+        paymentGateway = ['Razorpay', 'Paytm'][Math.floor(Math.random() * 2)];
       } else if (paymentMethod === 'UPI') {
         paymentGateway = ['Razorpay', 'PhonePe', 'Paytm'][Math.floor(Math.random() * 3)];
       } else if (paymentMethod === 'CARD') {
@@ -335,7 +335,7 @@ export class PaymentService {
 
     return of({
       successful: filteredPayments.filter(p => p.paymentStatus === 'SUCCESS').length,
-      pending: filteredPayments.filter(p => p.paymentStatus === 'PENDING').length,
+      pending: filteredPayments.filter(p => p.paymentStatus === 'INITIATED').length,
       failed: filteredPayments.filter(p => p.paymentStatus === 'FAILED').length,
       notInitiatedSettlements: filteredPayments.filter(p => p.settlementStatus === 'NOT_INITIATED').length,
       inProgressSettlements: filteredPayments.filter(p => p.settlementStatus === 'IN_PROGRESS').length,

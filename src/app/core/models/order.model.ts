@@ -6,10 +6,21 @@ export interface OrderItem {
 }
 
 export enum OrderStatus {
+  // Restaurant statuses
+  INITIATED = 'INITIATED',
   PENDING = 'PENDING',
   CONFIRMED = 'CONFIRMED',
+  ACCEPTED = 'ACCEPTED',
+  
+  // Order assignment statuses
   PREPARING = 'PREPARING',
-  READY = 'READY',
+  READY_FOR_PICKUP = 'READY_FOR_PICKUP',
+  AWAITING_RIDER_ASSIGNMENT = 'AWAITING_RIDER_ASSIGNMENT',
+  OFFERED_TO_RIDER = 'OFFERED_TO_RIDER',
+  
+  // Rider statuses
+  RIDER_ASSIGNED = 'RIDER_ASSIGNED',
+  PICKED_UP = 'PICKED_UP',
   OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
   DELIVERED = 'DELIVERED',
   CANCELLED = 'CANCELLED'
@@ -32,6 +43,8 @@ export interface Order {
   deliveryAddress: string;
   formattedAddress: string;
   addressId: string;
+  cancellationReason?: string;
+  acceptedAt?: string;
 }
 
 export interface OrdersResponse {
@@ -41,6 +54,7 @@ export interface OrdersResponse {
 
 export interface UpdateOrderStatusRequest {
   status: OrderStatus;
+  cancellationReason?: string;
 }
 
 export interface UpdateOrderStatusResponse extends Order {}

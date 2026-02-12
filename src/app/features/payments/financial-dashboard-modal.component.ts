@@ -483,9 +483,10 @@ export class FinancialDashboardModalComponent implements OnInit {
    */
   getPaymentStatusClass(status: PaymentStatus): string {
     const map: Record<PaymentStatus, string> = {
+      'INITIATED': 'status-pending',
       'SUCCESS': 'status-success',
-      'PENDING': 'status-pending',
-      'FAILED': 'status-failed'
+      'FAILED': 'status-failed',
+      'REFUNDED': 'status-refunded'
     };
     return map[status] || '';
   }

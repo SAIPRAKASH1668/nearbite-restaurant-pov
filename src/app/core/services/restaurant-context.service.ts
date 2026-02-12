@@ -7,7 +7,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 export class RestaurantContextService {
   // Hardcoded restaurant ID - simulating login response
   // In production, this will be set from actual login API response
-  private readonly RESTAURANT_ID = 'RES-1767795059270-5036';
+  private readonly RESTAURANT_ID = 'RES-1769420326546-3319';
   
   private restaurantIdSubject = new BehaviorSubject<string>(this.RESTAURANT_ID);
   public restaurantId$: Observable<string> = this.restaurantIdSubject.asObservable();

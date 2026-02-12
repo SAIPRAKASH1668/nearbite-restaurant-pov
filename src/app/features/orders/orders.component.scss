@@ -446,23 +446,25 @@
       }
 
       .btn-accept {
-        background: rgba($status-success, 0.15);
-        color: $status-success;
-        border: 1px solid rgba($status-success, 0.3);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 
         &:hover {
-          background: rgba($status-success, 0.25);
           transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
         }
       }
 
       .btn-reject {
-        background: rgba($status-error, 0.15);
-        color: $status-error;
-        border: 1px solid rgba($status-error, 0.3);
+        background: white;
+        color: #ef4444;
+        border: 2px solid #ef4444;
 
         &:hover {
-          background: rgba($status-error, 0.25);
+          background: #ef4444;
+          color: white;
           transform: translateY(-2px);
         }
       }
@@ -481,6 +483,27 @@
           transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba($primary-light, 0.3);
         }
+      }
+    }
+
+    .cancellation-info {
+      margin-top: $spacing-md;
+      padding: $spacing-md;
+      background: rgba($status-error, 0.1);
+      border-left: 3px solid $status-error;
+      border-radius: $radius-md;
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      font-size: $font-size-sm;
+      color: $status-error;
+
+      i {
+        font-size: $font-size-base;
+      }
+
+      span {
+        flex: 1;
       }
     }
   }
