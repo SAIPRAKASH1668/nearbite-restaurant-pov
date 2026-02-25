@@ -5,6 +5,8 @@
 @use 'styles/variables' as *;
 @use 'styles/mixins' as *;
 
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 // Global Reset and Base Styles
 * {
   margin: 0;
@@ -30,7 +32,7 @@ body {
 
 body {
   font-family: $font-family;
-  background: $bg-primary;
+  background: #FFFFFF;
   color: $text-primary;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -67,10 +69,42 @@ a {
 button {
   font-family: $font-family;
   outline: none;
+  border-radius: $radius-md;
+  transition: all $transition-base;
 
   &:focus {
     outline: none;
   }
+
+  &:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+
+  &:not(:disabled):active {
+    transform: translateY(0);
+  }
+}
+
+.btn,
+button.btn {
+  border-radius: $radius-lg;
+  padding: $spacing-sm $spacing-lg;
+  font-weight: $font-weight-bold;
+}
+
+.btn-primary,
+button.btn-primary {
+  background: linear-gradient(135deg, $primary-orange 0%, $dark-orange 100%);
+  color: #FFFFFF;
+  border: 1px solid transparent;
+  box-shadow: 0 10px 24px rgba($primary-orange, 0.28);
+}
+
+.btn-secondary,
+button.btn-secondary {
+  background: rgba($secondary-orange, 0.16);
+  color: $text-primary;
+  border: 2px solid rgba($secondary-orange, 0.7);
 }
 
 // Inputs

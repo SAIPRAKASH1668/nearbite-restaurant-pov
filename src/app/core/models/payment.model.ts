@@ -86,3 +86,47 @@ export interface PaginationConfig {
   totalItems: number;
   totalPages: number;
 }
+
+// ============================================
+// AWS Restaurant Earnings Types
+// ============================================
+
+// Individual earning record from AWS
+export interface RestaurantEarning {
+  restaurantId: string;
+  date: string; // Format: "YYYY-MM-DD#ORDER_ID"
+  totalOrders: number;
+  totalEarnings: number;
+  orderId: string;
+  settled: boolean;
+  settledAt: string | null;
+  settlementId: string | null;
+  createdAt: string;
+}
+
+// Response from AWS earnings history endpoint
+export interface EarningsHistoryResponse {
+  restaurantId: string;
+  startDate: string;
+  endDate: string;
+  totalOrders: number;
+  totalEarnings: number;
+  history: RestaurantEarning[];
+}
+
+// Request for settling earnings
+export interface SettleEarningsRequest {
+  orderIds: string[];
+  startDate: string;
+  endDate: string;
+}
+
+// Response from AWS settle endpoint
+export interface SettleEarningsResponse {
+  restaurantId: string;
+  updated: number;
+  settlementId: string;
+  orderIds: string[];
+  startDate: string;
+  endDate: string;
+}

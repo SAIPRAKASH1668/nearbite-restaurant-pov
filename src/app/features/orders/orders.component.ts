@@ -66,19 +66,26 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Get orders filtered by current tab
+   * Get orders filtered by current tab and today's date
    */
   getOrders(): Order[] {
+    // First filter by today's date
+    const todayOrders = this.filterTodayOrders(this.allOrders);
+    
+    // Then filter by tab status
+    let filteredOrders: Order[] = [];
     switch (this.activeTab) {
       case 'new':
-        return this.allOrders.filter(o => o.status === OrderStatus.CONFIRMED);
+        filteredOrders = todayOrders.filter(o => o.status === OrderStatus.CONFIRMED);
+        break;
       case 'preparing':
-        return this.allOrders.filter(o => 
+        filteredOrders = todayOrders.filter(o => 
           o.status === OrderStatus.ACCEPTED || 
           o.status === OrderStatus.PREPARING
         );
+        break;
       case 'ready':
-        return this.allOrders.filter(o => 
+        filteredOrders = todayOrders.filter(o => 
           o.status === OrderStatus.READY_FOR_PICKUP || 
           o.status === OrderStatus.AWAITING_RIDER_ASSIGNMENT ||
           o.status === OrderStatus.OFFERED_TO_RIDER ||
@@ -86,28 +93,52 @@ export class OrdersComponent implements OnInit, OnDestroy {
           o.status === OrderStatus.PICKED_UP ||
           o.status === OrderStatus.OUT_FOR_DELIVERY
         );
+        // Debug: Check OTP data in ready orders
+        filteredOrders.forEach(order => {
+          console.log(`📦 Ready Order: ${order.orderId}, Status: ${order.status}, OTP: ${order.pickupOtp || 'MISSING'}`);
+        });
+        break;
       case 'completed':
-        return this.allOrders.filter(o => o.status === OrderStatus.DELIVERED);
+        filteredOrders = todayOrders.filter(o => o.status === OrderStatus.DELIVERED);
+        break;
       case 'cancelled':
-        return this.allOrders.filter(o => o.status === OrderStatus.CANCELLED);
+        filteredOrders = todayOrders.filter(o => o.status === OrderStatus.CANCELLED);
+        break;
       default:
-        return [];
+        filteredOrders = [];
     }
+    return filteredOrders;
+  }
+
+  /**
+   * Filter orders for today only
+   */
+  private filterTodayOrders(orders: Order[]): Order[] {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    return orders.filter(order => {
+      const orderDate = new Date(order.createdAt);
+      return orderDate >= today && orderDate < tomorrow;
+    });
   }
 
   /**
    * Get count for specific tab
    */
   getTabCount(tab: string): number {
+    const todayOrders = this.filterTodayOrders(this.allOrders);
     switch (tab) {
       case 'new':
-        return this.allOrders.filter(o => o.status === OrderStatus.CONFIRMED).length;
+        return todayOrders.filter(o => o.status === OrderStatus.CONFIRMED).length;
       case 'preparing':
-        return this.allOrders.filter(o =>  
+        return todayOrders.filter(o =>  
           o.status === OrderStatus.PREPARING
         ).length;
       case 'ready':
-        return this.allOrders.filter(o => 
+        return todayOrders.filter(o => 
           o.status === OrderStatus.READY_FOR_PICKUP || 
           o.status === OrderStatus.AWAITING_RIDER_ASSIGNMENT ||
           o.status === OrderStatus.OFFERED_TO_RIDER ||
@@ -115,9 +146,9 @@ export class OrdersComponent implements OnInit, OnDestroy {
           o.status === OrderStatus.OUT_FOR_DELIVERY
         ).length;
       case 'completed':
-        return this.allOrders.filter(o => o.status === OrderStatus.DELIVERED).length;
+        return todayOrders.filter(o => o.status === OrderStatus.DELIVERED).length;
       case 'cancelled':
-        return this.allOrders.filter(o => o.status === OrderStatus.CANCELLED).length;
+        return todayOrders.filter(o => o.status === OrderStatus.CANCELLED).length;
       default:
         return 0;
     }
@@ -133,6 +164,13 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   closeExpandedOrder(): void {
     this.expandedOrder = null;
+  }
+
+  /**
+   * Check if order has more than 4 items
+   */
+  hasMoreItems(order: Order): boolean {
+    return order.items.length > 4;
   }
 
   /**
@@ -357,6 +395,19 @@ export class OrdersComponent implements OnInit, OnDestroy {
       default:
         return [];
     }
+  }
+
+  /**
+   * Determine if pickup OTP should be shown
+   * Show OTP when order is ready for pickup but not yet picked up by rider
+   */
+  shouldShowPickupOtp(order: Order): boolean {
+    return [
+      OrderStatus.READY_FOR_PICKUP,
+      OrderStatus.AWAITING_RIDER_ASSIGNMENT,
+      OrderStatus.OFFERED_TO_RIDER,
+      OrderStatus.RIDER_ASSIGNED
+    ].includes(order.status);
   }
 }
 

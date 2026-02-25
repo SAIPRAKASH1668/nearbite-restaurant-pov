@@ -1,253 +1,514 @@
 @use '../../../styles/variables' as *;
 @use '../../../styles/mixins' as *;
 
-.login-container {
+// Brand identity tokens (matches landing page)
+$yum-yellow: hsl(43, 100%, 55%);
+$dude-red:   hsl(0,  79%,  55%);
+
+// ─── Root Layout ──────────────────────────────────────────────────────────────
+.lp-root {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   min-height: 100vh;
+  background: $bg-primary;
+
+  @media (max-width: $breakpoint-tablet) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ─── LEFT BRAND PANEL ────────────────────────────────────────────────────────
+.lp-brand {
+  position: relative;
+  background: linear-gradient(145deg, #1C0A0A 0%, #3D0F0F 35%, #C0282B 75%, #E83A3A 100%);
+  display: flex;
+  flex-direction: column;
+  padding: 2.5rem 3rem;
+  overflow: hidden;
+  min-height: 100vh;
+
+  @media (max-width: $breakpoint-tablet) {
+    display: none;
+  }
+}
+
+.brand-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+.brand-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  animation: orbFloat 8s ease-in-out infinite;
+}
+
+.brand-orb-1 {
+  width: 360px; height: 360px; top: -100px; right: -80px;
+  background: radial-gradient(circle, rgba($secondary-orange, 0.25) 0%, transparent 70%);
+  animation-delay: 0s;
+}
+.brand-orb-2 {
+  width: 280px; height: 280px; bottom: 160px; left: -60px;
+  background: radial-gradient(circle, rgba($secondary-orange, 0.15) 0%, transparent 70%);
+  animation-delay: -3s;
+}
+.brand-orb-3 {
+  width: 200px; height: 200px; bottom: -60px; right: 40px;
+  background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+  animation-delay: -6s;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-24px) scale(1.04); }
+}
+
+.brand-top {
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: $primary-gradient;
-  padding: $spacing-xl;
+  justify-content: space-between;
   position: relative;
-  overflow: hidden;
-
-  // Animated background pattern
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
-    animation: backgroundMove 20s linear infinite;
-  }
-
-  @keyframes backgroundMove {
-    0% {
-      transform: translate(0, 0);
-    }
-    100% {
-      transform: translate(50px, 50px);
-    }
-  }
+  z-index: 2;
 }
 
-.login-card {
-  background: $bg-card;
-  border-radius: $radius-2xl;
-  padding: $spacing-3xl;
-  box-shadow: $shadow-xl;
-  max-width: 480px;
-  width: 100%;
-  position: relative;
-  z-index: 1;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-
-  @include mobile {
-    padding: $spacing-xl;
-    max-width: 100%;
-  }
+.brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: $font-weight-bold;
+  letter-spacing: -0.5px;
 }
 
-.logo-section {
-  text-align: center;
-  margin-bottom: $spacing-3xl;
-
-  .logo {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto $spacing-lg;
-    background: $primary-gradient;
-    border-radius: $radius-xl;
-    @include flex-center;
-    font-size: $font-size-4xl;
-    color: $text-primary;
-    box-shadow: $shadow-lg;
-    animation: logoFloat 3s ease-in-out infinite;
-  }
-
-  @keyframes logoFloat {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-10px);
-    }
-  }
-
-  .brand-title {
-    @include text-title;
-    font-size: $font-size-4xl;
-    margin-bottom: $spacing-sm;
-    background: $primary-gradient;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .brand-subtitle {
-    @include text-subtitle;
-    font-size: $font-size-base;
-    color: $text-muted;
-  }
-}
-
-.login-form {
-  .form-group {
-    margin-bottom: $spacing-xl;
-
-    label {
-      display: block;
-      @include text-body;
-      font-weight: $font-weight-medium;
-      color: $text-secondary;
-      margin-bottom: $spacing-sm;
-      font-size: $font-size-sm;
-    }
-
-    .input-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-
-      .input-icon {
-        position: absolute;
-        left: $spacing-md;
-        color: $text-muted;
-        font-size: $font-size-base;
-        pointer-events: none;
-        transition: color $transition-fast;
-      }
-
-      input {
-        @include input-text;
-        padding-left: calc(#{$spacing-md} * 3);
-        padding-right: calc(#{$spacing-md} * 3);
-
-        &:focus + .input-icon,
-        &:focus ~ .input-icon {
-          color: $primary-light;
-        }
-      }
-
-      .password-toggle {
-        position: absolute;
-        right: $spacing-md;
-        color: $text-muted;
-        cursor: pointer;
-        font-size: $font-size-base;
-        transition: color $transition-fast;
-
-        &:hover {
-          color: $primary-light;
-        }
-      }
-    }
-
-    .error-message {
-      @include text-error;
-      margin-top: $spacing-sm;
-    }
-  }
-
-  .error-banner {
-    background: rgba($status-error, 0.1);
-    border: 1px solid rgba($status-error, 0.3);
-    border-radius: $radius-md;
-    padding: $spacing-md;
-    margin-bottom: $spacing-lg;
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    color: $status-error;
-    font-size: $font-size-sm;
-    animation: slideInUp $transition-base;
-
-    i {
-      font-size: $font-size-lg;
-    }
-  }
-
-  .login-button {
-    @include button-primary;
-    width: 100%;
-    padding: $spacing-md;
-    font-size: $font-size-base;
-    font-weight: $font-weight-semibold;
-    margin-top: $spacing-md;
-
-    i {
-      margin-right: $spacing-sm;
-    }
-  }
-
-  .forgot-password {
-    text-align: center;
-    margin-top: $spacing-lg;
-
-    a {
-      @include link;
-      font-size: $font-size-sm;
-      display: inline-flex;
-      align-items: center;
-      gap: $spacing-xs;
-
-      i {
-        font-size: $font-size-sm;
-      }
-    }
-  }
-}
-
-.demo-info {
-  margin-top: $spacing-2xl;
-  padding: $spacing-lg;
-  background: rgba($accent-orange, 0.05);
-  border: 1px solid rgba($accent-orange, 0.2);
+.brand-logo-icon {
+  width: 38px; height: 38px;
   border-radius: $radius-md;
-  text-align: center;
+  background: rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  i { color: #fff; }
+}
 
-  .demo-title {
-    @include text-body;
-    font-weight: $font-weight-semibold;
-    color: $accent-orange;
-    margin-bottom: $spacing-sm;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: $spacing-sm;
+.logo-yum  { color: $yum-yellow; }
+.logo-dude { color: $dude-red; }
 
-    i {
-      font-size: $font-size-base;
-    }
-  }
+.brand-badge {
+  font-size: 0.7rem;
+  font-weight: $font-weight-semibold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: $radius-full;
+  padding: 0.3rem 0.8rem;
+  backdrop-filter: blur(4px);
+}
 
-  .demo-text {
-    @include text-muted;
-    font-size: $font-size-sm;
-    margin-bottom: $spacing-xs;
+.brand-hero {
+  position: relative;
+  z-index: 2;
+  margin-top: 4.5rem;
+  margin-bottom: 2.5rem;
+}
 
-    strong {
-      color: $text-secondary;
-      font-weight: $font-weight-semibold;
-    }
+.brand-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba($secondary-orange, 0.18);
+  border: 1px solid rgba($secondary-orange, 0.35);
+  color: $secondary-orange;
+  border-radius: $radius-full;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: $font-weight-semibold;
+  margin-bottom: 1.25rem;
+  i { font-size: 0.75rem; }
+}
 
-    &:last-child {
-      margin-bottom: 0;
-    }
+.brand-headline {
+  font-size: clamp(1.9rem, 2.8vw, 2.6rem);
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+  color: #fff;
+  letter-spacing: -0.03em;
+  margin-bottom: 1rem;
+}
+
+.headline-accent {
+  background: linear-gradient(90deg, $secondary-orange 0%, #FFE07A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: block;
+}
+
+.brand-sub {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: rgba(255,255,255,0.65);
+  max-width: 380px;
+}
+
+.brand-features {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.feature-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: $radius-xl;
+  padding: 0.9rem 1.1rem;
+  backdrop-filter: blur(8px);
+  transition: background $transition-fast, border-color $transition-fast;
+  &:hover {
+    background: rgba(255,255,255,0.11);
+    border-color: rgba(255,255,255,0.22);
   }
 }
 
-.login-footer {
-  margin-top: $spacing-2xl;
-  text-align: center;
-  padding-top: $spacing-lg;
+.feature-pill-icon {
+  width: 36px; height: 36px;
+  border-radius: $radius-md;
+  background: rgba($secondary-orange, 0.2);
+  border: 1px solid rgba($secondary-orange, 0.3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  i { color: $secondary-orange; font-size: 0.875rem; }
+}
+
+.feature-pill-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  strong { font-size: 0.875rem; font-weight: $font-weight-semibold; color: #fff; }
+  span   { font-size: 0.775rem; color: rgba(255,255,255,0.5); }
+}
+
+// ─── RIGHT FORM PANEL ─────────────────────────────────────────────────────────
+.lp-form-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 2rem;
+  background: $bg-primary;
+  min-height: 100vh;
+  overflow-y: auto;
+
+  @media (max-width: $breakpoint-tablet) {
+    padding: 2rem 1.25rem;
+    justify-content: flex-start;
+    padding-top: 2.5rem;
+  }
+}
+
+.mobile-logo {
+  display: none;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.4rem;
+  font-weight: $font-weight-bold;
+  margin-bottom: 2rem;
+
+  @media (max-width: $breakpoint-tablet) { display: flex; }
+
+  .mobile-logo-icon {
+    width: 34px; height: 34px;
+    border-radius: $radius-md;
+    background: $primary-orange;
+    display: flex; align-items: center; justify-content: center;
+    i { color: #fff; font-size: 0.875rem; }
+  }
+  .logo-yum  { color: $yum-yellow; }
+  .logo-dude { color: $dude-red; }
+}
+
+.form-card {
+  width: 100%;
+  max-width: 420px;
+  animation: fadeSlideUp 0.4s ease both;
+}
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2.25rem;
+}
+
+.form-header-icon {
+  width: 52px; height: 52px;
+  border-radius: $radius-xl;
+  background: rgba($yum-yellow, 0.1);
+  border: 1.5px solid rgba($yum-yellow, 0.3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  i {
+    font-size: 1.25rem;
+    color: $yum-yellow;
+  }
+}
+
+.form-title {
+  font-size: 1.625rem;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.2rem;
+}
+.form-subtitle {
+  font-size: 0.875rem;
+  color: $text-muted;
+  font-weight: $font-weight-normal;
+}
+
+// ─── Form Fields ─────────────────────────────────────────────────────────────
+.lp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  &.field-error .field-input {
+    border-color: $status-error !important;
+    background: rgba($status-error, 0.03);
+  }
+}
+
+.field-label {
+  font-size: 0.8125rem;
+  font-weight: $font-weight-semibold;
+  color: $text-secondary;
+  letter-spacing: 0.01em;
+}
+
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.forgot-link {
+  font-size: 0.775rem;
+  font-weight: $font-weight-semibold;
+  color: $primary-orange;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color $transition-fast;
+  &:hover { color: $accent-orange; }
+}
+
+.field-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field-icon-left {
+  position: absolute;
+  left: 0.85rem;
+  color: $text-muted;
+  font-size: 0.875rem;
+  pointer-events: none;
+  transition: color $transition-fast;
+  z-index: 1;
+}
+
+.field-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 0.875rem 0 2.6rem;
+  background: #fff;
+  border: 1.5px solid $border-primary;
+  border-radius: $radius-lg;
+  font-size: 0.9375rem;
+  font-family: $font-family;
+  color: $text-primary;
+  outline: none;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+
+  &::placeholder { color: $text-muted; font-size: 0.875rem; }
+
+  &:focus {
+    border-color: $primary-orange;
+    box-shadow: 0 0 0 3.5px rgba($primary-orange, 0.1);
+  }
+}
+
+.field-input-pr { padding-right: 2.8rem; }
+
+.field-eye-btn {
+  position: absolute;
+  right: 0; top: 0;
+  height: 100%; width: 44px;
+  background: none; border: none;
+  cursor: pointer;
+  color: $text-muted;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.875rem;
+  transition: color $transition-fast;
+  &:hover { color: $primary-orange; }
+}
+
+.field-error-msg {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.775rem;
+  color: $status-error;
+  font-weight: $font-weight-medium;
+  i { font-size: 0.75rem; }
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  background: rgba($status-error, 0.06);
+  border: 1px solid rgba($status-error, 0.25);
+  border-radius: $radius-lg;
+  color: $status-error;
+  font-size: 0.85rem;
+  font-weight: $font-weight-medium;
+  animation: fadeSlideUp 0.25s ease both;
+  i { font-size: 1rem; flex-shrink: 0; }
+}
+
+.submit-btn {
+  width: 100%;
+  height: 52px;
+  background: $primary-orange;
+  color: #fff;
+  border: 2px solid $accent-orange;
+  border-radius: $radius-lg;
+  font-size: 0.9375rem;
+  font-weight: $font-weight-bold;
+  font-family: $font-family;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  // Offset shadow gives a tactile "stamp" depth — no gradient needed
+  box-shadow: 0 5px 0 $dark-orange;
+  transition: transform 80ms ease, box-shadow 80ms ease, background $transition-fast;
+  margin-top: 0.25rem;
+  position: relative;
+
+  &:hover:not(:disabled) {
+    background: $accent-orange;
+  }
+  &:active:not(:disabled) {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 $dark-orange;
+  }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+}
+
+.submit-content {
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+// ─── Trust Strip ──────────────────────────────────────────────────────────────
+.trust-strip {
+  display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+  padding-top: 1.25rem;
   border-top: 1px solid $border-primary;
-
-  p {
-    @include text-muted;
-    font-size: $font-size-xs;
-  }
 }
+.trust-item {
+  display: flex; align-items: center; gap: 0.3rem;
+  font-size: 0.725rem; color: $text-muted; font-weight: $font-weight-medium;
+  i { font-size: 0.8rem; color: $status-success; }
+}
+.trust-dot { width: 3px; height: 3px; background: $border-secondary; border-radius: 50%; }
+
+// ─── Right Panel Stats ────────────────────────────────────────────────────────
+.rp-stats {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1.5px solid $border-primary;
+  border-top: 3px solid $yum-yellow;
+  border-radius: $radius-xl;
+  padding: 1rem 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.rp-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+.rp-stat-val {
+  font-size: 1.125rem;
+  font-weight: $font-weight-bold;
+  color: $primary-orange;
+  letter-spacing: -0.02em;
+}
+.rp-stat-lbl {
+  font-size: 0.7rem;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: $font-weight-medium;
+  text-align: center;
+}
+.rp-stat-divider {
+  width: 1px;
+  height: 32px;
+  background: $border-primary;
+}
+
+.rp-footer {
+  font-size: 0.725rem;
+  color: $text-muted;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+// ─── Legacy styles cleanup (keep old classes silent) ──────────────────────────

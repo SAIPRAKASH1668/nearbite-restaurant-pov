@@ -47,14 +47,14 @@
     border-left: 4px solid $status-success;
     
     .notification-icon {
-      background: linear-gradient(135deg, $status-success, lighten($status-success, 10%));
+      background: linear-gradient(135deg, $status-success, #4ade80);
       box-shadow: 0 4px 12px rgba($status-success, 0.4);
     }
     
     .notification-progress {
       background: linear-gradient(90deg, 
         $status-success, 
-        lighten($status-success, 15%)
+        #4ade80
       );
     }
   }
@@ -67,14 +67,14 @@
     border-left: 4px solid $status-error;
     
     .notification-icon {
-      background: linear-gradient(135deg, $status-error, lighten($status-error, 10%));
+      background: linear-gradient(135deg, $status-error, #f87171);
       box-shadow: 0 4px 12px rgba($status-error, 0.4);
     }
     
     .notification-progress {
       background: linear-gradient(90deg, 
         $status-error, 
-        lighten($status-error, 15%)
+        #f87171
       );
     }
   }
@@ -87,14 +87,14 @@
     border-left: 4px solid $status-warning;
     
     .notification-icon {
-      background: linear-gradient(135deg, $status-warning, lighten($status-warning, 10%));
+      background: linear-gradient(135deg, $status-warning, #fbbf24);
       box-shadow: 0 4px 12px rgba($status-warning, 0.4);
     }
     
     .notification-progress {
       background: linear-gradient(90deg, 
         $status-warning, 
-        lighten($status-warning, 15%)
+        #fbbf24
       );
     }
   }
@@ -107,14 +107,14 @@
     border-left: 4px solid $status-info;
     
     .notification-icon {
-      background: linear-gradient(135deg, $status-info, lighten($status-info, 10%));
+      background: linear-gradient(135deg, $status-info, #60a5fa);
       box-shadow: 0 4px 12px rgba($status-info, 0.4);
     }
     
     .notification-progress {
       background: linear-gradient(90deg, 
         $status-info, 
-        lighten($status-info, 15%)
+        #60a5fa
       );
     }
   }

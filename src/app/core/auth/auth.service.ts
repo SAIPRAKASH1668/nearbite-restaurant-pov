@@ -1,13 +1,21 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { BehaviorSubject, Observable, catchError, map, of } from 'rxjs';
+import { RestaurantContextService } from '../services/restaurant-context.service';
 
 export interface User {
-  id: string;
-  name: string;
-  email: string;
-  restaurantName: string;
-  role: string;
+  token: string;
+  restaurantId: string;
+  name?: string;
+  restaurantName?: string;
+  [key: string]: unknown;
+}
+
+interface RestaurantLoginResponse {
+  token: string;
+  restaurantId: string;
+  [key: string]: unknown;
 }
 
 @Injectable({
@@ -17,20 +25,23 @@ export class AuthService {
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
   private readonly STORAGE_KEY = 'nearbite_user';
+  private readonly TOKEN_STORAGE_KEY = 'nearbite_auth_token';
+  private readonly API_BASE_URL = '/api/v1';
 
-  // Dummy credentials for testing
-  private readonly VALID_CREDENTIALS = [
-    { username: 'demo@restaurant.com', password: 'demo123' },
-    { username: 'admin@nearbite.com', password: 'admin123' },
-    { username: '9876543210', password: 'demo123' }
-  ];
-
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    private http: HttpClient,
+    private restaurantContext: RestaurantContextService
+  ) {
     const storedUser = localStorage.getItem(this.STORAGE_KEY);
     this.currentUserSubject = new BehaviorSubject<User | null>(
       storedUser ? JSON.parse(storedUser) : null
     );
     this.currentUser = this.currentUserSubject.asObservable();
+
+    if (this.currentUserSubject.value?.restaurantId) {
+      this.restaurantContext.setRestaurantId(this.currentUserSubject.value.restaurantId);
+    }
   }
 
   public get currentUserValue(): User | null {
@@ -38,46 +49,41 @@ export class AuthService {
   }
 
   public get isAuthenticated(): boolean {
-    return !!this.currentUserSubject.value;
+    return !!this.currentUserSubject.value && !!localStorage.getItem(this.TOKEN_STORAGE_KEY);
   }
 
   login(username: string, password: string): Observable<{ success: boolean; message?: string }> {
-    return new Observable(observer => {
-      // Simulate API call delay
-      setTimeout(() => {
-        const validCredential = this.VALID_CREDENTIALS.find(
-          cred => cred.username === username && cred.password === password
-        );
+    return this.http.post<RestaurantLoginResponse>(`${this.API_BASE_URL}/restaurants/login`, {
+      username,
+      password
+    }).pipe(
+      map((response) => {
+        const user: User = { ...response };
 
-        if (validCredential) {
-          // Create dummy user object
-          const user: User = {
-            id: '1',
-            name: 'Demo Restaurant Owner',
-            email: validCredential.username,
-            restaurantName: 'The Great Indian Kitchen',
-            role: 'owner'
-          };
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
+        localStorage.setItem(this.TOKEN_STORAGE_KEY, response.token);
+        this.restaurantContext.setRestaurantId(response.restaurantId);
+        this.currentUserSubject.next(user);
 
-          // Store user
-          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
-          this.currentUserSubject.next(user);
+        return { success: true };
+      }),
+      catchError((error: HttpErrorResponse) => {
+        const message = error.status === 401
+          ? 'Invalid username or password. Please try again.'
+          : (error.error?.message || 'Login failed. Please try again later.');
+        return of({ success: false, message });
+      })
+    );
+  }
 
-          observer.next({ success: true });
-          observer.complete();
-        } else {
-          observer.next({
-            success: false,
-            message: 'Invalid username or password. Please try again.'
-          });
-          observer.complete();
-        }
-      }, 1000); // Simulate 1 second delay
-    });
+  getToken(): string | null {
+    return localStorage.getItem(this.TOKEN_STORAGE_KEY);
   }
 
   logout(): void {
     localStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(this.TOKEN_STORAGE_KEY);
+    this.restaurantContext.clearContext();
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }

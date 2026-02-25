@@ -1,426 +1,317 @@
-<!-- ====================================
-     YumDude Landing Page
-     ==================================== -->
-
-<!-- Sticky Navbar -->
-<nav class="navbar" [class.scrolled]="isScrolled">
-  <div class="navbar-container">
-    <!-- Logo -->
-    <div class="navbar-brand" (click)="scrollToSection('home', $event)">
-      <i class="fas fa-utensils brand-icon"></i>
-      <span class="brand-name">YumDude</span>
+﻿<!-- ========== NAVBAR ========== -->
+<nav class="l-nav glass">
+  <div class="l-container">
+    <div class="nav-inner">
+      <a href="javascript:void(0)" class="nav-logo" (click)="scrollToSection('home')">
+        <img src="assets/images/nearbite_logo.png" alt="YumDude" class="nav-logo-img" />
+        <span class="logo-text"><span class="logo-yum">Yum</span><span class="logo-dude">Dude</span></span>
+      </a>
+      <div class="nav-links">
+        <a *ngFor="let link of navLinks" href="javascript:void(0)" class="nav-link" (click)="scrollToSection(link.id)">{{ link.label }}</a>
+      </div>
+      <div class="nav-ctas">
+        <button class="btn-outline-nav" (click)="navigateToLogin($event)">Partner With Us</button>
+        <button class="btn-cta-nav" (click)="scrollToSection('cta', $event)">Order Now</button>
+      </div>
+      <button class="mobile-toggle" (click)="toggleMobileMenu()" aria-label="Toggle menu">
+        <i class="fas" [class.fa-bars]="!isMobileMenuOpen" [class.fa-xmark]="isMobileMenuOpen"></i>
+      </button>
     </div>
-
-    <!-- Navigation Links -->
-    <ul class="navbar-nav">
-      <li *ngFor="let section of sections" 
-          class="nav-item"
-          [class.active]="activeSection === section.id">
-        <a (click)="scrollToSection(section.id, $event)" class="nav-link">
-          {{ section.label }}
-        </a>
-      </li>
-    </ul>
-
-    <!-- Mobile Menu Toggle -->
-    <button class="mobile-menu-toggle" (click)="toggleMobileMenu()" [class.active]="isMobileMenuOpen">
-      <span class="hamburger-line"></span>
-      <span class="hamburger-line"></span>
-      <span class="hamburger-line"></span>
-    </button>
-
-    <!-- CTA Button -->
-    <button class="navbar-cta" (click)="navigateToLogin($event)">
-      <i class="fas fa-sign-in-alt"></i>
-      <span class="cta-text">Login as Restaurant</span>
-      <span class="cta-text-mobile">Login</span>
-    </button>
+  </div>
+  <div class="mobile-menu" [class.open]="isMobileMenuOpen">
+    <div class="l-container">
+      <div class="mobile-menu-links">
+        <a *ngFor="let link of navLinks" href="javascript:void(0)" class="mobile-nav-link" (click)="scrollToSection(link.id)">{{ link.label }}</a>
+        <div class="mobile-cta-row">
+          <button class="btn-outline-nav w-full" (click)="navigateToLogin($event)">Partner With Us</button>
+          <button class="btn-cta-nav w-full" (click)="scrollToSection('cta', $event)">Order Now</button>
+        </div>
+      </div>
+    </div>
   </div>
 </nav>
 
-<!-- Mobile Menu Drawer -->
-<div class="mobile-menu-overlay" [class.active]="isMobileMenuOpen" (click)="closeMobileMenu()"></div>
-<div class="mobile-menu-drawer" [class.active]="isMobileMenuOpen">
-  <div class="mobile-menu-header">
-    <div class="mobile-menu-brand">
-      <i class="fas fa-utensils"></i>
-      <span>YumDude</span>
-    </div>
-    <button class="mobile-menu-close" (click)="closeMobileMenu()">
-      <i class="fas fa-times"></i>
-    </button>
-  </div>
-  <nav class="mobile-menu-nav">
-    <a *ngFor="let section of sections" 
-       (click)="scrollToSection(section.id, $event); closeMobileMenu()" 
-       class="mobile-menu-link"
-       [class.active]="activeSection === section.id">
-      {{ section.label }}
-    </a>
-  </nav>
-  <div class="mobile-menu-footer">
-    <button class="mobile-menu-cta" (click)="navigateToLogin($event); closeMobileMenu()">
-      <i class="fas fa-sign-in-alt"></i>
-      Login as Restaurant
-    </button>
-  </div>
-</div>
-
-<!-- Hero Section -->
+<!-- ========== HERO ========== -->
 <section id="home" class="hero-section">
-  <!-- Background -->
-  <div class="hero-background">
-    <div class="screenshot-collage">
-      <div class="collage-overlay"></div>
-    </div>
+  <div class="hero-bg-layer">
+    <img src="assets/images/hero-food.jpg" alt="" aria-hidden="true" class="hero-bg-img" />
+    <div class="hero-bg-overlay"></div>
   </div>
-
-  <!-- Hero Content -->
-  <div class="hero-content animate-on-scroll">
-    <h1 class="hero-title">
-      YumDude — Your Local Food<br>
-      Delivery Partner
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <!-- Floating decorative bubbles -->
+  <div class="hero-bubble hero-bubble-1"></div>
+  <div class="hero-bubble hero-bubble-2"></div>
+  <div class="hero-bubble hero-bubble-3"></div>
+  <div class="l-container hero-content">
+    <div class="hero-badge">
+      <i class="fas fa-utensils hero-badge-icon"></i>
+      Disrupting Food Delivery
+    </div>
+    <h1 class="hero-h1">
+      Fair Food.&#32;<span class="h1-yum">Fair</span><br />Commission.&#32;<span class="h1-dude">Fair</span>&#32;Prices.
     </h1>
-    <p class="hero-subtitle">
-      Order from your favorite restaurants and enjoy express delivery powered by our trusted Dudes.
+    <p class="hero-sub">
+      YumDude delivers happiness without overcharging restaurants or customers.<br />
+      A transparent ecosystem built for everyone.
     </p>
-    <div class="hero-actions">
-      <button class="btn-primary" (click)="navigateToDownload($event)">
-        <i class="fas fa-mobile-alt"></i>
+    <div class="hero-btns">
+      <button class="btn-hero-primary" (click)="scrollToSection('cta', $event)">
         Order Now
+        <i class="fas fa-arrow-right btn-icon"></i>
       </button>
-      <button class="btn-secondary" (click)="navigateToRegisterRestaurant($event)">
-        <i class="fas fa-handshake"></i>
+      <button class="btn-hero-outline" (click)="navigateToLogin($event)">
         Partner With Us
+        <i class="fas fa-chevron-right btn-icon"></i>
+      </button>
+    </div>
+    <div class="hero-stats">
+      <div *ngFor="let stat of heroStats" class="stat-item">
+        <div class="stat-value stat-gradient">{{ stat.value }}</div>
+        <div class="stat-label">{{ stat.label }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-curve">
+    <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0,80 C360,0 1080,0 1440,80 L1440,80 L0,80 Z" fill="hsl(43, 100%, 97%)" />
+    </svg>
+  </div>
+</section>
+
+<!-- ========== DIFFERENCE ========== -->
+<section id="difference" class="section-py bg-background">
+  <div class="l-container">
+    <div class="section-header">
+      <div class="chip chip-red">
+        <i class="fas fa-bolt chip-icon"></i>
+        Why YumDude?
+      </div>
+      <h2 class="section-h2">
+        How <span class="brand-yum">Yum</span><span class="brand-dude">Dude</span> is Different
+      </h2>
+      <p class="section-sub">We believe food delivery should benefit everyone — not just the platform.</p>
+    </div>
+    <div class="diff-grid">
+      <div class="diff-card diff-card-problems">
+        <div class="diff-card-header">
+          <div class="diff-icon-box diff-icon-red">
+            <i class="fas fa-xmark diff-hdr-icon"></i>
+          </div>
+          <h3 class="diff-card-title">Other Platforms</h3>
+        </div>
+        <ul class="diff-list">
+          <li *ngFor="let p of problems" class="diff-list-item">
+            <div class="diff-item-icon diff-item-icon-red">
+              <i class="fas {{ p.icon }}"></i>
+            </div>
+            <span>{{ p.text }}</span>
+          </li>
+        </ul>
+      </div>
+      <div class="diff-card diff-card-solutions">
+        <div class="diff-card-header">
+          <div class="diff-icon-box diff-icon-yellow">
+            <i class="fas fa-check diff-hdr-icon"></i>
+          </div>
+          <h3 class="diff-card-title"><span class="brand-yum">Yum</span><span class="brand-dude">Dude</span></h3>
+        </div>
+        <ul class="diff-list">
+          <li *ngFor="let s of solutions" class="diff-list-item">
+            <div class="diff-item-icon diff-item-icon-yellow">
+              <i class="fas {{ s.icon }}"></i>
+            </div>
+            <span>{{ s.text }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== RESTAURANTS ========== -->
+<section id="restaurants" class="section-py bg-gradient-warm">
+  <div class="l-container">
+    <div class="section-header">
+      <div class="chip chip-yellow">
+        <i class="fas fa-store chip-icon"></i>
+        For Restaurants
+      </div>
+      <h2 class="section-h2">Built for Restaurant <span class="brand-yum">Growth</span></h2>
+      <p class="section-sub">We believe when restaurants thrive, everyone wins.</p>
+    </div>
+    <div class="feat-grid feat-grid-4">
+      <div *ngFor="let feat of restaurantFeatures" class="feat-card">
+        <div class="feat-icon-box feat-icon-yellow">
+          <i class="fas {{ feat.icon }}"></i>
+        </div>
+        <h3 class="feat-title">{{ feat.title }}</h3>
+        <p class="feat-desc">{{ feat.description }}</p>
+        <div class="feat-accent-bar feat-accent-yellow"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== CUSTOMERS ========== -->
+<section id="customers" class="section-py bg-background">
+  <div class="l-container">
+    <div class="section-header">
+      <div class="chip chip-red">
+        <i class="fas fa-users chip-icon"></i>
+        For Customers
+      </div>
+      <h2 class="section-h2">Food That Doesn't Hurt <span class="brand-dude">Your Wallet</span></h2>
+      <p class="section-sub">Order with confidence. Every price you see is the real price.</p>
+    </div>
+    <div class="feat-grid feat-grid-2">
+      <div *ngFor="let feat of customerFeatures" class="cust-card">
+        <div class="feat-icon-box feat-icon-red">
+          <i class="fas {{ feat.icon }}"></i>
+        </div>
+        <div>
+          <h3 class="feat-title">{{ feat.title }}</h3>
+          <p class="feat-desc">{{ feat.description }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== APP PREVIEW ========== -->
+<section id="app-preview" class="section-py bg-gradient-warm">
+  <div class="l-container app-grid">
+    <div class="app-text">
+      <div class="chip chip-yellow">
+        <i class="fas fa-mobile-screen-button chip-icon"></i>
+        Live App Preview
+      </div>
+      <h2 class="section-h2 app-h2">Experience <span class="brand-gradient">YumDude</span> in Action</h2>
+      <p class="section-sub app-sub">
+        Track your order in real-time, discover top-rated restaurants, and enjoy a seamless delivery
+        experience — all from one beautiful app.
+      </p>
+      <ul class="highlight-list">
+        <li *ngFor="let h of appHighlights" class="highlight-item">
+          <div class="highlight-dot">
+            <i class="fas {{ h.icon }}"></i>
+          </div>
+          <span>{{ h.text }}</span>
+        </li>
+      </ul>
+    </div>
+    <div class="app-visual">
+      <div class="phone-glow"></div>
+      <img src="assets/images/app-mockup.png" alt="YumDude app" class="phone-img float-anim" />
+      <div class="float-card float-card-1 glass">
+        <div class="float-card-icon-box float-card-icon-yellow">
+          <i class="fas fa-truck float-card-fa"></i>
+        </div>
+        <div class="float-card-text">
+          <div class="float-card-title">On the way!</div>
+          <div class="float-card-sub">Arriving in 12 min</div>
+        </div>
+      </div>
+      <div class="float-card float-card-2 glass">
+        <span class="float-card-emoji">⭐</span>
+        <div class="float-card-text">
+          <div class="float-card-title">4.9 Rating</div>
+          <div class="float-card-sub">2,450 reviews</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== TESTIMONIALS ========== -->
+<section class="section-py bg-background">
+  <div class="l-container">
+    <div class="section-header">
+      <div class="chip chip-yellow">
+        <i class="fas fa-comment-dots chip-icon"></i>
+        Testimonials
+      </div>
+      <h2 class="section-h2">
+        Loved by <span class="brand-yum">Restaurants</span> &amp; <span class="brand-dude">Customers</span>
+      </h2>
+    </div>
+    <div class="feat-grid feat-grid-3">
+      <div *ngFor="let t of testimonials" class="testi-card">
+        <div class="testi-quote-icon">
+          <i class="fas fa-quote-left"></i>
+        </div>
+        <p class="testi-text">"{{ t.text }}"</p>
+        <div class="testi-stars">
+          <i *ngFor="let s of stars" class="fas fa-star testi-star"></i>
+        </div>
+        <div class="testi-author">
+          <div class="testi-avatar">{{ t.avatar }}</div>
+          <div class="testi-author-info">
+            <div class="testi-name">{{ t.name }}</div>
+            <div class="testi-role">{{ t.role }}</div>
+          </div>
+          <div class="testi-tag" [class.testi-tag-yellow]="t.type === 'Restaurant'" [class.testi-tag-red]="t.type === 'Customer'">
+            {{ t.type }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== FINAL CTA ========== -->
+<section id="cta" class="cta-section">
+  <div class="cta-bg"></div>
+  <div class="cta-curve-top">
+    <svg viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+      <path d="M0,0 C360,80 1080,80 1440,0 L1440,0 L0,0 Z" fill="hsl(43, 100%, 97%)" />
+    </svg>
+  </div>
+  <div class="cta-orb cta-orb-1"></div>
+  <div class="cta-orb cta-orb-2"></div>
+  <div class="l-container cta-content">
+    <h2 class="cta-h2">Let's Fix Food Delivery Together.</h2>
+    <p class="cta-sub">
+      Join the movement for fair food delivery. Whether you're a restaurant or a food lover,
+      YumDude has your back.
+    </p>
+    <div class="cta-btns">
+      <button class="btn-cta-white" (click)="scrollToSection('app-preview', $event)">
+        <i class="fas fa-download btn-icon"></i>
+        Download App
+      </button>
+      <button class="btn-cta-ghost" (click)="navigateToLogin($event)">
+        Become a Partner
+        <i class="fas fa-arrow-right btn-icon"></i>
       </button>
     </div>
   </div>
 </section>
 
-<div id="about-divider" class="section-divider"></div>
-
-<!-- About YumDude Section (Includes Features) -->
-<section id="about" class="about-section">
-  <div class="section-container">
-    <div class="section-header animate-on-scroll">
-      <h2 class="section-title">About YumDude</h2>
-      <p class="section-subtitle">
-        Connecting customers, restaurants, and riders in a seamless food delivery ecosystem.
-      </p>
-    </div>
-
-    <div class="about-content animate-on-scroll">
-      <div class="about-card">
-        <div class="about-icon">
-          <i class="fas fa-bullseye"></i>
-        </div>
-        <h3>Our Mission</h3>
-        <p>
-          To empower local communities by connecting food lovers with their favorite restaurants through fast, reliable delivery.
-        </p>
+<!-- ========== FOOTER ========== -->
+<footer class="l-footer">
+  <div class="l-container">
+    <div class="footer-grid">
+      <div class="footer-brand-col">
+        <a href="javascript:void(0)" class="footer-logo" (click)="scrollToSection('home')">
+          <img src="assets/images/nearbite_logo.png" alt="YumDude" class="footer-logo-img" />
+          <span class="logo-text"><span class="logo-yum">Yum</span><span class="logo-dude">Dude</span></span>
+        </a>
+        <p class="footer-tagline">Fair food delivery for everyone. Transparent pricing, supporting local restaurants.</p>
       </div>
-
-      <div class="about-card">
-        <div class="about-icon">
-          <i class="fas fa-network-wired"></i>
-        </div>
-        <h3>Our Ecosystem</h3>
-        <p>
-          A complete platform serving customers, restaurant partners, and delivery riders with dedicated tools and support.
-        </p>
-      </div>
-
-      <div class="about-card">
-        <div class="about-icon">
-          <i class="fas fa-heart"></i>
-        </div>
-        <h3>Community First</h3>
-        <p>
-          We believe in supporting local businesses and creating flexible earning opportunities for our delivery partners.
-        </p>
+      <div *ngFor="let col of footerCols" class="footer-link-col">
+        <h4 class="footer-col-title">{{ col.title }}</h4>
+        <ul class="footer-link-list">
+          <li *ngFor="let link of col.links">
+            <a href="#" class="footer-link">{{ link }}</a>
+          </li>
+        </ul>
       </div>
     </div>
-
-    <!-- Features within About Section -->
-    <div class="features-wrapper">
-      <div class="section-header animate-on-scroll">
-        <h3 class="subsection-title">Platform Features</h3>
-        <p class="section-subtitle">
-          Tailored solutions for everyone in our ecosystem.
-        </p>
-      </div>
-
-      <!-- For Customers -->
-      <div class="feature-category animate-on-scroll">
-        <h4 class="category-title">
-          <i class="fas fa-user-circle"></i>
-          For Customers
-        </h4>
-        <div class="features-grid">
-          <div *ngFor="let feature of customerFeatures" class="feature-card">
-            <div class="feature-icon">
-              <i class="fas {{ feature.icon }}"></i>
-            </div>
-            <h5 class="feature-title">{{ feature.title }}</h5>
-            <p class="feature-description">{{ feature.description }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- For Restaurants -->
-      <div class="feature-category animate-on-scroll">
-        <h4 class="category-title">
-          <i class="fas fa-store"></i>
-          For Restaurants
-        </h4>
-        <div class="features-grid">
-          <div *ngFor="let feature of restaurantFeatures" class="feature-card">
-            <div class="feature-icon">
-              <i class="fas {{ feature.icon }}"></i>
-            </div>
-            <h5 class="feature-title">{{ feature.title }}</h5>
-            <p class="feature-description">{{ feature.description }}</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- For Riders -->
-      <div class="feature-category animate-on-scroll">
-        <h4 class="category-title">
-          <i class="fas fa-biking"></i>
-          For Riders
-        </h4>
-        <div class="features-grid">
-          <div *ngFor="let feature of riderFeatures" class="feature-card">
-            <div class="feature-icon">
-              <i class="fas {{ feature.icon }}"></i>
-            </div>
-            <h5 class="feature-title">{{ feature.title }}</h5>
-            <p class="feature-description">{{ feature.description }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Features Section (Hidden anchor for compatibility) -->
-<section id="features" class="features-section" style="display: none;"></section>
-
-<div id="screenshots-divider" class="section-divider"></div>
-
-<!-- Screenshots Section -->
-<section id="screenshots" class="screenshots-section">
-  <div class="section-container">
-    <div class="section-header animate-on-scroll">
-      <h2 class="section-title">YumDude App Preview</h2>
-      <p class="section-subtitle">
-        Browse, order, and track — all in one beautifully designed app.
-      </p>
-    </div>
-  </div>
-
-  <div class="screenshots-scroll-container">
-    <div class="screenshots-track">
-      <!-- First set of screenshots -->
-      <div 
-        *ngFor="let screenshot of screenshots" 
-        class="screenshot-item"
-      >
-        <img 
-          [src]="screenshot.src" 
-          [alt]="screenshot.alt" 
-          loading="lazy"
-          class="screenshot-img"
-        />
-      </div>
-      <!-- Duplicate for seamless loop -->
-      <div 
-        *ngFor="let screenshot of screenshots" 
-        class="screenshot-item"
-      >
-        <img 
-          [src]="screenshot.src" 
-          [alt]="screenshot.alt" 
-          loading="lazy"
-          class="screenshot-img"
-        />
-      </div>
-    </div>
-  </div>
-</section>
-
-<div id="register-restaurant-divider" class="section-divider"></div>
-
-<!-- Register Restaurant Section -->
-<section id="register-restaurant" class="register-section">
-  <div class="section-container">
-    <div class="section-header animate-on-scroll">
-      <h2 class="section-title">How to Register Your Restaurant</h2>
-      <p class="section-subtitle">
-        Join hundreds of restaurants already growing with YumDude.
-      </p>
-    </div>
-
-    <div class="steps-container">
-      <div 
-        *ngFor="let step of restaurantSteps; let i = index; let last = last" 
-        class="step-item animate-on-scroll"
-      >
-        <div class="step-number">{{ step.number }}</div>
-        <div class="step-content">
-          <h3 class="step-title">{{ step.title }}</h3>
-          <p class="step-description">{{ step.description }}</p>
-        </div>
-        <div class="step-connector" *ngIf="!last"></div>
-      </div>
-    </div>
-
-    <div class="benefits-grid animate-on-scroll">
-      <h3 class="benefits-title">Why Partner with YumDude?</h3>
-      <div class="benefits-cards">
-        <div class="benefit-card">
-          <i class="fas fa-chart-line"></i>
-          <h4>Grow Your Business</h4>
-          <p>Reach thousands of new customers actively looking for great food.</p>
-        </div>
-        <div class="benefit-card">
-          <i class="fas fa-mobile-alt"></i>
-          <h4>Easy Order Handling</h4>
-          <p>Manage all orders through our intuitive partner dashboard.</p>
-        </div>
-        <div class="benefit-card">
-          <i class="fas fa-money-check-alt"></i>
-          <h4>Hassle-Free Settlements</h4>
-          <p>Transparent pricing with timely weekly settlements.</p>
-        </div>
-        <div class="benefit-card">
-          <i class="fas fa-eye"></i>
-          <h4>Increased Visibility</h4>
-          <p>Feature your restaurant prominently to local customers.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div id="download-app-divider" class="section-divider"></div>
-
-<!-- Download App Section -->
-<section id="download-app" class="download-section">
-  <div class="section-container">
-    <div class="section-header animate-on-scroll">
-      <h2 class="section-title">Download YumDude</h2>
-      <p class="section-subtitle">
-        Get the app and order delicious food from your favorite restaurants.
-      </p>
-    </div>
-
-    <div class="steps-container">
-      <div 
-        *ngFor="let step of downloadSteps; let i = index; let last = last" 
-        class="step-item animate-on-scroll"
-      >
-        <div class="step-number">{{ step.number }}</div>
-        <div class="step-content">
-          <h3 class="step-title">{{ step.title }}</h3>
-          <p class="step-description">{{ step.description }}</p>
-        </div>
-        <div class="step-connector" *ngIf="!last"></div>
-      </div>
-    </div>
-
-    <div class="app-stores animate-on-scroll">
-      <div class="store-badge">
-        <i class="fab fa-google-play"></i>
-        <div class="store-text">
-          <span class="store-label">Get it on</span>
-          <span class="store-name">Google Play</span>
-        </div>
-      </div>
-      <div class="store-badge">
-        <i class="fab fa-app-store"></i>
-        <div class="store-text">
-          <span class="store-label">Download on the</span>
-          <span class="store-name">App Store</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div id="register-rider-divider" class="section-divider"></div>
-
-<!-- Register Rider Section -->
-<section id="register-rider" class="rider-section">
-  <div class="section-container">
-    <div class="section-header animate-on-scroll">
-      <h2 class="section-title">Become a YumDude Rider</h2>
-      <p class="section-subtitle">
-        Earn on your schedule. Deliver happiness. Be a Dude.
-      </p>
-    </div>
-
-    <div class="steps-container">
-      <div 
-        *ngFor="let step of riderSteps; let i = index; let last = last" 
-        class="step-item animate-on-scroll"
-      >
-        <div class="step-number">{{ step.number }}</div>
-        <div class="step-content">
-          <h3 class="step-title">{{ step.title }}</h3>
-          <p class="step-description">{{ step.description }}</p>
-        </div>
-        <div class="step-connector" *ngIf="!last"></div>
-      </div>
-    </div>
-
-    <div class="rider-benefits animate-on-scroll">
-      <h3 class="benefits-title">Rider Benefits</h3>
-      <div class="benefits-list">
-        <div class="benefit-item">
-          <i class="fas fa-check-circle"></i>
-          <span>Flexible working hours</span>
-        </div>
-        <div class="benefit-item">
-          <i class="fas fa-check-circle"></i>
-          <span>Competitive earnings</span>
-        </div>
-        <div class="benefit-item">
-          <i class="fas fa-check-circle"></i>
-          <span>Weekly payouts</span>
-        </div>
-        <div class="benefit-item">
-          <i class="fas fa-check-circle"></i>
-          <span>Dedicated support team</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div id="login-divider" class="section-divider"></div>
-
-<!-- Login Section -->
-<section id="login" class="login-section">
-  <div class="section-container">
-    <div class="login-wrapper animate-on-scroll">
-      <app-login></app-login>
-    </div>
-  </div>
-</section>
-
-<!-- Footer -->
-<footer class="footer">
-  <div class="footer-container">
-    <div class="footer-content">
-      <div class="footer-brand">
-        <i class="fas fa-utensils"></i>
-        <span>YumDude</span>
-      </div>
-      <p class="footer-text">
-        © {{ getCurrentYear() }} YumDude. All rights reserved.
-      </p>
+    <div class="footer-bottom">
+      <span>&copy; {{ getCurrentYear() }} YumDude. All rights reserved.</span>
+      <span>Crafted with &#10084;&#65039; in Nandyal</span>
     </div>
   </div>
 </footer>

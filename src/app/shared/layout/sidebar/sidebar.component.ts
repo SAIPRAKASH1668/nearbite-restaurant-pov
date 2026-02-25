@@ -28,13 +28,13 @@ export class SidebarComponent implements OnInit, OnDestroy {
   
   navItems: NavItem[] = [
     { label: 'Dashboard', icon: 'fa-chart-line', route: '/dashboard' },
-    { label: 'Orders', icon: 'fa-shopping-cart', route: '/orders', badge: 0 },
-    { label: 'Menu', icon: 'fa-utensils', route: '/menu' },
-    { label: 'Reports', icon: 'fa-chart-bar', route: '/reports' },
-    { label: 'Payments', icon: 'fa-credit-card', route: '/payments' },
-    { label: 'Reviews', icon: 'fa-star', route: '/reviews' },
-    { label: 'Settings', icon: 'fa-cog', route: '/settings' },
-    { label: 'Support', icon: 'fa-headset', route: '/support' }
+    { label: 'Orders', icon: 'fa-shopping-cart', route: '/dashboard/orders', badge: 0 },
+    { label: 'Menu', icon: 'fa-utensils', route: '/dashboard/menu' },
+    { label: 'Reports', icon: 'fa-chart-bar', route: '/dashboard/reports' },
+    { label: 'Payments', icon: 'fa-credit-card', route: '/dashboard/payments' },
+    { label: 'Reviews', icon: 'fa-star', route: '/dashboard/reviews' },
+    { label: 'Settings', icon: 'fa-cog', route: '/dashboard/settings' },
+    { label: 'Support', icon: 'fa-headset', route: '/dashboard/support' }
   ];
 
   constructor(
@@ -63,7 +63,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     
 
   private updateOrdersBadge(): void {
-    const ordersItem = this.navItems.find(item => item.route === '/orders');
+    const ordersItem = this.navItems.find(item => item.route === '/dashboard/orders');
     if (ordersItem) {
       ordersItem.badge = this.newOrdersCount > 0 ? this.newOrdersCount : undefined;
     }

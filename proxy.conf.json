@@ -1,6 +1,6 @@
 {
   "/api": {
-    "target": "https://htgicpllf2.execute-api.ap-south-1.amazonaws.com/default",
+    "target": "https://api.dev.yumdude.com",
     "secure": true,
     "changeOrigin": true,
     "pathRewrite": {

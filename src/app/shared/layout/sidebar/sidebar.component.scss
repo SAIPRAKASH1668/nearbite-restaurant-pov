@@ -1,18 +1,32 @@
 @use '../../../../styles/variables' as *;
 @use '../../../../styles/mixins' as *;
 
+// ── Sidebar dark tokens ─────────────────────────────────────────────────────
+$sidebar-bg:          #1C0A0A;
+$sidebar-border:      rgba(255, 255, 255, 0.07);
+$sidebar-text:        rgba(255, 255, 255, 0.52);
+$sidebar-text-hover:  rgba(255, 255, 255, 0.92);
+$sidebar-hover-bg:    rgba(255, 255, 255, 0.06);
+$sidebar-active-bg:   rgba(255, 197, 46, 0.12);
+$sidebar-active-text: hsl(43, 100%, 62%);
+$sidebar-active-bar:  hsl(43, 100%, 55%);
+$yum-yellow:          hsl(43, 100%, 55%);
+$dude-red:            hsl(0,  79%,  55%);
+// ─────────────────────────────────────────────────────────────────────────────
+
 .sidebar {
   position: fixed;
   left: 0;
   top: 0;
   height: 100vh;
   width: $sidebar-width;
-  background: $primary-gradient;
+  background: $sidebar-bg;
+  border-right: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: 2px 0 0 rgba(0,0,0,0.12);
   display: flex;
   flex-direction: column;
   z-index: $z-fixed;
   transition: width $transition-base;
-  box-shadow: $shadow-lg;
   @include custom-scrollbar;
 
   &.collapsed {
@@ -86,7 +100,7 @@
   align-items: center;
   gap: $spacing-md;
   position: relative;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid $sidebar-border;
 
   .toggle-btn {
     width: 32px;
@@ -94,7 +108,7 @@
     background: transparent;
     border: none;
     border-radius: 50%;
-    color: rgba(255, 255, 255, 0.9);
+    color: $sidebar-text-hover;
     cursor: pointer;
     @include flex-center;
     transition: all $transition-fast;
@@ -102,27 +116,14 @@
     margin-left: auto;
     position: relative;
 
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-      opacity: 0;
-      transition: all $transition-fast;
-    }
-
     &:hover {
-      color: $text-primary;
-      transform: translateX(-2px);
-
-      &::before {
-        opacity: 1;
-      }
+      background: $sidebar-hover-bg;
+      color: #FFFFFF;
     }
 
     &:active {
-      transform: translateX(-4px) scale(0.95);
+      background: $sidebar-hover-bg;
+      transform: scale(0.92);
     }
 
     i {
@@ -149,14 +150,16 @@
     .brand-name {
       font-size: $font-size-xl;
       font-weight: $font-weight-bold;
-      color: $text-primary;
       margin: 0 0 $spacing-xs;
       line-height: 1;
     }
 
+    .brand-yum  { color: $yum-yellow; }
+    .brand-dude { color: $dude-red; }
+
     .brand-tagline {
       font-size: $font-size-xs;
-      color: rgba(255, 255, 255, 0.7);
+      color: rgba(255, 255, 255, 0.38);
       margin: 0;
       line-height: 1;
     }
@@ -168,6 +171,14 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: $spacing-lg 0;
+  
+  // Hide scrollbar but keep scroll functionality
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE and Edge
+  
+  &::-webkit-scrollbar {
+    display: none; // Chrome, Safari, Opera
+  }
 
   .nav-list {
     list-style: none;
@@ -185,24 +196,23 @@
     align-items: center;
     gap: $spacing-md;
     padding: $spacing-md $spacing-lg;
-    color: rgba(255, 255, 255, 0.8);
+    color: $sidebar-text;
     text-decoration: none;
-    border-radius: $radius-md;
+    border-radius: 3px;
     transition: all $transition-fast;
     font-size: $font-size-base;
     font-weight: $font-weight-medium;
     position: relative;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: $text-primary;
-      transform: translateX(4px);
+      background: $sidebar-hover-bg;
+      color: $sidebar-text-hover;
     }
 
     &.active {
-      background: rgba(255, 255, 255, 0.15);
-      color: $text-primary;
-      box-shadow: $shadow-sm;
+      background: $sidebar-active-bg;
+      color: $sidebar-active-text;
+      font-weight: $font-weight-semibold;
 
       &::before {
         content: '';
@@ -210,10 +220,10 @@
         left: 0;
         top: 50%;
         transform: translateY(-50%);
-        width: 4px;
-        height: 70%;
-        background: $text-primary;
-        border-radius: 0 $radius-sm $radius-sm 0;
+        width: 3px;
+        height: 60%;
+        background: $sidebar-active-bar;
+        border-radius: 0;
       }
     }
 
@@ -230,22 +240,21 @@
     }
 
     .badge {
-      background: $status-error;
-      color: $text-primary;
+      background: $primary-orange;
+      color: #FFFFFF;
       font-size: $font-size-xs;
       font-weight: $font-weight-bold;
-      padding: $spacing-xs $spacing-sm;
+      padding: 2px $spacing-sm;
       border-radius: $radius-full;
-      min-width: 24px;
+      min-width: 20px;
       text-align: center;
-      box-shadow: $shadow-sm;
     }
   }
 }
 
 .sidebar-footer {
   padding: $spacing-lg $spacing-md;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid $sidebar-border;
 
   .logout-btn {
     width: 100%;
@@ -253,10 +262,10 @@
     align-items: center;
     gap: $spacing-md;
     padding: $spacing-md $spacing-lg;
-    background: rgba(255, 255, 255, 0.1);
+    background: transparent;
     border: none;
-    color: $text-primary;
-    border-radius: $radius-md;
+    color: $sidebar-text;
+    border-radius: 3px;
     font-size: $font-size-base;
     font-weight: $font-weight-medium;
     cursor: pointer;
@@ -264,9 +273,8 @@
     font-family: $font-family;
 
     &:hover {
-      background: rgba($status-error, 0.3);
-      transform: translateY(-2px);
-      box-shadow: $shadow-sm;
+      background: rgba($status-error, 0.15);
+      color: hsl(0, 80%, 72%);
     }
 
     .nav-icon {

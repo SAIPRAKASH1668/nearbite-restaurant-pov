@@ -242,7 +242,8 @@
   box-shadow: $shadow-sm;
   
   &:hover {
-    background: darken($status-error, 5%);
+    background: $status-error;
+    filter: brightness(0.95);
     box-shadow: $shadow-md;
   }
 }

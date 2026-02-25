@@ -62,8 +62,8 @@
           <i class="fas fa-user"></i>
         </div>
         <div class="user-info">
-          <p class="user-name">{{ currentUser?.name }}</p>
-          <p class="restaurant-name">{{ currentUser?.restaurantName }}</p>
+          <p class="user-name">{{ ownerName || currentUser?.name }}</p>
+          <p class="restaurant-name">{{ restaurantName || currentUser?.restaurantName }}</p>
         </div>
         <i class="fas fa-chevron-down dropdown-icon"></i>
 

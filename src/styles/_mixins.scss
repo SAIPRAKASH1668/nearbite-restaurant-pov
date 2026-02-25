@@ -8,7 +8,7 @@
 // Primary Button
 @mixin button-primary {
   background: $primary-gradient;
-  color: $text-primary;
+  color: #FFFFFF;
   border: none;
   padding: $spacing-sm $spacing-xl;
   border-radius: $radius-md;
@@ -26,7 +26,7 @@
   &:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: $shadow-md;
-    background: linear-gradient(135deg, color.adjust($primary-dark, $lightness: 5%) 0%, color.adjust($primary-light, $lightness: 5%) 100%);
+    filter: brightness(0.95);
   }
 
   &:active:not(:disabled) {
@@ -58,7 +58,7 @@
 
   &:hover:not(:disabled) {
     border-color: $primary-light;
-    background: rgba($primary-light, 0.1);
+    background: rgba($secondary-orange, 0.2);
     transform: translateY(-2px);
   }
 
@@ -92,8 +92,8 @@
 
   &:focus {
     border-color: $border-focus;
-    background: color.adjust($bg-tertiary, $lightness: 3%);
-    box-shadow: 0 0 0 3px rgba($primary-light, 0.1);
+    background: $bg-secondary;
+    box-shadow: 0 0 0 3px rgba($primary-orange, 0.16);
   }
 
   &.error {
@@ -133,14 +133,14 @@
 
 // Link
 @mixin link {
-  color: $accent-orange;
+  color: $primary-orange;
   text-decoration: none;
   font-family: $font-family;
   transition: all $transition-fast;
   cursor: pointer;
 
   &:hover {
-    color: $accent-orange-light;
+    color: $secondary-orange;
     text-decoration: underline;
   }
 
@@ -250,11 +250,11 @@
       background: $border-secondary;
       
       &:hover {
-        background: lighten($border-secondary, 15%);
+        background: $gray-400;
       }
 
       &:active {
-        background: lighten($border-secondary, 25%);
+        background: $gray-500;
       }
     }
 
@@ -282,7 +282,8 @@
   font-size: $font-size-xs;
   font-weight: $font-weight-semibold;
   background: rgba($color, 0.15);
-  color: color.adjust($color, $lightness: 15%);
+  color: $color;
+  filter: brightness(1.15);
   border: 1px solid rgba($color, 0.3);
 }
 

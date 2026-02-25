@@ -5,11 +5,9 @@ import { BehaviorSubject, Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class RestaurantContextService {
-  // Hardcoded restaurant ID - simulating login response
-  // In production, this will be set from actual login API response
-  private readonly RESTAURANT_ID = 'RES-1769420326546-3319';
-  
-  private restaurantIdSubject = new BehaviorSubject<string>(this.RESTAURANT_ID);
+  private readonly STORAGE_KEY = 'nearbite_restaurant_id';
+
+  private restaurantIdSubject = new BehaviorSubject<string>(localStorage.getItem(this.STORAGE_KEY) || '');
   public restaurantId$: Observable<string> = this.restaurantIdSubject.asObservable();
 
   constructor() {}
@@ -28,14 +26,14 @@ export class RestaurantContextService {
    */
   setRestaurantId(restaurantId: string): void {
     this.restaurantIdSubject.next(restaurantId);
+    localStorage.setItem(this.STORAGE_KEY, restaurantId);
   }
 
   /**
    * Clear restaurant context (for logout)
    */
   clearContext(): void {
-    // Don't clear in development - keep hardcoded value
-    // In production, this would clear the ID
-    // this.restaurantIdSubject.next('');
+    localStorage.removeItem(this.STORAGE_KEY);
+    this.restaurantIdSubject.next('');
   }
 }

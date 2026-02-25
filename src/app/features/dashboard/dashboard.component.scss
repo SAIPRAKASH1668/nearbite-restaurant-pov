@@ -1,378 +1,554 @@
 @use '../../../styles/variables' as *;
 @use '../../../styles/mixins' as *;
 
-.dashboard-container {
+// ── Brand tokens (────────────────────────────────────────────────────────
+$yum-yellow: hsl(43, 100%, 55%);
+$dude-red:   hsl(0,  79%,  55%);
+
+// ── Page root ──────────────────────────────────────────────────────────────
+.db-root {
   max-width: 1400px;
-  animation: fadeIn $transition-base;
+  padding-bottom: 2rem;
+  animation: dbFadeIn 0.35s ease both;
 }
 
-.page-header {
-  @include flex-between;
-  margin-bottom: $spacing-2xl;
-  gap: $spacing-lg;
+@keyframes dbFadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
 
-  @include mobile {
+// ── Header ────────────────────────────────────────────────────────────────
+.db-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1.5px solid $border-primary;
+
+  @media (max-width: $breakpoint-tablet) {
     flex-direction: column;
     align-items: flex-start;
   }
-
-  .page-title {
-    @include text-title;
-    font-size: $font-size-3xl;
-    margin-bottom: $spacing-xs;
-  }
-
-  .page-subtitle {
-    @include text-body;
-    color: $text-muted;
-  }
-
-  .header-actions {
-    display: flex;
-    gap: $spacing-md;
-    align-items: center;
-
-    @include mobile {
-      width: 100%;
-      flex-direction: column;
-    }
-  }
-
-  .financial-btn {
-    @include button-primary;
-    padding: $spacing-md $spacing-lg;
-    background: $primary-gradient;
-    border: none;
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    font-weight: 600;
-    transition: all $transition-base;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: $shadow-lg;
-    }
-
-    i {
-      font-size: $font-size-base;
-    }
-  }
-
-  .refresh-btn {
-    @include button-secondary;
-    padding: $spacing-md $spacing-lg;
-
-    i {
-      margin-right: $spacing-sm;
-    }
-  }
 }
 
-.loading-container {
-  @include flex-center;
-  flex-direction: column;
-  gap: $spacing-md;
-  padding: $spacing-3xl;
+.db-header-left { display: flex; flex-direction: column; gap: 0.2rem; }
+
+.db-greeting {
+  font-size: 0.8125rem;
+  font-weight: $font-weight-semibold;
+  color: $primary-orange;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.db-title {
+  font-size: clamp(1.6rem, 2.5vw, 2rem);
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+  letter-spacing: -0.03em;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.db-date {
+  font-size: 0.8125rem;
   color: $text-muted;
-
-  i {
-    font-size: $font-size-4xl;
-  }
+  margin: 0;
+  margin-top: 0.15rem;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: $spacing-xl;
-  margin-bottom: $spacing-2xl;
-
-  @include mobile {
-    grid-template-columns: 1fr;
-    gap: $spacing-md;
-  }
-
-  @include tablet {
-    grid-template-columns: repeat(2, 1fr);
-    gap: $spacing-lg;
-  }
-
-  @include laptop {
-    grid-template-columns: repeat(4, 1fr);
-  }
-
-  @include desktop {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-.stat-card {
-  @include card;
-  @include card-hover;
+.db-header-right {
   display: flex;
   align-items: center;
-  gap: $spacing-lg;
-  position: relative;
-  overflow: hidden;
+  gap: 0.75rem;
+  flex-shrink: 0;
 
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 4px;
-    height: 100%;
-    background: $primary-gradient;
-  }
-
-  &.card-2::before {
-    background: linear-gradient(135deg, #2ECC71 0%, #27AE60 100%);
-  }
-
-  &.card-3::before {
-    background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%);
-  }
-
-  &.card-4::before {
-    background: linear-gradient(135deg, #F39C12 0%, #E67E22 100%);
-  }
-
-  .stat-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: $radius-lg;
-    background: rgba($primary-light, 0.1);
-    @include flex-center;
-    font-size: $font-size-2xl;
-    color: $primary-light;
-    flex-shrink: 0;
-  }
-
-  &.card-2 .stat-icon {
-    background: rgba(#2ECC71, 0.1);
-    color: #2ECC71;
-  }
-
-  &.card-3 .stat-icon {
-    background: rgba(#3498DB, 0.1);
-    color: #3498DB;
-  }
-
-  &.card-4 .stat-icon {
-    background: rgba(#F39C12, 0.1);
-    color: #F39C12;
-  }
-
-  .stat-content {
-    flex: 1;
-
-    .stat-label {
-      @include text-muted;
-      font-size: $font-size-sm;
-      margin-bottom: $spacing-xs;
-    }
-
-    .stat-value {
-      @include text-title;
-      font-size: $font-size-3xl;
-      margin-bottom: $spacing-xs;
-    }
-
-    .stat-change {
-      font-size: $font-size-xs;
-      color: $text-muted;
-      display: flex;
-      align-items: center;
-      gap: $spacing-xs;
-
-      &.positive {
-        color: $status-success;
-      }
-
-      &.negative {
-        color: $status-error;
-      }
-
-      i {
-        font-size: $font-size-xs;
-      }
-    }
-  }
+  @media (max-width: $breakpoint-tablet) { width: 100%; }
 }
 
-.charts-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: $spacing-xl;
-  margin-bottom: $spacing-2xl;
-
-  @include mobile {
-    grid-template-columns: 1fr;
-    gap: $spacing-md;
-  }
-
-  @include tablet {
-    grid-template-columns: 1fr;
-    gap: $spacing-lg;
-  }
-
-  @include laptop {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @include desktop {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.chart-card {
-  @include card;
-  min-height: 300px;
-
-  .chart-title {
-    @include text-subtitle;
-    margin-bottom: $spacing-lg;
-    display: flex;
-    align-items: center;
-    gap: $spacing-sm;
-    padding-bottom: $spacing-md;
-    border-bottom: 1px solid $border-primary;
-
-    i {
-      color: $primary-light;
-    }
-  }
-
-  .chart-placeholder {
-    @include flex-center;
-    flex-direction: column;
-    gap: $spacing-md;
-    min-height: 200px;
-    background: $bg-secondary;
-    border-radius: $radius-md;
-    color: $text-muted;
-
-    i {
-      font-size: $font-size-4xl;
-      opacity: 0.3;
-    }
-
-    p {
-      font-size: $font-size-sm;
-    }
-  }
-}
-
-.recent-orders-section {
-  .section-header {
-    @include flex-between;
-    margin-bottom: $spacing-lg;
-
-    .section-title {
-      @include text-subtitle;
-      display: flex;
-      align-items: center;
-      gap: $spacing-sm;
-
-      i {
-        color: $primary-light;
-      }
-    }
-
-    .view-all-link {
-      @include link;
-      font-size: $font-size-sm;
-      font-weight: $font-weight-medium;
-      display: flex;
-      align-items: center;
-      gap: $spacing-xs;
-
-      i {
-        font-size: $font-size-xs;
-      }
-    }
-  }
-}
-
-.orders-list {
-  display: grid;
-  gap: $spacing-lg;
-}
-
-.order-card {
-  @include card;
-  @include card-hover;
+// ── Buttons (offset-shadow, no gradients) ──────────────────────────────
+.db-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 42px;
+  padding: 0 1.25rem;
+  background: $primary-orange;
+  color: #fff;
+  border: 2px solid $accent-orange;
+  border-radius: 3px;
+  font-size: 0.875rem;
+  font-weight: $font-weight-bold;
+  font-family: $font-family;
+  letter-spacing: 0.02em;
   cursor: pointer;
+  box-shadow: 0 4px 0 $dark-orange;
+  transition: transform 80ms ease, box-shadow 80ms ease, background 150ms ease;
+  text-transform: uppercase;
+  white-space: nowrap;
 
-  .order-header {
-    @include flex-between;
-    margin-bottom: $spacing-md;
-    gap: $spacing-md;
+  &:hover { background: $accent-orange; }
+  &:active { transform: translateY(3px); box-shadow: 0 1px 0 $dark-orange; }
+  i { font-size: 0.875rem; }
+}
 
-    .order-info {
-      flex: 1;
+.db-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 42px;
+  padding: 0 1.25rem;
+  background: #fff;
+  color: $text-secondary;
+  border: 1.5px solid $border-primary;
+  border-radius: 3px;
+  font-size: 0.875rem;
+  font-weight: $font-weight-semibold;
+  font-family: $font-family;
+  cursor: pointer;
+  box-shadow: 0 3px 0 $border-primary;
+  transition: transform 80ms ease, box-shadow 80ms ease, border-color 150ms ease;
+  white-space: nowrap;
 
-      .order-number {
-        @include text-body;
-        font-weight: $font-weight-semibold;
-        font-size: $font-size-base;
-        margin-bottom: $spacing-xs;
-      }
+  &:hover { border-color: $primary-orange; color: $primary-orange; }
+  &:active { transform: translateY(2px); box-shadow: 0 1px 0 $border-primary; }
+  i { font-size: 0.875rem; }
+}
 
-      .order-customer {
-        @include text-muted;
-        font-size: $font-size-sm;
-      }
-    }
+// ── Loading ─────────────────────────────────────────────────────────────────
+.db-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 380px;
+  color: $text-muted;
+  font-size: 0.9rem;
+}
 
-    .status-badge {
-      @include badge($status-info);
+.db-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid rgba($primary-orange, 0.15);
+  border-top-color: $primary-orange;
+  border-radius: 50%;
+  animation: dbSpin 0.7s linear infinite;
+}
+@keyframes dbSpin { to { transform: rotate(360deg); } }
 
-      &.status-new {
-        @include badge($status-new);
-      }
+// ── Stats grid ───────────────────────────────────────────────────────────────
+.db-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
 
-      &.status-preparing {
-        @include badge($status-preparing);
-      }
+  @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: $breakpoint-tablet) { grid-template-columns: 1fr; }
+}
 
-      &.status-warning {
-        @include badge($status-warning);
-      }
+.db-stat {
+  background: #fff;
+  border: 1px solid #E8E5E2;
+  border-radius: 3px;
+  padding: 1.375rem 1.5rem;
+  border-top-width: 3px;
+  box-shadow: none;
+  transition: border-color 150ms ease;
 
-      &.status-completed {
-        @include badge($status-completed);
-      }
-    }
+  &:hover {
+    border-color: #D0CCC8;
   }
 
-  .order-footer {
-    @include flex-between;
-    padding-top: $spacing-md;
-    border-top: 1px solid $border-primary;
+  &--orders  { border-top-color: $primary-orange; }
+  &--revenue { border-top-color: $status-success; }
+  &--avg     { border-top-color: $yum-yellow; }
+  &--pending { border-top-color: $status-warning; }
+}
 
-    .order-details {
-      display: flex;
-      gap: $spacing-lg;
+.db-stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
 
-      .detail-item {
-        @include text-muted;
-        font-size: $font-size-sm;
-        display: flex;
-        align-items: center;
-        gap: $spacing-xs;
+.db-stat-label {
+  font-size: 0.8rem;
+  font-weight: $font-weight-semibold;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 
-        i {
-          font-size: $font-size-xs;
-        }
-      }
-    }
+.db-stat-icon {
+  width: 36px; height: 36px;
+  border-radius: 3px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
 
-    .order-amount {
-      @include text-body;
-      font-weight: $font-weight-semibold;
-      font-size: $font-size-lg;
-      color: $accent-orange;
-    }
+  &--red    { background: rgba($primary-orange, 0.1); color: $primary-orange; }
+  &--green  { background: rgba($status-success, 0.1); color: $status-success; }
+  &--yellow { background: rgba($yum-yellow, 0.12);    color: hsl(38, 90%, 40%); }
+  &--orange { background: rgba($status-warning, 0.1); color: $status-warning; }
+}
+
+.db-stat-value {
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 0.625rem;
+}
+
+.db-stat-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.775rem;
+  font-weight: $font-weight-semibold;
+  padding: 0.2rem 0.55rem;
+  border-radius: 2px;
+
+  &--up      { color: $status-success; background: rgba($status-success, 0.1); }
+  &--down    { color: $status-error;   background: rgba($status-error, 0.08); }
+  &--neutral { color: $text-muted;     background: $bg-secondary; }
+}
+
+
+// ── Middle grid ────────────────────────────────────────────────────────────
+.db-mid-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  align-items: start;
+
+  @media (max-width: 1100px) { grid-template-columns: 1fr; }
+}
+
+// ── Shared card shell ──────────────────────────────────────────────────
+.db-card {
+  background: #fff;
+  border: 1px solid #E8E5E2;
+  border-radius: 3px;
+  padding: 1.5rem;
+  box-shadow: none;
+}
+
+.db-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.db-card-eyebrow {
+  font-size: 0.75rem;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $text-muted;
+  margin: 0 0 0.2rem;
+}
+
+.db-card-title {
+  font-size: 1.0625rem;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+// ── Chart tabs ───────────────────────────────────────────────────────────────
+.db-chart-tabs {
+  display: flex;
+  gap: 0.25rem;
+  background: $bg-secondary;
+  border: 1px solid $border-primary;
+  border-radius: 3px;
+  padding: 0.2rem;
+  flex-shrink: 0;
+}
+
+.db-tab {
+  padding: 0.3rem 0.75rem;
+  border: none;
+  background: none;
+  border-radius: 2px;
+  font-size: 0.775rem;
+  font-weight: $font-weight-semibold;
+  font-family: $font-family;
+  color: $text-muted;
+  cursor: pointer;
+  transition: all 150ms ease;
+
+  &--active { background: #fff; color: $primary-orange; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  &:hover:not(.db-tab--active) { color: $text-secondary; }
+}
+
+// ── Skeleton bar chart ──────────────────────────────────────────────────
+.db-bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.625rem;
+  height: 160px;
+  padding: 0 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.db-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.db-bar {
+  width: 100%;
+  min-height: 6px;
+  background: rgba($primary-orange, 0.13);
+  border: 1px solid rgba($primary-orange, 0.22);
+  border-radius: 2px 2px 0 0;
+  transition: background 150ms ease;
+
+  &:hover {
+    background: rgba($primary-orange, 0.28);
+    border-color: rgba($primary-orange, 0.5);
+  }
+}
+
+.db-bar-label {
+  font-size: 0.675rem;
+  color: $text-muted;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+}
+
+.db-chart-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.775rem;
+  color: $text-muted;
+  padding-top: 0.75rem;
+  border-top: 1px solid $border-primary;
+  i { color: $primary-orange; font-size: 0.875rem; }
+}
+
+// ── Pipeline ─────────────────────────────────────────────────────────────────
+.db-pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid $border-primary;
+}
+
+.db-pipe-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.db-pipe-count {
+  font-size: 1.375rem;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.db-pipe-bar {
+  width: 100%; height: 3px;
+  border-radius: 0;
+  background: $border-primary;
+}
+
+.db-pipe-stage--new   .db-pipe-bar  { background: $primary-orange; }
+.db-pipe-stage--prep  .db-pipe-bar  { background: $status-warning; }
+.db-pipe-stage--ready .db-pipe-bar  { background: $status-info; }
+.db-pipe-stage--done  .db-pipe-bar  { background: $status-success; }
+.db-pipe-stage--new   .db-pipe-count { color: $primary-orange; }
+.db-pipe-stage--done  .db-pipe-count { color: $status-success; }
+
+.db-pipe-label {
+  font-size: 0.7rem;
+  font-weight: $font-weight-semibold;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+// ── Quick actions ───────────────────────────────────────────────────────────
+.db-qa-section { display: flex; flex-direction: column; gap: 0; }
+
+.db-qa-title {
+  font-size: 0.75rem;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: $text-muted;
+  margin: 0 0 0.625rem;
+}
+
+.db-qa-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.5rem;
+  border-radius: 2px;
+  text-decoration: none;
+  color: $text-secondary;
+  font-size: 0.875rem;
+  font-weight: $font-weight-semibold;
+  transition: background 150ms ease, color 150ms ease;
+
+  & + & { border-top: 1px solid $border-primary; }
+
+  &:hover {
+    background: $bg-secondary;
+    color: $primary-orange;
+    .db-qa-icon  { background: rgba($primary-orange, 0.1); color: $primary-orange; }
+    .db-qa-arrow { opacity: 1; transform: translateX(2px); }
+  }
+}
+
+.db-qa-icon {
+  width: 30px; height: 30px;
+  border-radius: 2px;
+  background: $bg-secondary;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem;
+  color: $text-muted;
+  flex-shrink: 0;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.db-qa-arrow {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: $text-muted;
+  opacity: 0.4;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+
+// ── Orders card + table + badges ──────────────────────────────────────────────
+.db-orders-card { margin-bottom: 2rem; }
+
+.db-view-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: $font-weight-semibold;
+  color: $primary-orange;
+  text-decoration: none;
+  transition: gap 150ms ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover { gap: 0.6rem; }
+  i { font-size: 0.75rem; }
+}
+
+.db-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 160px;
+  color: $text-muted;
+  i { font-size: 2.5rem; opacity: 0.25; }
+  p { font-size: 0.9rem; }
+}
+
+.db-table-wrap {
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.db-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 680px;
+
+  thead tr { border-bottom: 1.5px solid $border-primary; }
+
+  th {
+    padding: 0.625rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: $font-weight-bold;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $text-muted;
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid $border-primary;
+    transition: background 100ms ease;
+    &:last-child { border-bottom: none; }
+    &:hover { background: $bg-secondary; }
+  }
+
+  td {
+    padding: 0.9rem 1rem;
+    font-size: 0.875rem;
+    color: $text-secondary;
+    vertical-align: middle;
+  }
+}
+
+.db-td-order    { font-weight: $font-weight-bold; color: $text-primary !important; font-family: 'Courier New', monospace; font-size: 0.8125rem !important; }
+.db-td-customer { font-weight: $font-weight-semibold; color: $text-primary !important; }
+.db-td-meta     { color: $text-muted !important; }
+.db-td-amount   { font-weight: $font-weight-bold; color: $primary-orange !important; font-size: 0.9375rem !important; }
+
+// ── Status badges ──────────────────────────────────────────────────────────
+.db-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 2px;
+  font-size: 0.725rem;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.04em;
+  text-transform: capitalize;
+
+  &.status-new {
+    background: rgba($yum-yellow, 0.15);
+    color: hsl(38, 90%, 36%);
+    border: 1px solid rgba($yum-yellow, 0.35);
+  }
+  &.status-preparing {
+    background: rgba($status-warning, 0.12);
+    color: darken($status-warning, 15%);
+    border: 1px solid rgba($status-warning, 0.3);
+  }
+  &.status-warning {
+    background: rgba($status-info, 0.12);
+    color: darken($status-info, 15%);
+    border: 1px solid rgba($status-info, 0.3);
+  }
+  &.status-completed {
+    background: rgba($status-success, 0.1);
+    color: darken($status-success, 10%);
+    border: 1px solid rgba($status-success, 0.3);
   }
 }

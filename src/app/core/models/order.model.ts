@@ -45,6 +45,8 @@ export interface Order {
   addressId: string;
   cancellationReason?: string;
   acceptedAt?: string;
+  pickupOtp?: string; // 4-digit OTP for restaurant to verify with rider during pickup
+  deliveryOtp?: string; // 4-digit OTP for customer to verify with rider during delivery
 }
 
 export interface OrdersResponse {

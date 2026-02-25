@@ -1,49 +1,73 @@
 // ====================================
 // NearBite Design System - Variables
+// YumDude Yellow + Red Theme
 // ====================================
 
-// Primary Colors
-$primary-dark: #8B1E1E;
-$primary-light: #B02121;
-$primary-gradient: linear-gradient(135deg, $primary-dark 0%, $primary-light 100%);
+// Primary Colors - YumDude theme
+$primary-orange: #E83A3A;        // YumDude red
+$secondary-orange: #FFC52E;      // YumDude yellow
+$accent-orange: #CC2F2F;         // Strong red accent
+$light-orange: #FFF9E7;          // Warm cream
+$warm-orange: #FFF3CC;           // Soft yellow tint
+$dark-orange: #B72929;           // Dark red for hover states
+
+// Primary color mappings
+$primary-dark: $dark-orange;
+$primary-light: $primary-orange;
+$primary-gradient: linear-gradient(135deg, $primary-orange 0%, $secondary-orange 100%);
 
 // Background Colors
-$bg-primary: #0F0F0F;
-$bg-secondary: #1A1A1A;
-$bg-tertiary: #242424;
-$bg-card: #1E1E1E;
-$bg-card-hover: #252525;
+$bg-primary: #FFFDF7;
+$bg-secondary: #FFF8EA;
+$bg-tertiary: #F7F1DF;
+$bg-card: #FFFFFF;
+$bg-card-hover: #FFF9E7;
+$bg-light: $light-orange;
+$bg-warm: $warm-orange;
 
 // Accent Colors
-$accent-orange: #D97642;
-$accent-orange-light: #E5915A;
+$accent-primary: $accent-orange;
+$accent-light: $secondary-orange;
+$accent-orange-light: $secondary-orange;
 
 // Text Colors
-$text-primary: #FFFFFF;
-$text-secondary: #D1D1D1;
-$text-muted: #999999;
-$text-disabled: #5A5A5A;
+$text-primary: #2E241B;
+$text-secondary: #5C4C3B;
+$text-muted: #9B8A79;
+$text-disabled: #D1D5DB;
 
 // Status Colors
-$status-success: #2ECC71;
-$status-error: #E74C3C;
-$status-warning: #F39C12;
-$status-info: #3498DB;
-$status-pending: #F39C12;
-$status-new: #3498DB;
-$status-preparing: #9B59B6;
-$status-completed: #2ECC71;
+$status-success: #10B981;
+$status-error: #EF4444;
+$status-warning: #F59E0B;
+$status-info: #3B82F6;
+$status-pending: $status-warning;
+$status-new: $status-info;
+$status-preparing: #8B5CF6;
+$status-completed: $status-success;
+
+// Gray Scale (from Customer App)
+$gray-50: #F9FAFB;
+$gray-100: #F3F4F6;
+$gray-200: #E5E7EB;
+$gray-300: #D1D5DB;
+$gray-400: #9CA3AF;
+$gray-500: #6B7280;
+$gray-600: #4B5563;
+$gray-700: #374151;
+$gray-800: #1F2937;
+$gray-900: #111827;
 
 // Border Colors
-$border-primary: #333333;
-$border-secondary: #444444;
-$border-focus: $primary-light;
+$border-primary: #EBDDCC;
+$border-secondary: #DCCDB7;
+$border-focus: $primary-orange;
 
-// Shadow
-$shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
-$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-$shadow-xl: 0 12px 32px rgba(0, 0, 0, 0.6);
+// Shadow - Warm Theme
+$shadow-sm: 0 4px 20px rgba(46, 36, 27, 0.08);
+$shadow-md: 0 10px 30px rgba(46, 36, 27, 0.12);
+$shadow-lg: 0 16px 42px rgba(46, 36, 27, 0.16);
+$shadow-xl: 0 20px 55px rgba(46, 36, 27, 0.2);
 
 // Spacing
 $spacing-xs: 0.25rem;  // 4px
@@ -63,7 +87,7 @@ $radius-2xl: 24px;
 $radius-full: 9999px;
 
 // Typography
-$font-family: 'Poppins', sans-serif;
+$font-family: 'Plus Jakarta Sans', sans-serif;
 $font-size-xs: 0.75rem;   // 12px
 $font-size-sm: 0.875rem;  // 14px
 $font-size-base: 1rem;    // 16px

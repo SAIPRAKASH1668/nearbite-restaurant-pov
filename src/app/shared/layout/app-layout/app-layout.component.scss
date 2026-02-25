@@ -4,7 +4,7 @@
 .app-layout {
   display: flex;
   min-height: 100vh;
-  background: $bg-primary;
+  background: #FFFFFF;
 }
 
 .main-wrapper {
@@ -26,24 +26,24 @@
 
 .content {
   flex: 1;
-  padding: $spacing-xl;
+  padding: 2rem;
   margin-top: $navbar-height;
-  background: $bg-primary;
+  background: #FFFFFF;
   min-height: calc(100vh - #{$navbar-height} - #{$footer-height});
 
   @include mobile {
-    padding: $spacing-md;
+    padding: 2rem;
   }
 
   @include tablet {
-    padding: $spacing-lg;
+    padding: 2rem;
   }
 
   @include laptop {
-    padding: $spacing-xl;
+    padding: 2rem;
   }
 
   @include desktop {
-    padding: $spacing-2xl;
+    padding: 2rem;
   }
 }

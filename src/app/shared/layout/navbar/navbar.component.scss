@@ -7,11 +7,11 @@
   right: 0;
   left: $sidebar-width;
   height: $navbar-height;
-  background: $bg-card;
-  border-bottom: 1px solid $border-primary;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E8E5E2;
   z-index: $z-sticky;
   transition: left $transition-base;
-  box-shadow: $shadow-sm;
+  box-shadow: none;
 
   @include mobile {
     left: 0;
@@ -109,8 +109,8 @@
     position: absolute;
     top: 6px;
     right: 6px;
-    background: $status-error;
-    color: $text-primary;
+    background: $primary-orange;
+    color: white;
     font-size: $font-size-xs;
     font-weight: $font-weight-bold;
     padding: 2px 6px;
@@ -162,7 +162,7 @@
     .mark-read-btn {
       background: transparent;
       border: none;
-      color: $accent-orange;
+      color: $primary-orange;
       font-family: $font-family;
       font-size: $font-size-xs;
       font-weight: $font-weight-medium;
@@ -172,8 +172,8 @@
       border-radius: $radius-sm;
 
       &:hover {
-        color: $accent-orange-light;
-        background: rgba($accent-orange, 0.1);
+        color: $accent-orange;
+        background: rgba($primary-orange, 0.08);
       }
     }
   }
@@ -318,12 +318,11 @@
     width: 40px;
     height: 40px;
     border-radius: $radius-md;
-    background: $primary-gradient;
+    background: $primary-orange;
     @include flex-center;
     font-size: $font-size-lg;
-    color: $text-primary;
+    color: #FFFFFF;
     flex-shrink: 0;
-    box-shadow: $shadow-sm;
   }
 
   .user-info {

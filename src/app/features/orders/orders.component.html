@@ -1,12 +1,4 @@
 <div class="orders-container">
-  <!-- Page Header -->
-  <div class="page-header">
-    <div>
-      <h1 class="page-title">Orders</h1>
-      <p class="page-subtitle">Manage and track all your orders</p>
-    </div>
-  </div>
-
   <!-- Tabs -->
   <div class="tabs">
     <button
@@ -67,34 +59,43 @@
         <div class="order-id-section">
           <div class="order-number-wrapper">
             <h3 class="order-number" [title]="order.orderId">{{ order.orderId }}</h3>
-            <button class="btn-copy" (click)="copyOrderId(order.orderId)" title="Copy Order ID">
+            <button class="btn-copy" (click)="copyOrderId(order.orderId); $event.stopPropagation()" title="Copy Order ID">
               <i class="fas fa-copy"></i>
             </button>
+            <button class="btn-expand" (click)="expandOrder(order); $event.stopPropagation()" title="View Details">
+              <i class="fas fa-expand-alt"></i>
+            </button>
           </div>
-          <p class="customer-name">
-            <i class="fas fa-phone"></i>
-            {{ order.customerPhone }}
-          </p>
         </div>
         <div class="header-actions">
-          <div class="order-time">
-            <i class="fas fa-clock"></i>
-            {{ getRelativeTime(order.createdAt) }}
+          <div class="customer-time-wrapper">
+            <p class="customer-name">
+              <i class="fas fa-phone"></i>
+              {{ order.customerPhone }}
+            </p>
+            <div class="order-time">
+              <i class="fas fa-clock"></i>
+              {{ getRelativeTime(order.createdAt) }}
+            </div>
           </div>
           <span class="status-badge" [attr.data-status]="order.status">
             {{ getStatusLabel(order.status) }}
           </span>
-          <button class="btn-expand" (click)="expandOrder(order)" title="View Details">
-            <i class="fas fa-expand-alt"></i>
-          </button>
         </div>
       </div>
 
       <div class="order-items">
-        <div class="item" *ngFor="let item of order.items">
+        <div class="items-header">Menu Items</div>
+        <div class="item" *ngFor="let item of order.items.slice(0, 4)">
           <span class="item-name">{{ item.name }}</span>
-          <span class="item-qty">x{{ item.quantity }} @ ₹{{ item.price }}</span>
+          <span class="item-qty">x{{ item.quantity }}</span>
         </div>
+        <button 
+          *ngIf="hasMoreItems(order)" 
+          class="btn-see-more" 
+          (click)="expandOrder(order); $event.stopPropagation()">
+          See {{ order.items.length - 4 }} more items
+        </button>
       </div>
 
       <!-- Delivery Address -->
@@ -106,6 +107,18 @@
         <div class="delivery-partner" *ngIf="order.riderId">
           <i class="fas fa-motorcycle"></i>
           <span>Rider ID: {{ order.riderId }}</span>
+        </div>
+      </div>
+
+      <!-- Pickup OTP Display - Show when order is ready but not yet picked up -->
+      <div class="pickup-otp-section" *ngIf="shouldShowPickupOtp(order)">
+        <div class="otp-container">
+          <div class="otp-label">
+            <i class="fas fa-shield-alt"></i>
+            <span>Pickup OTP - Verify with Rider</span>
+          </div>
+          <div class="otp-code" *ngIf="order.pickupOtp">{{ order.pickupOtp }}</div>
+          <div class="otp-code" *ngIf="!order.pickupOtp" style="font-size: 0.875rem; color: #999;">Not Available</div>
         </div>
       </div>
 
@@ -221,6 +234,18 @@
           <div class="delivery-partner" *ngIf="expandedOrder.riderId">
             <i class="fas fa-motorcycle"></i>
             <span>Rider ID: {{ expandedOrder.riderId }}</span>
+          </div>
+        </div>
+
+        <!-- Pickup OTP Display in Modal -->
+        <div class="modal-pickup-otp" *ngIf="expandedOrder.pickupOtp && shouldShowPickupOtp(expandedOrder)">
+          <div class="otp-container-modal">
+            <div class="otp-label-modal">
+              <i class="fas fa-shield-alt"></i>
+              <span>Pickup OTP - Verify with Rider</span>
+            </div>
+            <div class="otp-code-modal">{{ expandedOrder.pickupOtp }}</div>
+            <p class="otp-instruction">Show this code to the rider when they arrive to pick up the order</p>
           </div>
         </div>
       </div>

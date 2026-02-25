@@ -3,7 +3,9 @@
   <div class="sidebar-header">
     <div class="logo" (click)="isCollapsed && toggleSidebar()"></div>
     <div class="brand" *ngIf="!isCollapsed">
-      <h2 class="brand-name">NearBite</h2>
+      <h2 class="brand-name">
+        <span class="brand-yum">Yum</span><span class="brand-dude">Dude</span>
+      </h2>
       <p class="brand-tagline">Partner Dashboard</p>
     </div>
     <button class="toggle-btn" *ngIf="!isCollapsed" (click)="toggleSidebar()">
@@ -18,6 +20,7 @@
         <a
           [routerLink]="item.route"
           routerLinkActive="active"
+          [routerLinkActiveOptions]="item.route === '/dashboard' ? {exact: true} : {exact: false}"
           class="nav-link"
           [title]="isCollapsed ? item.label : ''"
         >

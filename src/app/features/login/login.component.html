@@ -1,105 +1,207 @@
-<div class="login-container">
-  <div class="login-card fade-in">
-    <!-- Logo and Title -->
-    <div class="logo-section">
-      <div class="logo">
-        <i class="fas fa-utensils"></i>
+<div class="lp-root">
+
+  <!-- ===== LEFT BRAND PANEL ===== -->
+  <aside class="lp-brand">
+    <!-- Decorative background layers -->
+    <div class="brand-orb brand-orb-1"></div>
+    <div class="brand-orb brand-orb-2"></div>
+    <div class="brand-orb brand-orb-3"></div>
+    <div class="brand-grid"></div>
+
+    <!-- Top nav row -->
+    <div class="brand-top">
+      <div class="brand-logo">
+        <div class="brand-logo-icon">
+          <i class="fas fa-utensils"></i>
+        </div>
+        <span class="logo-text"><span class="logo-yum">Yum</span><span class="logo-dude">Dude</span></span>
       </div>
-      <h1 class="brand-title">YumDude</h1>
-      <p class="brand-subtitle">Restaurant Partner Dashboard</p>
+      <span class="brand-badge">Partner Portal</span>
     </div>
 
-    <!-- Login Form -->
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
-      <!-- Username Input -->
-      <div class="form-group">
-        <label for="username">Email / Mobile / Username</label>
-        <div class="input-wrapper">
-          <i class="fas fa-user input-icon"></i>
-          <input
-            id="username"
-            type="text"
-            formControlName="username"
-            placeholder="Enter your email, mobile or username"
-            [class.error]="f['username'].invalid && f['username'].touched"
-          />
-        </div>
-        <div class="error-message" *ngIf="f['username'].invalid && f['username'].touched">
-          <i class="fas fa-exclamation-circle"></i>
-          <span>This field is required</span>
-        </div>
+    <!-- Hero copy -->
+    <div class="brand-hero">
+      <div class="brand-chip">
+        <i class="fas fa-bolt"></i>
+        India's Fairest Food Platform
       </div>
-
-      <!-- Password Input -->
-      <div class="form-group">
-        <label for="password">Password</label>
-        <div class="input-wrapper">
-          <i class="fas fa-lock input-icon"></i>
-          <input
-            id="password"
-            [type]="showPassword ? 'text' : 'password'"
-            formControlName="password"
-            placeholder="Enter your password"
-            [class.error]="f['password'].invalid && f['password'].touched"
-          />
-          <i
-            class="fas password-toggle"
-            [class.fa-eye]="!showPassword"
-            [class.fa-eye-slash]="showPassword"
-            (click)="togglePasswordVisibility()"
-          ></i>
-        </div>
-        <div class="error-message" *ngIf="f['password'].invalid && f['password'].touched">
-          <i class="fas fa-exclamation-circle"></i>
-          <span *ngIf="f['password'].errors?.['required']">Password is required</span>
-          <span *ngIf="f['password'].errors?.['minlength']">Password must be at least 6 characters</span>
-        </div>
-      </div>
-
-      <!-- Error Message -->
-      <div class="error-banner" *ngIf="errorMessage">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span>{{ errorMessage }}</span>
-      </div>
-
-      <!-- Login Button -->
-      <button
-        type="submit"
-        class="login-button"
-        [disabled]="isLoading"
-      >
-        <span *ngIf="!isLoading">
-          <i class="fas fa-sign-in-alt"></i>
-          Login to Dashboard
-        </span>
-        <span *ngIf="isLoading">
-          <i class="fas fa-spinner fa-spin"></i>
-          Logging in...
-        </span>
-      </button>
-
-      <!-- Forgot Password -->
-      <div class="forgot-password">
-        <a (click)="onForgotPassword()">
-          <i class="fas fa-question-circle"></i>
-          Forgot Password?
-        </a>
-      </div>
-    </form>
-
-    <!-- Demo Credentials Info -->
-    <div class="demo-info">
-      <p class="demo-title">
-        <i class="fas fa-info-circle"></i>
-        Demo Credentials
+      <h2 class="brand-headline">
+        Grow your restaurant
+        <span class="headline-accent">without limits.</span>
+      </h2>
+      <p class="brand-sub">
+        Join our growing network of restaurant owners earning more with zero hidden charges and transparent commissions.
       </p>
-      <p class="demo-text">Email: <strong>demo@restaurant.com</strong></p>
-      <p class="demo-text">Password: <strong>demo123</strong></p>
     </div>
 
-    <!-- Footer -->
-    <div class="login-footer">
-      <p>© 2026 NearBite. All rights reserved.</p>
+    <!-- Feature pills -->
+    <div class="brand-features">
+      <div class="feature-pill">
+        <div class="feature-pill-icon">
+          <i class="fas fa-percent"></i>
+        </div>
+        <div class="feature-pill-text">
+          <strong>Lowest Commission</strong>
+          <span>Lowest in the industry, no hidden fees</span>
+        </div>
+      </div>
+      <div class="feature-pill">
+        <div class="feature-pill-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="feature-pill-text">
+          <strong>Real-time Analytics</strong>
+          <span>Track orders, revenue &amp; reviews</span>
+        </div>
+      </div>
+      <div class="feature-pill">
+        <div class="feature-pill-icon">
+          <i class="fas fa-bolt"></i>
+        </div>
+        <div class="feature-pill-text">
+          <strong>Instant Payouts</strong>
+          <span>Settlements within 24 hours</span>
+        </div>
+      </div>
     </div>
-  </div>
+
+
+  </aside>
+
+  <!-- ===== RIGHT FORM PANEL ===== -->
+  <main class="lp-form-panel">
+
+    <!-- Mobile-only logo -->
+    <div class="mobile-logo">
+      <div class="mobile-logo-icon"><i class="fas fa-utensils"></i></div>
+      <span class="logo-yum">Yum</span><span class="logo-dude">Dude</span>
+    </div>
+
+    <div class="form-card">
+
+      <!-- Header -->
+      <div class="form-header">
+        <div class="form-header-icon">
+          <i class="fas fa-store"></i>
+        </div>
+        <div>
+          <h1 class="form-title">Welcome back</h1>
+          <p class="form-subtitle">Sign in to your restaurant dashboard</p>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="lp-form" autocomplete="off">
+
+        <!-- Username -->
+        <div class="field-group" [class.field-error]="f['username'].invalid && f['username'].touched">
+          <label for="username" class="field-label">
+            Email 
+          </label>
+          <div class="field-input-wrap">
+            <i class="fas fa-user field-icon-left"></i>
+            <input
+              id="username"
+              type="text"
+              formControlName="username"
+              placeholder="e.g. restaurant@email.com"
+              class="field-input"
+              autocomplete="username"
+            />
+          </div>
+          <p class="field-error-msg" *ngIf="f['username'].invalid && f['username'].touched">
+            <i class="fas fa-circle-exclamation"></i> This field is required
+          </p>
+        </div>
+
+        <!-- Password -->
+        <div class="field-group" [class.field-error]="f['password'].invalid && f['password'].touched">
+          <div class="field-label-row">
+            <label for="password" class="field-label">Password</label>
+            <a class="forgot-link" (click)="onForgotPassword()">Forgot password?</a>
+          </div>
+          <div class="field-input-wrap">
+            <i class="fas fa-lock field-icon-left"></i>
+            <input
+              id="password"
+              [type]="showPassword ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="Enter your password"
+              class="field-input field-input-pr"
+              autocomplete="current-password"
+            />
+            <button type="button" class="field-eye-btn" (click)="togglePasswordVisibility()" tabindex="-1" aria-label="Toggle password">
+              <i class="fas" [class.fa-eye]="!showPassword" [class.fa-eye-slash]="showPassword"></i>
+            </button>
+          </div>
+          <p class="field-error-msg" *ngIf="f['password'].invalid && f['password'].touched">
+            <i class="fas fa-circle-exclamation"></i>
+            <span *ngIf="f['password'].errors?.['required']">Password is required</span>
+            <span *ngIf="f['password'].errors?.['minlength']">Minimum 6 characters required</span>
+          </p>
+        </div>
+
+        <!-- Server error banner -->
+        <div class="error-banner" *ngIf="errorMessage" role="alert">
+          <i class="fas fa-triangle-exclamation"></i>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="submit-btn" [disabled]="isLoading">
+          <span class="submit-content" *ngIf="!isLoading">
+            <i class="fas fa-arrow-right-to-bracket"></i>
+            Sign In to Dashboard
+          </span>
+          <span class="submit-content" *ngIf="isLoading">
+            <span class="spinner"></span>
+            Signing in...
+          </span>
+        </button>
+
+      </form>
+
+      <!-- Trust strip -->
+      <div class="trust-strip">
+        <div class="trust-item">
+          <i class="fas fa-shield-halved"></i>
+          <span>256-bit SSL</span>
+        </div>
+        <div class="trust-dot"></div>
+        <div class="trust-item">
+          <i class="fas fa-lock"></i>
+          <span>Secure Login</span>
+        </div>
+        <div class="trust-dot"></div>
+        <div class="trust-item">
+          <i class="fas fa-user-shield"></i>
+          <span>Data Protected</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Stats row (moved from left panel) -->
+    <div class="rp-stats">
+      <div class="rp-stat">
+        <span class="rp-stat-val">—</span>
+        <span class="rp-stat-lbl">Active Partners</span>
+      </div>
+      <div class="rp-stat-divider"></div>
+      <div class="rp-stat">
+        <span class="rp-stat-val">—</span>
+        <span class="rp-stat-lbl">Paid Out Monthly</span>
+      </div>
+      <div class="rp-stat-divider"></div>
+      <div class="rp-stat">
+        <span class="rp-stat-val">—</span>
+        <span class="rp-stat-lbl">Partner Rating</span>
+      </div>
+    </div>
+
+    <!-- Footer copyright -->
+    <p class="rp-footer">© 2026 YumDude &nbsp;·&nbsp; Crafted with ❤️ in Nandyal</p>
+
+  </main>
+
 </div>

@@ -24,6 +24,8 @@ interface Notification {
 export class NavbarComponent implements OnInit {
   private readonly API_BASE_URL = 'api/v1';
   currentUser: User | null = null;
+  restaurantName: string = '';
+  ownerName: string = '';
   showUserMenu = false;
   showNotifications = false;
   isRestaurantOpen: boolean = true;
@@ -79,6 +81,22 @@ export class NavbarComponent implements OnInit {
   ngOnInit(): void {
     this.authService.currentUser.subscribe(user => {
       this.currentUser = user;
+    });
+    this.fetchRestaurantName();
+  }
+
+  fetchRestaurantName(): void {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    this.http.get<any>(`${this.API_BASE_URL}/restaurants/${restaurantId}`).subscribe({
+      next: (response) => {
+        this.restaurantName = response.name || 'Restaurant';
+        this.ownerName = response.ownerName || response.managerName || 'Owner';
+      },
+      error: (error) => {
+        console.error('Failed to fetch restaurant details:', error);
+        this.restaurantName = 'Restaurant';
+        this.ownerName = 'Owner';
+      }
     });
   }
 

@@ -100,7 +100,7 @@ export class MenuService {
       `${this.API_BASE_URL}/restaurants/${restaurantId}/menu`,
       {
         name: itemData.itemName,
-        price: itemData.price,
+        restaurantPrice: itemData.price,
         category: itemData.category,
         isVeg: itemData.isVeg,
         isAvailable: itemData.isAvailable,

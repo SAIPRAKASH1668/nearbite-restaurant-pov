@@ -1,5 +1,5 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, ElementRef, Inject } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { 
   Payment, 
@@ -11,9 +11,11 @@ import {
   PaginationConfig,
   PaymentStatus,
   SettlementStatus,
-  PaymentMethod
+  PaymentMethod,
+  RestaurantEarning
 } from '../../core/models/payment.model';
 import { PaymentService } from '../../core/services/payment.service';
+import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 
 @Component({
   selector: 'app-financial-dashboard-modal',
@@ -23,7 +25,7 @@ import { PaymentService } from '../../core/services/payment.service';
   styleUrl: './financial-dashboard-modal.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class FinancialDashboardModalComponent implements OnInit {
+export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   
   // Modal visibility
   isVisible = false;
@@ -77,9 +79,18 @@ export class FinancialDashboardModalComponent implements OnInit {
   // Expose Math for template
   Math = Math;
 
+  // Real AWS data
+  realEarnings: RestaurantEarning[] = [];
+  useRealData = true; // Toggle to switch between real and mock data
+
+  private _originalParent: Element | null = null;
+
   constructor(
     private paymentService: PaymentService,
-    private cdr: ChangeDetectorRef
+    private restaurantContextService: RestaurantContextService,
+    private cdr: ChangeDetectorRef,
+    private el: ElementRef<HTMLElement>,
+    @Inject(DOCUMENT) private document: Document
   ) {}
 
   ngOnInit(): void {
@@ -114,6 +125,12 @@ export class FinancialDashboardModalComponent implements OnInit {
    * Open modal and load fresh data
    */
   open(): void {
+    // Teleport host to document.body so position:fixed covers the full viewport,
+    // escaping any ancestor stacking context (transforms, transitions, etc.)
+    if (!this._originalParent) {
+      this._originalParent = this.el.nativeElement.parentElement;
+    }
+    this.document.body.appendChild(this.el.nativeElement);
     this.isVisible = true;
     this.loadData();
     this.cdr.markForCheck();
@@ -127,6 +144,13 @@ export class FinancialDashboardModalComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  ngOnDestroy(): void {
+    // Return host to original parent on destroy to avoid DOM leaks
+    if (this._originalParent && this.el.nativeElement.parentElement === this.document.body) {
+      this._originalParent.appendChild(this.el.nativeElement);
+    }
+  }
+
   /**
    * Load all financial data with current filters
    * IMPORTANT: Filters apply to ENTIRE dataset, then we paginate
@@ -138,15 +162,67 @@ export class FinancialDashboardModalComponent implements OnInit {
     // Update filters from UI
     this.updateFiltersFromUI();
 
-    // Load all data sources
+    if (this.useRealData) {
+      // Load REAL data from AWS
+      this.loadRealDataFromAWS();
+    } else {
+      // Load mock data (fallback)
+      this.loadMockData();
+    }
+  }
+
+  /**
+   * Load real restaurant earnings from AWS backend
+   */
+  private loadRealDataFromAWS(): void {
+    const restaurantId = this.restaurantContextService.getRestaurantId();
+    
+    console.log('Loading AWS earnings for restaurant:', restaurantId);
+    console.log('Date range:', this.startDate, 'to', this.endDate);
+    
+    this.paymentService.getRestaurantEarnings(
+      restaurantId,
+      this.startDate,
+      this.endDate
+    ).subscribe({
+      next: (response) => {
+        console.log('AWS earnings response:', response);
+        this.realEarnings = response.history;
+        
+        // Convert AWS earnings to Payment format for table display
+        this.allPayments = this.paymentService.convertEarningsToPayments(response.history);
+        
+        // Calculate summary metrics from real data
+        this.earnings = this.paymentService.calculateEarningsSummaryFromAWS(response.history);
+        this.commission = this.paymentService.calculateCommissionFromAWS(response.history);
+        this.statusCounts = this.paymentService.calculateStatusCountsFromAWS(response.history);
+        
+        // Apply search and update UI
+        this.applySearch();
+        this.pagination.currentPage = 1;
+        this.updatePagination();
+        
+        this.isLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: (error) => {
+        console.error('Failed to load AWS earnings, falling back to mock data:', error);
+        // Fallback to mock data on error
+        this.useRealData = false;
+        this.loadMockData();
+      }
+    });
+  }
+
+  /**
+   * Load mock data (original implementation)
+   */
+  private loadMockData(): void {
     this.paymentService.getFilteredPayments(this.filters).subscribe(payments => {
       this.allPayments = payments;
-      this.applySearch(); // Apply search after loading new data
-      
-      // Reset to first page when data changes
+      this.applySearch();
       this.pagination.currentPage = 1;
       this.updatePagination();
-      
       this.isLoading = false;
       this.cdr.markForCheck();
     });
@@ -224,16 +300,39 @@ export class FinancialDashboardModalComponent implements OnInit {
   }
 
   private applySearch(): void {
-    if (!this.searchOrderId.trim()) {
-      // No search term - show all filtered payments
-      this.filteredPayments = [...this.allPayments];
-    } else {
-      // Filter by order ID (case-insensitive partial match)
+    // Start with all payments
+    let payments = [...this.allPayments];
+    
+    // Apply payment status filter
+    if (this.selectedPaymentStatuses.length > 0) {
+      payments = payments.filter(p => 
+        this.selectedPaymentStatuses.includes(p.paymentStatus)
+      );
+    }
+    
+    // Apply settlement status filter
+    if (this.selectedSettlementStatuses.length > 0) {
+      payments = payments.filter(p => 
+        this.selectedSettlementStatuses.includes(p.settlementStatus)
+      );
+    }
+    
+    // Apply payment method filter
+    if (this.selectedPaymentMethods.length > 0) {
+      payments = payments.filter(p => 
+        this.selectedPaymentMethods.includes(p.paymentMethod)
+      );
+    }
+    
+    // Apply order ID search
+    if (this.searchOrderId.trim()) {
       const searchTerm = this.searchOrderId.trim().toLowerCase();
-      this.filteredPayments = this.allPayments.filter(p => 
+      payments = payments.filter(p => 
         p.orderId.toLowerCase().includes(searchTerm)
       );
     }
+    
+    this.filteredPayments = payments;
     this.applySorting();
   }
 
@@ -247,7 +346,11 @@ export class FinancialDashboardModalComponent implements OnInit {
     } else {
       this.selectedPaymentStatuses.push(status);
     }
-    this.loadData();
+    // Re-apply filters without reloading from AWS
+    this.applySearch();
+    this.pagination.currentPage = 1;
+    this.updatePagination();
+    this.cdr.markForCheck();
   }
 
   toggleSettlementStatus(status: SettlementStatus): void {
@@ -257,7 +360,11 @@ export class FinancialDashboardModalComponent implements OnInit {
     } else {
       this.selectedSettlementStatuses.push(status);
     }
-    this.loadData();
+    // Re-apply filters without reloading from AWS
+    this.applySearch();
+    this.pagination.currentPage = 1;
+    this.updatePagination();
+    this.cdr.markForCheck();
   }
 
   togglePaymentMethod(method: PaymentMethod): void {
@@ -267,7 +374,11 @@ export class FinancialDashboardModalComponent implements OnInit {
     } else {
       this.selectedPaymentMethods.push(method);
     }
-    this.loadData();
+    // Re-apply filters without reloading from AWS
+    this.applySearch();
+    this.pagination.currentPage = 1;
+    this.updatePagination();
+    this.cdr.markForCheck();
   }
 
   /**

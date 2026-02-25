@@ -55,6 +55,12 @@ export class OrderService {
       .pipe(
         tap(response => {
           console.log('✓ Orders fetched successfully:', response);
+          // Debug: Check if pickupOtp exists in any order
+          response.orders.forEach(order => {
+            if (order.pickupOtp || (order as any).pickupOtp) {
+              console.log('🔐 Order with OTP:', order.orderId, 'pickupOtp:', order.pickupOtp || (order as any).pickupOtp);
+            }
+          });
           this.ordersSubject.next(response.orders);
           this.loadingSubject.next(false);
         }),

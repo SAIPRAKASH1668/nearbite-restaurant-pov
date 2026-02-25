@@ -306,69 +306,89 @@
 }
 
 .modal-content {
-  background: #1E1E1E;
-  border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  background: $bg-primary;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-xl;
   max-width: 700px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   animation: slideInUp 0.25s ease-in-out;
-  border: 1px solid #333333;
+  border: 1px solid $border-primary;
+
+  // Custom scrollbar styling
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $bg-secondary;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $primary-orange;
+    border-radius: 4px;
+    border: 2px solid $bg-primary;
+
+    &:hover {
+      background: $accent-orange;
+    }
+  }
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 2rem;
-  border-bottom: 1px solid #333333;
-  background: #1A1A1A;
-  border-radius: 16px 16px 0 0;
+  padding: $spacing-lg;
+  border-bottom: 1px solid $border-primary;
+  background: $bg-secondary;
+  border-radius: $radius-lg $radius-lg 0 0;
 
   h2 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #FFFFFF;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    color: $text-primary;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: $spacing-sm;
     margin: 0;
 
     i {
-      color: #B02121;
+      color: $primary-orange;
     }
   }
 
   .close-btn {
     background: transparent;
     border: none;
-    color: #999999;
-    font-size: 1.25rem;
+    color: $text-muted;
+    font-size: $font-size-xl;
     width: 36px;
     height: 36px;
-    border-radius: 8px;
+    border-radius: $radius-sm;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.15s ease-in-out;
+    transition: all $transition-fast;
 
     &:hover {
-      background: #242424;
-      color: #FFFFFF;
+      background: $bg-tertiary;
+      color: $primary-orange;
     }
   }
 }
 
 .add-item-form {
-  padding: 2rem;
+  padding: $spacing-lg;
 
   .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
+    gap: $spacing-md;
+    margin-bottom: $spacing-md;
   }
 
   .form-group {
@@ -383,13 +403,13 @@
     label {
       font-weight: 500;
       font-size: 0.875rem;
-      color: #D1D1D1;
+      color: $text-secondary;
       display: flex;
       align-items: center;
       gap: 0.5rem;
 
       i {
-        color: #D97642;
+        color: $primary-orange;
         font-size: 0.875rem;
       }
     }
@@ -398,25 +418,25 @@
     input[type="number"],
     select,
     textarea {
-      background: #242424;
-      color: #FFFFFF;
-      border: 2px solid #333333;
-      padding: 1rem;
-      border-radius: 8px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 0.875rem;
+      background: $bg-secondary;
+      color: $text-primary;
+      border: 1px solid $border-primary;
+      padding: $spacing-sm;
+      border-radius: $radius-sm;
+      font-family: $font-family;
+      font-size: $font-size-sm;
       width: 100%;
-      transition: all 0.25s ease-in-out;
+      transition: all $transition-base;
       outline: none;
 
       &::placeholder {
-        color: #999999;
+        color: $text-muted;
       }
 
       &:focus {
-        border-color: #B02121;
-        background: #262626;
-        box-shadow: 0 0 0 3px rgba(176, 33, 33, 0.1);
+        border-color: $primary-orange;
+        background: $bg-tertiary;
+        box-shadow: 0 0 0 3px rgba($primary-orange, 0.1);
       }
     }
 
@@ -452,8 +472,8 @@
         cursor: pointer;
 
         &:checked + .checkbox-custom {
-          background: linear-gradient(135deg, #8B1E1E 0%, #B02121 100%);
-          border-color: #B02121;
+          background: $primary-gradient;
+          border-color: $primary-orange;
 
           &::after {
             display: block;
@@ -464,9 +484,9 @@
       .checkbox-custom {
         width: 20px;
         height: 20px;
-        border: 2px solid #444444;
+        border: 2px solid $border-secondary;
         border-radius: 4px;
-        background: #242424;
+        background: $bg-tertiary;
         transition: all 0.15s ease-in-out;
         display: flex;
         align-items: center;
@@ -478,26 +498,26 @@
           font-family: 'Font Awesome 6 Free';
           font-weight: 900;
           font-size: 10px;
-          color: #FFFFFF;
+          color: white;
           display: none;
         }
       }
 
       .checkbox-text {
         font-size: 0.875rem;
-        color: #D1D1D1;
+        color: $text-secondary;
         display: flex;
         align-items: center;
         gap: 0.25rem;
 
         i {
-          color: #D97642;
+          color: $primary-orange;
           font-size: 0.875rem;
         }
       }
 
       &:hover .checkbox-custom {
-        border-color: #B02121;
+        border-color: $primary-orange;
       }
     }
   }
@@ -505,50 +525,56 @@
   .form-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 1rem;
-    margin-top: 3rem;
-    padding-top: 1.5rem;
-    border-top: 1px solid #333333;
+    gap: $spacing-sm;
+    margin-top: $spacing-xl;
+    padding-top: $spacing-md;
+    border-top: 1px solid $border-primary;
 
     button {
-      padding: 1rem 2rem;
-      border-radius: 8px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 1rem;
-      font-weight: 500;
+      padding: $spacing-sm $spacing-lg;
+      border-radius: $radius-sm;
+      font-family: $font-family;
+      font-size: $font-size-base;
+      font-weight: $font-weight-medium;
       cursor: pointer;
-      transition: all 0.25s ease-in-out;
+      transition: all $transition-fast;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: $spacing-xs;
       border: none;
 
       i {
-        font-size: 1rem;
+        font-size: $font-size-base;
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
       }
     }
 
     .btn-cancel {
       background: transparent;
-      color: #999999;
-      border: 2px solid #444444;
+      color: $text-secondary;
+      border: 1px solid $border-primary;
 
-      &:hover {
-        border-color: #E74C3C;
-        color: #E74C3C;
-        background: rgba(231, 76, 60, 0.05);
+      &:hover:not(:disabled) {
+        border-color: $status-error;
+        color: $status-error;
+        background: rgba($status-error, 0.05);
       }
     }
 
     .btn-save {
-      background: linear-gradient(135deg, #8B1E1E 0%, #B02121 100%);
-      color: #FFFFFF;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      background: $primary-orange;
+      color: white;
+      box-shadow: $shadow-sm;
 
-      &:hover {
+      &:hover:not(:disabled) {
+        background: $accent-orange;
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        box-shadow: $shadow-md;
       }
 
       &:active {
