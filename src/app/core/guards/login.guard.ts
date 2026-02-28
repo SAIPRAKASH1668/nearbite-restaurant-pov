@@ -10,7 +10,7 @@ export const loginGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  // Already authenticated, redirect to dashboard
-  router.navigate(['/dashboard']);
+  // Already authenticated, redirect to welcome screen
+  router.navigate(['/dashboard/welcome']);
   return false;
 };

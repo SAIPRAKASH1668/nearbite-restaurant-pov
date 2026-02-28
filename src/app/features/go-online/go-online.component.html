@@ -1,0 +1,56 @@
+<div class="go-online-page">
+
+  <!-- Loading pulse while fetching status from API -->
+  <div class="go-center" *ngIf="isLoading">
+    <svg class="go-loading-spinner" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke="#E83A3A" stroke-width="2.5"
+              stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+    </svg>
+    <p class="go-hint">Loading status…</p>
+  </div>
+
+  <div class="go-center" *ngIf="!isLoading">
+
+    <!-- Offline icon -->
+    <div class="go-icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" class="go-icon">
+        <!-- Wifi-off lines -->
+        <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M8.5 16.5a5 5 0 0 1 7 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
+        <path d="M5 12.5a9 9 0 0 1 5.2-2.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
+        <path d="M10.7 7.5A13 13 0 0 1 19 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" opacity="0.35"/>
+        <circle cx="12" cy="20" r="1" fill="currentColor"/>
+      </svg>
+    </div>
+
+    <!-- Offline indicator -->
+    <div class="go-status">
+      <span class="go-status-dot"></span>
+      <span class="go-status-label">Restaurant is offline</span>
+    </div>
+
+    <!-- CTA -->
+    <button
+      class="go-live-btn"
+      [class.go-live-btn--loading]="isGoingOnline"
+      (click)="goLive()"
+      [disabled]="isGoingOnline">
+
+      <svg *ngIf="!isGoingOnline" viewBox="0 0 24 24" fill="none" class="go-live-btn__icon">
+        <!-- Power on icon -->
+        <path d="M12 3v6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M6.3 5.3a9 9 0 1 0 11.4 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <svg *ngIf="isGoingOnline" class="go-live-btn__spinner" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2.5"
+                stroke-dasharray="31.4 31.4" stroke-linecap="round"/>
+      </svg>
+
+      <span>{{ isGoingOnline ? 'Going live…' : 'Go Live' }}</span>
+    </button>
+
+    <p class="go-hint">Start accepting orders from customers nearby</p>
+
+  </div>
+
+</div>

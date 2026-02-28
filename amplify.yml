@@ -1,0 +1,36 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: dist/yumdude-restaurant/browser
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
+  customHeaders:
+    - pattern: '**/*'
+      headers:
+        - key: 'Cache-Control'
+          value: 'no-store'
+  # Rewrites and redirects
+  # Rules are evaluated top-to-bottom; first match wins.
+  redirects:
+    # 1. Proxy all /api/* calls to the actual backend - prevents Amplify from
+    #    handling them and eliminates the trailing-slash redirect on API paths.
+    - source: /api/<*>
+      target: https://api.dev.yumdude.com/api/<*>
+      status: '200'
+      condition: null
+
+    # 2. Standard SPA rewrite - serve index.html for all non-file Angular routes.
+    - source: /<*>
+      target: /index.html
+      status: '200'
+      condition: null

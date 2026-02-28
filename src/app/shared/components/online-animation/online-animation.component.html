@@ -1,0 +1,60 @@
+<div class="oa-overlay" *ngIf="visible" [class.oa-exit]="exiting">
+
+  <!-- ── Ambient glow orb ── -->
+  <div class="oa-glow-orb"></div>
+
+  <!-- ── Expanding rings ── -->
+  <div class="oa-rings">
+    <div class="oa-ring" *ngFor="let r of rings" [attr.data-ring]="r"></div>
+  </div>
+
+  <!-- ── Particle starburst ── -->
+  <div class="oa-particles">
+    <div class="oa-particle" *ngFor="let p of particles" [attr.data-p]="p"></div>
+  </div>
+
+  <!-- ── Main content ── -->
+  <div class="oa-content">
+
+    <!-- YumDude wordmark -->
+    <div class="oa-brand">
+      <span class="oa-brand-yum">Yum</span><span class="oa-brand-dude">Dude</span>
+    </div>
+
+    <!-- Check badge -->
+    <div class="oa-check-wrap">
+      <div class="oa-check-ring"></div>
+      <svg class="oa-check-icon" viewBox="0 0 52 52" fill="none">
+        <circle cx="26" cy="26" r="25" stroke="currentColor" stroke-width="2"/>
+        <path class="oa-checkmark" d="M14 26 l8 8 16-16" stroke="currentColor"
+              stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- "YOU'RE" -->
+    <p class="oa-youre">YOU'RE</p>
+
+    <!-- "LIVE!" — letter-by-letter -->
+    <div class="oa-hero-word">
+      <span class="oa-letter" *ngFor="let l of liveLetters; let i = index"
+            [style.animation-delay]="(0.55 + i * 0.07) + 's'">{{ l }}</span>
+    </div>
+
+    <!-- Subtitle -->
+    <p class="oa-subtitle">Your restaurant is now accepting orders</p>
+
+    <!-- Online badge -->
+    <div class="oa-badge">
+      <span class="oa-badge-dot"></span>
+      <span class="oa-badge-text">ONLINE</span>
+    </div>
+
+  </div>
+
+  <!-- Corner decoration lines -->
+  <div class="oa-corner oa-corner--tl"></div>
+  <div class="oa-corner oa-corner--tr"></div>
+  <div class="oa-corner oa-corner--bl"></div>
+  <div class="oa-corner oa-corner--br"></div>
+
+</div>

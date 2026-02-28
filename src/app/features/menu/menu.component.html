@@ -1,235 +1,256 @@
-<div class="menu-container">
-  <div class="page-header">
-    <div>
-      <h1 class="page-title">Menu Management</h1>
-      <p class="page-subtitle">Manage your restaurant menu items</p>
+﻿<div class="menu-root">
+
+  <!-- ── Page Header ──────────────────────────────────────────────────────── -->
+  <div class="mn-header">
+    <div class="mn-header-left">
+      <h1 class="mn-title">Menu Management</h1>
+      <p class="mn-subtitle">Manage your restaurant menu items</p>
     </div>
-    <button class="add-btn" (click)="openAddItemForm()">
-      <i class="fas fa-plus"></i>
-      Add New Item
+    <button class="mn-btn-add" (click)="openAddItemForm()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Add Item
     </button>
   </div>
 
-  <!-- Categories -->
-  <div class="categories" *ngIf="!loading">
+  <!-- ── Category Tabs ─────────────────────────────────────────────────────── -->
+  <div class="mn-cats" *ngIf="!loading">
     <button
       *ngFor="let category of categories"
-      class="category-btn"
+      class="mn-cat"
       [class.active]="selectedCategory === category.toLowerCase()"
-      (click)="selectCategory(category)"
-    >
+      (click)="selectCategory(category)">
       {{ category }}
     </button>
   </div>
 
-  <!-- Loading State -->
-  <div class="loading-container" *ngIf="loading">
-    <div class="spinner"></div>
-    <p>Loading menu items...</p>
+  <!-- ── Loading ───────────────────────────────────────────────────────────── -->
+  <div class="mn-loading" *ngIf="loading">
+    <div class="mn-spinner"></div>
+    <p>Loading menu items…</p>
   </div>
 
-  <!-- Empty State -->
-  <div class="empty-state" *ngIf="!loading && menuItems.length === 0">
+  <!-- ── Empty State ───────────────────────────────────────────────────────── -->
+  <div class="mn-empty" *ngIf="!loading && menuItems.length === 0">
     <i class="fas fa-utensils"></i>
     <h3>No menu items yet</h3>
     <p>Start by adding your first menu item</p>
-    <button class="add-btn" (click)="openAddItemForm()">
-      <i class="fas fa-plus"></i>
+    <button class="mn-btn-add" (click)="openAddItemForm()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+        <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
       Add First Item
     </button>
   </div>
 
-  <!-- Menu Items Grid -->
-  <div class="menu-grid" *ngIf="!loading && menuItems.length > 0">
-    <div class="menu-card" *ngFor="let item of getFilteredItems()">
-      <div class="item-image" [style.background-image]="item.image ? 'url(' + item.image + ')' : 'none'">
+  <!-- ── List: column header ──────────────────────────────────────────────── -->
+  <div class="mn-list-head" *ngIf="!loading && getFilteredItems().length > 0">
+    <span class="mn-col-thumb"></span>
+    <span class="mn-col-item">Item</span>
+    <span class="mn-col-cat">Category</span>
+    <span class="mn-col-price">Price</span>
+    <span class="mn-col-avail">Available</span>
+    <span class="mn-col-act">Edit</span>
+  </div>
+
+  <!-- ── List: rows ────────────────────────────────────────────────────────── -->
+  <div class="mn-list" *ngIf="!loading && getFilteredItems().length > 0">
+    <div class="mn-row" *ngFor="let item of getFilteredItems()">
+
+      <!-- Thumbnail -->
+      <div class="mn-thumb"
+        [style.background-image]="item.image ? 'url(' + item.image + ')' : 'none'"
+        [class.no-img]="!item.image">
         <i class="fas fa-utensils" *ngIf="!item.image"></i>
       </div>
-      <div class="item-content">
-        <div class="item-header">
-          <h3 class="item-name">{{ item.itemName }}</h3>
-          <span class="veg-badge" [class.non-veg]="!item.isVeg">
-            <i class="fas fa-circle"></i>
-          </span>
+
+      <!-- Name + description -->
+      <div class="mn-info">
+        <div class="mn-name-row">
+          <span class="mn-veg-dot" [class.non-veg]="!item.isVeg" [title]="item.isVeg ? 'Veg' : 'Non-Veg'"></span>
+          <span class="mn-name">{{ item.itemName }}</span>
         </div>
-        <p class="item-description" *ngIf="item.description">{{ item.description }}</p>
-        <p class="item-category">{{ item.category }}</p>
-        <div class="item-footer">
-          <span class="item-price">₹{{ item.price }}</span>
-          <div class="item-actions">
-            <button class="btn-edit" (click)="openEditItemForm(item)" title="Edit item">
-              <i class="fas fa-edit"></i>
-            </button>
-            <label class="toggle-switch">
-              <input
-                type="checkbox"
-                [checked]="item.isAvailable"
-                (change)="toggleAvailability(item.itemId)"
-              />
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-        <div class="availability-status" [class.available]="item.isAvailable">
-          <i class="fas" [class.fa-check-circle]="item.isAvailable" [class.fa-times-circle]="!item.isAvailable"></i>
-          {{ item.isAvailable ? 'Available' : 'Unavailable' }}
-        </div>
+        <p class="mn-desc" *ngIf="item.description">{{ item.description }}</p>
+      </div>
+
+      <!-- Category -->
+      <div class="mn-cat-cell">
+        <span class="mn-cat-tag">{{ item.category }}</span>
+      </div>
+
+      <!-- Price -->
+      <div class="mn-price-cell">₹{{ item.price }}</div>
+
+      <!-- Availability Toggle -->
+      <div class="mn-avail-cell">
+        <label class="mn-toggle" [title]="item.isAvailable ? 'Mark unavailable' : 'Mark available'">
+          <input type="checkbox" [checked]="item.isAvailable" (change)="toggleAvailability(item.itemId)" />
+          <span class="mn-track"></span>
+        </label>
+        <span class="mn-avail-label" [class.on]="item.isAvailable">
+          {{ item.isAvailable ? 'On' : 'Off' }}
+        </span>
+      </div>
+
+      <!-- Edit -->
+      <div class="mn-act-cell">
+        <button class="mn-btn-edit" (click)="openEditItemForm(item)" title="Edit item">
+          <i class="fas fa-pen"></i>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Add/Edit Item Modal -->
-  <div class="modal-overlay" *ngIf="showAddItemForm" (click)="closeAddItemForm()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h2>
-          <i class="fas" [class.fa-plus-circle]="!isEditMode" [class.fa-edit]="isEditMode"></i>
-          {{ isEditMode ? 'Edit Menu Item' : 'Add New Menu Item' }}
-        </h2>
-        <button class="close-btn" (click)="closeAddItemForm()">
+  <!-- ── No results in selected category ──────────────────────────────────── -->
+  <div class="mn-no-results" *ngIf="!loading && menuItems.length > 0 && getFilteredItems().length === 0">
+    <p>No items in this category</p>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     Add / Edit Item Modal — outside .menu-root so position:fixed works
+════════════════════════════════════════════════════════════════════════ -->
+<div class="mn-modal-bg" *ngIf="showAddItemForm" (click)="closeAddItemForm()">
+    <div class="mn-modal" (click)="$event.stopPropagation()">
+
+      <!-- Modal top accent bar + header -->
+      <div class="mn-modal-accent"></div>
+      <div class="mn-modal-head">
+        <div class="mn-modal-head-left">
+          <span class="mn-modal-icon">
+            <i class="fas" [class.fa-utensils]="!isEditMode" [class.fa-pen]="isEditMode"></i>
+          </span>
+          <div>
+            <h2 class="mn-modal-title">{{ isEditMode ? 'Edit Menu Item' : 'Add New Item' }}</h2>
+            <p class="mn-modal-subtitle">{{ isEditMode ? 'Update details for this dish' : 'Fill in the details below to add a new dish' }}</p>
+          </div>
+        </div>
+        <button class="mn-modal-close" (click)="closeAddItemForm()" aria-label="Close">
           <i class="fas fa-times"></i>
         </button>
       </div>
 
-      <form class="add-item-form" (ngSubmit)="saveNewItem()">
-        <div class="form-row">
-          <div class="form-group full-width">
-            <label for="itemName">
-              <i class="fas fa-utensils"></i>
-              Item Name *
-            </label>
-            <input
-              id="itemName"
-              type="text"
-              [(ngModel)]="newItem.itemName"
-              name="name"
-              placeholder="Enter item name"
-              required
-            />
+      <form class="mn-form" (ngSubmit)="saveNewItem()">
+
+        <!-- ── Section: Dish Identity ─────────────────────────────────────── -->
+        <div class="mn-form-section">
+          <div class="mn-section-header">
+            <i class="fas fa-info-circle"></i>
+            <span>Dish Identity</span>
+          </div>
+
+          <div class="mn-fg mn-full">
+            <label>Item Name <span class="mn-req">*</span></label>
+            <input type="text" [(ngModel)]="newItem.itemName" name="name"
+              placeholder="e.g. Butter Chicken" required />
+          </div>
+
+          <div class="mn-fg mn-full">
+            <label>Description</label>
+            <textarea [(ngModel)]="newItem.description" name="description"
+              rows="2" placeholder="A brief description of the dish — flavours, ingredients…"></textarea>
+          </div>
+
+          <!-- Veg / Non-veg picker -->
+          <div class="mn-type-row">
+            <span class="mn-type-lbl">Food Type</span>
+            <div class="mn-type-toggle">
+              <button type="button" class="mn-type-btn"
+                [class.veg]="newItem.isVeg" (click)="newItem.isVeg = true">
+                <span class="mn-veg-dot"></span> Veg
+              </button>
+              <button type="button" class="mn-type-btn"
+                [class.non-veg]="!newItem.isVeg" (click)="newItem.isVeg = false">
+                <span class="mn-veg-dot non-veg"></span> Non-Veg
+              </button>
+            </div>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="itemCategory">
-              <i class="fas fa-list"></i>
-              Category *
-            </label>
-            <select id="itemCategory" [(ngModel)]="newItem.category" name="category" required (change)="onCategoryChange($event)">
-              <option value="" disabled>Select a category</option>
-              <option *ngFor="let cat of categories.slice(1)" [value]="cat">{{ cat }}</option>
-              <option value="_new">+ Add New Category</option>
-            </select>
+        <!-- ── Section: Pricing & Category ───────────────────────────────── -->
+        <div class="mn-form-section">
+          <div class="mn-section-header">
+            <i class="fas fa-tag"></i>
+            <span>Pricing &amp; Category</span>
           </div>
 
-          <!-- Custom Category Input (shown when "+ Add New Category" is selected) -->
-          <div class="form-group" *ngIf="newItem.category === '_new'">
-            <label for="customCategory">
-              <i class="fas fa-plus"></i>
-              New Category Name *
-            </label>
-            <input
-              id="customCategory"
-              type="text"
-              [(ngModel)]="customCategoryName"
-              name="customCategory"
-              placeholder="Enter new category name"
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="itemPrice">
-              <i class="fas fa-rupee-sign"></i>
-              Price *
-            </label>
-            <input
-              id="itemPrice"
-              type="number"
-              [(ngModel)]="newItem.price"
-              name="price"
-              placeholder="0"
-              min="0"
-              required
-            />
+          <div class="mn-form-row">
+            <div class="mn-fg">
+              <label>Category <span class="mn-req">*</span></label>
+              <select [(ngModel)]="newItem.category" name="category" required (change)="onCategoryChange($event)">
+                <option value="" disabled>Select category</option>
+                <option *ngFor="let cat of categories.slice(1)" [value]="cat">{{ cat }}</option>
+                <option value="_new">+ Add New Category</option>
+              </select>
+            </div>
+            <div class="mn-fg" *ngIf="newItem.category === '_new'">
+              <label>New Category Name <span class="mn-req">*</span></label>
+              <input type="text" [(ngModel)]="customCategoryName" name="customCategory"
+                placeholder="e.g. Desserts" required />
+            </div>
+            <div class="mn-fg">
+              <label>Price (₹) <span class="mn-req">*</span></label>
+              <div class="mn-price-input-wrap">
+                <span class="mn-price-prefix">₹</span>
+                <input type="number" [(ngModel)]="newItem.price" name="price"
+                  placeholder="0" min="0" required />
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group full-width">
-            <label for="itemDescription">
-              <i class="fas fa-align-left"></i>
-              Description
-            </label>
-            <textarea
-              id="itemDescription"
-              [(ngModel)]="newItem.description"
-              name="description"
-              rows="3"
-              placeholder="Enter item description"
-            ></textarea>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group full-width">
-            <label for="imageUrl">
-              <i class="fas fa-image"></i>
-              Image URL
-            </label>
-            <input
-              id="imageUrl"
-              type="url"
-              [(ngModel)]="newItem.image"
-              name="imageUrl"
-              placeholder="https://example.com/image.jpg"
-            />
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group checkbox-group">
-            <label class="checkbox-label">
-              <input
-                type="checkbox"
-                [(ngModel)]="newItem.isVeg"
-                name="isVeg"
-              />
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-text">
-                <i class="fas fa-leaf"></i>
-                Vegetarian
-              </span>
-            </label>
+        <!-- ── Section: Media & Availability ─────────────────────────────── -->
+        <div class="mn-form-section mn-section-bottom">
+          <div class="mn-section-header">
+            <i class="fas fa-image"></i>
+            <span>Media &amp; Availability</span>
           </div>
 
-          <div class="form-group checkbox-group">
-            <label class="checkbox-label">
-              <input
-                type="checkbox"
-                [(ngModel)]="newItem.isAvailable"
-                name="available"
-              />
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-text">
-                <i class="fas fa-check-circle"></i>
-                Available Now
-              </span>
+          <div class="mn-media-row">
+            <!-- Image preview -->
+            <div class="mn-img-preview"
+              [style.background-image]="newItem.image ? 'url(' + newItem.image + ')' : 'none'"
+              [class.has-img]="!!newItem.image">
+              <i class="fas fa-camera" *ngIf="!newItem.image"></i>
+            </div>
+            <div class="mn-fg mn-full">
+              <label>Image URL</label>
+              <input type="url" [(ngModel)]="newItem.image" name="imageUrl"
+                placeholder="https://example.com/dish.jpg" />
+              <span class="mn-field-hint">Paste a direct image link for the dish photo</span>
+            </div>
+          </div>
+
+          <!-- Availability toggle -->
+          <div class="mn-avail-row">
+            <div class="mn-avail-text">
+              <span class="mn-avail-title">Available Now</span>
+              <span class="mn-avail-desc">Customers can order this item immediately</span>
+            </div>
+            <label class="mn-toggle">
+              <input type="checkbox" [(ngModel)]="newItem.isAvailable" name="available" />
+              <span class="mn-track"></span>
             </label>
           </div>
         </div>
 
-        <div class="form-actions">
-          <button type="button" class="btn-cancel" (click)="closeAddItemForm()" [disabled]="savingItem">
-            <i class="fas fa-times"></i>
+        <!-- Form actions -->
+        <div class="mn-form-actions">
+          <button type="button" class="mn-btn-cancel"
+            (click)="closeAddItemForm()" [disabled]="savingItem">
             Cancel
           </button>
-          <button type="submit" class="btn-save" [disabled]="savingItem">
-            <i class="fas" [class.fa-save]="!savingItem" [class.fa-spinner]="savingItem" [class.fa-spin]="savingItem"></i>
-            {{ savingItem ? 'Saving...' : (isEditMode ? 'Update Item' : 'Save Item') }}
+          <button type="submit" class="mn-btn-save" [disabled]="savingItem">
+            <i class="fas"
+              [class.fa-save]="!savingItem"
+              [class.fa-spinner]="savingItem"
+              [class.fa-spin]="savingItem"></i>
+            {{ savingItem ? 'Saving…' : (isEditMode ? 'Update Item' : 'Add to Menu') }}
           </button>
         </div>
+
       </form>
     </div>
   </div>
-</div>

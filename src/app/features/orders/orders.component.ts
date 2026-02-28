@@ -32,6 +32,247 @@ export class OrdersComponent implements OnInit, OnDestroy {
   // Status enum for template
   OrderStatus = OrderStatus;
 
+  // ── Dummy preview data (remove when going live) ───────────────────────────
+  private readonly DUMMY_ORDERS: Order[] = (() => {
+    const now = new Date();
+    const ts = (minutesAgo: number) =>
+      new Date(now.getTime() - minutesAgo * 60000).toISOString();
+    return [
+      // ── NEW (CONFIRMED) ──────────────────────────────────────────────────
+      {
+        orderId: 'ORD-20260228-001',
+        customerPhone: '+91 98765 43210',
+        restaurantId: 'RES-001',
+        restaurantName: 'Spice Garden',
+        restaurantImage: '',
+        items: [
+          { itemId: 'I1', name: 'Butter Chicken', quantity: 1, price: 280 },
+          { itemId: 'I2', name: 'Garlic Naan',    quantity: 2, price: 45 },
+          { itemId: 'I3', name: 'Dal Makhani',    quantity: 1, price: 180 },
+        ],
+        foodTotal: 550,
+        deliveryFee: 40,
+        platformFee: 10,
+        grandTotal: 600,
+        status: OrderStatus.CONFIRMED,
+        riderId: null,
+        createdAt: ts(3),
+        deliveryAddress: '12, MG Road, Koramangala, Bangalore – 560034',
+        formattedAddress: 'Near Forum Mall',
+        addressId: 'A1',
+      },
+      {
+        orderId: 'ORD-20260228-002',
+        customerPhone: '+91 87654 32109',
+        restaurantId: 'RES-001',
+        restaurantName: 'Spice Garden',
+        restaurantImage: '',
+        items: [
+          { itemId: 'I4', name: 'Paneer Tikka Masala', quantity: 1, price: 260 },
+          { itemId: 'I5', name: 'Jeera Rice',          quantity: 1, price: 120 },
+          { itemId: 'I6', name: 'Raita',               quantity: 1, price: 60 },
+          { itemId: 'I7', name: 'Papad',               quantity: 2, price: 20 },
+          { itemId: 'I8', name: 'Gulab Jamun',         quantity: 1, price: 80 },
+        ],
+        foodTotal: 560,
+        deliveryFee: 40,
+        platformFee: 10,
+        grandTotal: 610,
+        status: OrderStatus.CONFIRMED,
+        riderId: null,
+        createdAt: ts(7),
+        deliveryAddress: '45, Indiranagar 12th Main, Bangalore – 560038',
+        formattedAddress: 'Near 100 Feet Road',
+        addressId: 'A2',
+      },
+      {
+        orderId: 'ORD-20260228-003',
+        customerPhone: '+91 76543 21098',
+        restaurantId: 'RES-001',
+        restaurantName: 'Spice Garden',
+        restaurantImage: '',
+        items: [
+          { itemId: 'I9',  name: 'Chicken Biryani', quantity: 2, price: 320 },
+          { itemId: 'I10', name: 'Mirchi Ka Salan', quantity: 1, price: 90 },
+        ],
+        foodTotal: 730,
+        deliveryFee: 40,
+        platformFee: 10,
+        grandTotal: 780,
+        status: OrderStatus.CONFIRMED,
+        riderId: null,
+        createdAt: ts(1),
+        deliveryAddress: '8, HSR Layout Sector 2, Bangalore – 560102',
+        formattedAddress: 'Opposite BDA Complex',
+        addressId: 'A3',
+      },
+      // ── PREPARING ────────────────────────────────────────────────────────
+      {
+        orderId: 'ORD-20260228-004',
+        customerPhone: '+91 65432 10987',
+        restaurantId: 'RES-001',
+        restaurantName: 'Spice Garden',
+        restaurantImage: '',
+        items: [
+          { itemId: 'I11', name: 'Mutton Rogan Josh', quantity: 1, price: 380 },
+          { itemId: 'I12', name: 'Laccha Paratha',    quantity: 3, price: 55 },
+          { itemId: 'I13', name: 'Lassi',             quantity: 2, price: 70 },
+        ],
+        foodTotal: 705,
+        deliveryFee: 50,
+        platformFee: 10,
+        grandTotal: 765,
+        status: OrderStatus.PREPARING,
+        riderId: null,
+        createdAt: ts(18),
+        deliveryAddress: '22, JP Nagar 3rd Phase, Bangalore – 560078',
+        formattedAddress: 'Near BMTC Depot',
+        addressId: 'A4',
+        acceptedAt: ts(15),
+      },
+      {
+        orderId: 'ORD-20260228-005',
+        customerPhone: '+91 54321 09876',
+        restaurantId: 'RES-001',
+        restaurantName: 'Spice Garden',
+        restaurantImage: '',
+        items: [
+          { itemId: 'I14', name: 'Veg Thali',   quantity: 1, price: 220 },
+          { itemId: 'I15', name: 'Cold Coffee', quantity: 1, price: 110 },
+        ],
+        foodTotal: 330,
+        deliveryFee: 30,
+        platformFee: 5,
+        grandTotal: 365,
+        status: OrderStatus.PREPARING,
+        riderId: null,
+        createdAt: ts(25),
+        deliveryAddress: '3, Whitefield Main Road, Bangalore – 560066',
+        formattedAddress: 'ITPL Gate 2 Area',
+        addressId: 'A5',
+        acceptedAt: ts(22),
+      },
+      // ── READY ─────────────────────────────────────────────────────────────
+      {
+        orderId: 'ORD-20260228-006',
+        customerPhone: '+91 43210 98765',
+        restaurantId: 'RES-001',
+        restaurantName: 'Spice Garden',
+        restaurantImage: '',
+        items: [
+          { itemId: 'I16', name: 'Fish Curry',    quantity: 1, price: 310 },
+          { itemId: 'I17', name: 'Steamed Rice',  quantity: 2, price: 80 },
+        ],
+        foodTotal: 470,
+        deliveryFee: 40,
+        platformFee: 10,
+        grandTotal: 520,
+        status: OrderStatus.READY_FOR_PICKUP,
+        riderId: null,
+        createdAt: ts(42),
+        deliveryAddress: '67, Bannerghatta Road, Bangalore – 560029',
+        formattedAddress: 'Near Meenakshi Mall',
+        addressId: 'A6',
+        acceptedAt: ts(40),
+        pickupOtp: '7382',
+      },
+      {
+        orderId: 'ORD-20260228-007',
+        customerPhone: '+91 32109 87654',
+        restaurantId: 'RES-001',
+        restaurantName: 'Spice Garden',
+        restaurantImage: '',
+        items: [
+          { itemId: 'I18', name: 'Palak Paneer',  quantity: 1, price: 230 },
+          { itemId: 'I19', name: 'Butter Naan',   quantity: 3, price: 50 },
+          { itemId: 'I20', name: 'Kheer',         quantity: 2, price: 90 },
+        ],
+        foodTotal: 560,
+        deliveryFee: 40,
+        platformFee: 10,
+        grandTotal: 610,
+        status: OrderStatus.AWAITING_RIDER_ASSIGNMENT,
+        riderId: null,
+        createdAt: ts(55),
+        deliveryAddress: '101, Sarjapur Road, Bangalore – 560035',
+        formattedAddress: 'Embassy Tech Village Area',
+        addressId: 'A7',
+        acceptedAt: ts(53),
+        pickupOtp: '4519',
+      },
+      // ── COMPLETED ─────────────────────────────────────────────────────────
+      {
+        orderId: 'ORD-20260228-008',
+        customerPhone: '+91 21098 76543',
+        restaurantId: 'RES-001',
+        restaurantName: 'Spice Garden',
+        restaurantImage: '',
+        items: [
+          { itemId: 'I21', name: 'Chicken 65',    quantity: 1, price: 250 },
+          { itemId: 'I22', name: 'Fried Rice',    quantity: 1, price: 160 },
+          { itemId: 'I23', name: 'Mango Lassi',   quantity: 2, price: 90 },
+        ],
+        foodTotal: 590,
+        deliveryFee: 40,
+        platformFee: 10,
+        grandTotal: 640,
+        status: OrderStatus.DELIVERED,
+        riderId: 'RDR-00421',
+        createdAt: ts(120),
+        deliveryAddress: '55, Rajajinagar 1st Block, Bangalore – 560010',
+        formattedAddress: 'Near Majestic',
+        addressId: 'A8',
+        acceptedAt: ts(118),
+        pickupOtp: '2847',
+      },
+      {
+        orderId: 'ORD-20260228-009',
+        customerPhone: '+91 10987 65432',
+        restaurantId: 'RES-001',
+        restaurantName: 'Spice Garden',
+        restaurantImage: '',
+        items: [
+          { itemId: 'I24', name: 'Prawn Masala',  quantity: 1, price: 420 },
+          { itemId: 'I25', name: 'Appam',         quantity: 4, price: 35 },
+        ],
+        foodTotal: 560,
+        deliveryFee: 50,
+        platformFee: 10,
+        grandTotal: 620,
+        status: OrderStatus.DELIVERED,
+        riderId: 'RDR-00388',
+        createdAt: ts(95),
+        deliveryAddress: '14, Electronic City Phase 1, Bangalore – 560100',
+        formattedAddress: 'Infosys Gate Area',
+        addressId: 'A9',
+        acceptedAt: ts(93),
+      },
+      // ── CANCELLED ─────────────────────────────────────────────────────────
+      {
+        orderId: 'ORD-20260228-010',
+        customerPhone: '+91 99887 76655',
+        restaurantId: 'RES-001',
+        restaurantName: 'Spice Garden',
+        restaurantImage: '',
+        items: [
+          { itemId: 'I26', name: 'Tandoori Chicken', quantity: 1, price: 340 },
+          { itemId: 'I27', name: 'Mint Chutney',     quantity: 1, price: 30 },
+        ],
+        foodTotal: 370,
+        deliveryFee: 40,
+        platformFee: 10,
+        grandTotal: 420,
+        status: OrderStatus.CANCELLED,
+        riderId: null,
+        createdAt: ts(80),
+        deliveryAddress: '28, BTM Layout 2nd Stage, Bangalore – 560076',
+        formattedAddress: 'Near Udupi Garden',
+        addressId: 'A10',
+        cancellationReason: 'Item out of stock — Tandoori Chicken not available',
+      },
+    ] as Order[];
+  })();
+
   constructor(
     private orderService: OrderService,
     private orderNotificationService: OrderNotificationService,
@@ -39,25 +280,24 @@ export class OrdersComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // ── PREVIEW MODE: load dummy data instead of live API ─────────────────
+    this.allOrders = this.DUMMY_ORDERS;
+    this.loading = false;
+    this.cdr.detectChanges();
+    // ── END PREVIEW MODE ───────────────────────────────────────────────────
+    // To restore live data, comment out the 3 lines above and uncomment below:
+    /*
     this.loading = true;
-    
-    // Subscribe to orders from the service
     this.ordersSubscription = this.orderService.orders$.subscribe(orders => {
-      console.log('📦 Orders updated:', orders.length, 'orders');
       this.allOrders = orders;
       this.loading = false;
       this.cdr.detectChanges();
     });
-    
-    // Fetch orders
     this.orderService.fetchOrders();
-    
-    // Subscribe to new orders from global notification service (for UI notifications)
     this.newOrderSubscription = this.orderNotificationService.getNewOrders().subscribe(
-      (incomingOrder) => {
-        console.log('📥 [ORDERS COMPONENT] New order notification:', incomingOrder);
-      }
+      (incomingOrder) => { console.log('📥 New order notification:', incomingOrder); }
     );
+    */
   }
 
   ngOnDestroy(): void {

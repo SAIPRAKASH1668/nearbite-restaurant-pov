@@ -41,6 +41,14 @@ $dude-red:            hsl(0,  79%,  55%);
         height: 60px;
         cursor: pointer;
         transition: all $transition-fast;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .logo-svg {
+          width: 30px;
+          height: 30px;
+        }
 
         &:hover {
           transform: scale(1.1);
@@ -136,11 +144,14 @@ $dude-red:            hsl(0,  79%,  55%);
     width: 45px;
     height: 60px;
     flex-shrink: 0;
-    background-image: url('/images/nearbite_logo.png');
-    background-size: 200%;
-    background-repeat: no-repeat;
-    background-position: center;
-    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .logo-svg {
+      width: 34px;
+      height: 34px;
+    }
   }
 
   .brand {

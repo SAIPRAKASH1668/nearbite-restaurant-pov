@@ -12,6 +12,7 @@ import { PaymentsComponent } from './features/payments/payments.component';
 import { ReviewsComponent } from './features/reviews/reviews.component';
 import { SettingsComponent } from './features/settings/settings.component';
 import { SupportComponent } from './features/support/support.component';
+import { GoOnlineComponent } from './features/go-online/go-online.component';
 
 export const routes: Routes = [
   {
@@ -32,6 +33,10 @@ export const routes: Routes = [
       {
         path: '',
         component: DashboardComponent
+      },
+      {
+        path: 'welcome',
+        component: GoOnlineComponent
       },
       {
         path: 'orders',

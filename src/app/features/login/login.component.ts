@@ -16,7 +16,7 @@ export class LoginComponent implements OnInit {
   isLoading = false;
   errorMessage = '';
   showPassword = false;
-  returnUrl = '/dashboard';
+  returnUrl = '/dashboard/welcome';
 
   constructor(
     private formBuilder: FormBuilder,
@@ -31,8 +31,8 @@ export class LoginComponent implements OnInit {
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
 
-    // Get return url from route parameters or default to '/dashboard'
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+    // Get return url from route parameters or default to '/dashboard/welcome'
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard/welcome';
   }
 
   get f() {
