@@ -22,14 +22,19 @@ frontend:
   # Rewrites and redirects
   # Rules are evaluated top-to-bottom; first match wins.
   redirects:
-    # 1. Proxy all /api/* calls to the actual backend - prevents Amplify from
-    #    handling them and eliminates the trailing-slash redirect on API paths.
+    # 1. Strip trailing slashes from API paths before proxying (prevents 301 GET redirect loop)
+    - source: /api/<*>/
+      target: /api/<*>
+      status: '301'
+      condition: null
+
+    # 2. Proxy all /api/* calls to the actual backend
     - source: /api/<*>
       target: https://api.dev.yumdude.com/api/<*>
       status: '200'
       condition: null
 
-    # 2. Standard SPA rewrite - serve index.html for all non-file Angular routes.
+    # 3. Standard SPA rewrite - serve index.html for all non-file Angular routes.
     - source: /<*>
       target: /index.html
       status: '200'
