@@ -1,0 +1,222 @@
+<div class="ps-root">
+
+  <!-- Header -->
+  <div class="ps-header">
+    <h2 class="ps-title"><i class="fas fa-print"></i> Printer Settings</h2>
+    <p class="ps-subtitle">Connect your Bluetooth thermal printer for automatic KOT &amp; customer bill printing.</p>
+  </div>
+
+  <!-- ── Print status badge ───────────────────────────────────────────────── -->
+  <div class="ps-status-row" *ngIf="savedPrinter">
+    <span class="ps-badge" [ngClass]="statusBadgeClass">
+      <i class="fas"
+         [class.fa-circle-notch]="printStatus === 'connecting' || printStatus === 'printing'"
+         [class.fa-spin]="printStatus === 'connecting' || printStatus === 'printing'"
+         [class.fa-check-circle]="printStatus === 'success'"
+         [class.fa-times-circle]="printStatus === 'error'"
+         [class.fa-wifi]="printStatus === 'idle'"></i>
+      {{ statusLabel }}
+    </span>
+  </div>
+
+  <!-- ── 1. Paper width ───────────────────────────────────────────────────── -->
+  <div class="ps-section">
+    <h3 class="ps-section-title">Paper Width</h3>
+    <p class="ps-hint">
+      <i class="fas fa-info-circle"></i>
+      Select the paper roll size fitted in your printer.
+    </p>
+    <div class="ps-paper-row">
+      <button
+        class="ps-paper-btn"
+        [class.ps-paper-btn--active]="paperWidth === 80"
+        (click)="selectPaperWidth(80)">
+        <i class="fas fa-scroll"></i>
+        <span class="ps-paper-label">80 mm</span>
+        <span class="ps-paper-hint">48 chars/line</span>
+      </button>
+      <button
+        class="ps-paper-btn"
+        [class.ps-paper-btn--active]="paperWidth === 58"
+        (click)="selectPaperWidth(58)">
+        <i class="fas fa-scroll"></i>
+        <span class="ps-paper-label">58 mm</span>
+        <span class="ps-paper-hint">32 chars/line</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── 2. Active printer ────────────────────────────────────────────────── -->
+  <div class="ps-section">
+    <h3 class="ps-section-title">Active Printer</h3>
+
+    <div class="ps-card" *ngIf="savedPrinter; else noPrinter">
+      <!-- Row 1: icon + name/address -->
+      <div class="ps-card-top">
+        <div class="ps-card-icon ps-card-icon--active">
+          <i class="fas fa-print"></i>
+        </div>
+        <div class="ps-card-info">
+          <p class="ps-card-name">{{ savedPrinter.name }}</p>
+          <p class="ps-card-address">{{ savedPrinter.address }}</p>
+        </div>
+      </div>
+      <!-- Row 2: actions (full width, always visible) -->
+      <div class="ps-card-actions">
+        <button
+          class="ps-btn ps-btn--outline"
+          (click)="doTestPrint()"
+          [disabled]="testPrinting || printStatus === 'printing' || printStatus === 'connecting'"
+          title="Print a test page">
+          <i class="fas"
+             [class.fa-vial]="!testPrinting && !testSuccess && !testError"
+             [class.fa-spinner]="testPrinting"
+             [class.fa-spin]="testPrinting"
+             [class.fa-check]="testSuccess && !testPrinting"
+             [class.fa-times]="testError && !testPrinting"
+             [class.icon--ok]="testSuccess"
+             [class.icon--error]="testError"></i>
+          {{ testPrinting ? 'Printing…' : testSuccess ? 'Printed OK' : testError ? 'Failed' : 'Test Print' }}
+        </button>
+        <button class="ps-btn ps-btn--danger" (click)="clearPrinter()" title="Remove printer">
+          <i class="fas fa-trash-alt"></i> Remove
+        </button>
+      </div>
+    </div>
+
+    <ng-template #noPrinter>
+      <div class="ps-empty">
+        <i class="fas fa-print ps-empty-icon"></i>
+        <p>No printer configured. Scan and select a paired device below.</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- ── 3. Scan paired devices ───────────────────────────────────────────── -->
+  <div class="ps-section">
+    <h3 class="ps-section-title">Paired Bluetooth Devices</h3>
+
+    <div class="ps-hint">
+      <i class="fas fa-info-circle"></i>
+      Go to <strong>Android Settings → Bluetooth</strong>, pair your printer once, then tap
+      <strong>Load Paired Devices</strong> below to select it.
+    </div>
+
+    <button class="ps-btn ps-btn--primary" (click)="scan()" [disabled]="scanning">
+      <i class="fas"
+         [class.fa-search]="!scanning"
+         [class.fa-spinner]="scanning"
+         [class.fa-spin]="scanning"></i>
+      {{ scanning ? 'Loading…' : 'Load Paired Devices' }}
+    </button>
+
+    <!-- Scanning tip -->
+    <div *ngIf="scanning" class="ps-alert ps-alert--info ps-scan-tip">
+      <i class="fas fa-bluetooth-b"></i>
+      <div class="ps-alert-body">
+        <p>
+          If a <strong>permission dialog</strong> appears, tap <em>Allow</em>.<br>
+          Bluetooth must be <strong>ON</strong> to load paired devices.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Error states ──────────────────────────────────────────────────── -->
+
+    <!-- Permissions denied -->
+    <div *ngIf="scanError === 'PERMISSIONS_DENIED'" class="ps-alert ps-alert--error">
+      <i class="fas fa-shield-alt"></i>
+      <div class="ps-alert-body">
+        <strong>Bluetooth permission denied.</strong>
+        <p>Open <em>App Settings → Permissions</em> and allow <em>Nearby devices</em>, then tap Scan again.</p>
+      </div>
+      <button class="ps-btn ps-btn--ghost" (click)="scan()">
+        <i class="fas fa-redo"></i> Retry
+      </button>
+    </div>
+
+    <!-- Bluetooth disabled -->
+    <div *ngIf="scanError === 'BLUETOOTH_DISABLED'" class="ps-alert ps-alert--warn">
+      <i class="fas fa-bluetooth-b"></i>
+      <div class="ps-alert-body">
+        <strong>Bluetooth is turned off.</strong>
+        <p>
+          Please enable Bluetooth from your device's <em>Quick Settings</em> or
+          <em>Settings → Bluetooth</em>, then tap <strong>Retry</strong>.
+        </p>
+      </div>
+      <button class="ps-btn ps-btn--ghost" (click)="scan()">
+        <i class="fas fa-redo"></i> Retry
+      </button>
+    </div>
+
+    <!-- Generic scan failure -->
+    <div *ngIf="scanError === 'SCAN_FAILED' || scanError === 'UNKNOWN'" class="ps-alert ps-alert--error">
+      <i class="fas fa-exclamation-triangle"></i>
+      <div class="ps-alert-body">
+        <strong>Scan failed.</strong>
+        <p>Make sure Bluetooth is on and the printer is already paired in Android Settings.</p>
+      </div>
+      <button class="ps-btn ps-btn--ghost" (click)="scan()">
+        <i class="fas fa-redo"></i> Retry
+      </button>
+    </div>
+
+    <!-- ── Device list ───────────────────────────────────────────────────── -->
+    <div class="ps-device-list" *ngIf="scanDone && !scanError">
+
+      <div *ngIf="devices.length === 0" class="ps-empty">
+        <i class="fas fa-bluetooth-b ps-empty-icon"></i>
+        <p>No paired Bluetooth devices found.</p>
+        <p class="ps-empty-sub">Please pair your printer from <strong>Android Settings → Bluetooth</strong> first.</p>
+      </div>
+
+      <div
+        class="ps-device"
+        *ngFor="let d of devices"
+        [class.ps-device--selected]="isSelected(d)"
+        (click)="selectDevice(d)"
+        role="button"
+        [attr.aria-pressed]="isSelected(d)">
+        <div class="ps-device-icon">
+          <i class="fas fa-print"></i>
+        </div>
+        <div class="ps-device-info">
+          <p class="ps-device-name">{{ d.name }}</p>
+          <p class="ps-device-address">{{ d.address }}</p>
+        </div>
+        <div class="ps-device-check" *ngIf="isSelected(d)">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="ps-device-select-hint" *ngIf="!isSelected(d)">
+          <i class="far fa-circle"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 4. How it works ──────────────────────────────────────────────────── -->
+  <div class="ps-section">
+    <div class="ps-infobox">
+      <h4><i class="fas fa-lightbulb"></i> How printing works</h4>
+      <ul>
+        <li><strong>KOT</strong> (Kitchen Order Ticket) prints on the kitchen printer immediately when you accept an order.</li>
+        <li><strong>Customer Bill</strong> prints a full tax invoice with item breakdown and totals.</li>
+        <li>Both documents are sent automatically — no manual action needed.</li>
+        <li>Supported: 80 mm &amp; 58 mm ESC/POS Bluetooth thermal printers (Xprinter XP-58, XP-80, Epson TM-T20, TVS RP-3200, etc.)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Browser notice -->
+  <div class="ps-section" *ngIf="!printerService.isNativeApp()">
+    <div class="ps-alert ps-alert--info">
+      <i class="fas fa-desktop"></i>
+      <div class="ps-alert-body">
+        <strong>Browser preview mode.</strong>
+        <p>Bluetooth printing works only in the installed Android app. Mock devices are shown for testing.</p>
+      </div>
+    </div>
+  </div>
+
+</div>

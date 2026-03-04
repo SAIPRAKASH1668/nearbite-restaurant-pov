@@ -19,24 +19,42 @@
     margin-left: $sidebar-collapsed-width;
   }
 
+  // Mobile: no sidebar → zero margin. Use &, &.sidebar-collapsed so this
+  // specificity [0,2,0] beats the collapsed modifier [0,2,0] via source order.
   @include mobile {
-    margin-left: 0;
+    &, &.sidebar-collapsed {
+      margin-left: 0;
+    }
+  }
+
+  @include tablet {
+    // Tablet always has the 70px collapsed sidebar pinned
+    &, &.sidebar-collapsed {
+      margin-left: $sidebar-collapsed-width;
+    }
   }
 }
 
 .content {
   flex: 1;
   padding: 2rem;
-  margin-top: $navbar-height;
+  // Push content below navbar + status bar
+  margin-top: calc(#{$navbar-height} + env(safe-area-inset-top, 0px));
   background: #FFFFFF;
   min-height: calc(100vh - #{$navbar-height} - #{$footer-height});
+  overflow-x: clip;    // clip (not hidden) so right padding isn't eaten by scroll container
+  width: 100%;         // explicit — prevents flex child from growing beyond wrapper
+  max-width: 100%;     // hard cap so no child element can blow this out
+  box-sizing: border-box;
 
   @include mobile {
-    padding: 2rem;
+    padding: $spacing-md;
+    // Clear bottom nav height (60px) + gesture bar inset
+    padding-bottom: calc(#{$spacing-md} + 60px + env(safe-area-inset-bottom, 0px));
   }
 
   @include tablet {
-    padding: 2rem;
+    padding: 1.25rem 1.5rem;  // enough top clearance so sticky tabs don't instantly cover first card on scroll
   }
 
   @include laptop {
@@ -46,4 +64,97 @@
   @include desktop {
     padding: 2rem;
   }
+}
+
+// ── Bottom Navigation (mobile only) ──────────────────────────────────────────
+// Dark theme matching the sidebar, native-app feel for Capacitor/APK
+.bottom-nav {
+  display: none;  // hidden on tablet and desktop
+
+  @include mobile {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    // Expand to cover gesture bar area
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    background: #1C0A0A;
+    border-top: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.35);
+    z-index: $z-fixed;
+    // Push nav items up so they sit in the visible 60px zone
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    align-items: flex-start;
+  }
+}
+
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: relative;
+  padding: 0.375rem 0.25rem 0.25rem;
+  transition: color 130ms ease;
+  -webkit-tap-highlight-color: transparent; // remove blue flash on Android tap
+
+  i {
+    font-size: 1.1rem;
+    transition: transform 130ms ease;
+    line-height: 1;
+  }
+
+  span { line-height: 1; }
+
+  // Active state — gold accent matching sidebar active colour
+  &--active {
+    color: hsl(43, 100%, 58%);
+
+    i { transform: translateY(-1px); }
+
+    // Tiny glow indicator pill above icon
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 28px;
+      height: 2px;
+      background: hsl(43, 100%, 58%);
+      border-radius: 0 0 2px 2px;
+    }
+  }
+
+  // Press feedback
+  &:active { opacity: 0.7; }
+}
+
+// Orders badge dot
+.bottom-nav-badge {
+  position: absolute;
+  top: 5px;
+  right: calc(50% - 20px);
+  background: $primary-orange;
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 700;
+  min-width: 15px;
+  height: 15px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  border: 1.5px solid #1C0A0A; // cutout against dark bg
+  line-height: 1;
 }

@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
@@ -21,8 +21,11 @@ interface NavItem {
 })
 export class SidebarComponent implements OnInit, OnDestroy {
   @Output() sidebarToggle = new EventEmitter<boolean>();
+  @Input() isMobileOpen = false;
+  @Output() mobileClose = new EventEmitter<void>();
   
   isCollapsed = false;
+  isTabletView = false;
   newOrdersCount = 0;
   private newOrderSubscription?: Subscription;
   
@@ -34,6 +37,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
     { label: 'Payments', icon: 'fa-credit-card', route: '/dashboard/payments' },
     { label: 'Reviews', icon: 'fa-star', route: '/dashboard/reviews' },
     { label: 'Settings', icon: 'fa-cog', route: '/dashboard/settings' },
+    { label: 'Printer', icon: 'fa-print', route: '/dashboard/printer-settings' },
     { label: 'Support', icon: 'fa-headset', route: '/dashboard/support' }
   ];
 
@@ -45,6 +49,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Auto-collapse on tablet viewport (768–1023px); mobile uses overlay drawer
+    this.checkViewport();
+    if (this.isTabletView) {
+      this.isCollapsed = true;
+      this.sidebarToggle.emit(true);
+    }
     // Subscribe to new orders count from service
     this.newOrderSubscription = this.orderNotificationService.getNewOrdersCount().subscribe((count) => {
       setTimeout(() => {
@@ -59,6 +69,22 @@ export class SidebarComponent implements OnInit, OnDestroy {
     if (this.newOrderSubscription) {
       this.newOrderSubscription.unsubscribe();
     }
+  }
+
+  /** Re-evaluate viewport on resize — collapse sidebar when entering tablet range */
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.checkViewport();
+    // If we just entered or remain in tablet range while expanded, snap back to collapsed
+    if (this.isTabletView && !this.isCollapsed) {
+      this.isCollapsed = true;
+      this.sidebarToggle.emit(true);
+      this.cdr.detectChanges();
+    }
+  }
+
+  private checkViewport(): void {
+    this.isTabletView = window.innerWidth >= 768 && window.innerWidth < 1024;
   }
     
 

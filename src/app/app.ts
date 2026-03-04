@@ -4,6 +4,8 @@ import { OrderNotificationModalComponent } from './shared/components/order-notif
 import { NotificationComponent } from './shared/components/notification/notification.component';
 import { WebSocketService } from './core/services/websocket.service';
 import { OrderNotificationService, IncomingOrder } from './core/services/order-notification.service';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 @Component({
   selector: 'app-root',
@@ -23,7 +25,13 @@ export class App implements OnInit {
 
   ngOnInit(): void {
     console.log('🚀 App component initialized - WebSocket connection starting...');
-    
+
+    // Fix status bar on Android — make it transparent so safe-area-inset-top works
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setOverlaysWebView({ overlay: true });
+      StatusBar.setStyle({ style: Style.Light }); // dark icons on white navbar background
+    }
+
     // Request notification permission
     this.orderNotificationService.requestNotificationPermission();
 

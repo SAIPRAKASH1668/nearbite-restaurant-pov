@@ -1,6 +1,11 @@
 @use '../../../../styles/variables' as *;
 @use '../../../../styles/mixins' as *;
 
+// Host element takes zero flex space — inner .sidebar is position:fixed
+:host {
+  display: contents;   // makes the host transparent to flex layout; children participate directly
+}
+
 // ── Sidebar dark tokens ─────────────────────────────────────────────────────
 $sidebar-bg:          #1C0A0A;
 $sidebar-border:      rgba(255, 255, 255, 0.07);
@@ -77,12 +82,7 @@ $dude-red:            hsl(0,  79%,  55%);
   }
 
   @include mobile {
-    transform: translateX(-100%);
-    z-index: $z-modal;
-
-    &.open {
-      transform: translateX(0);
-    }
+    display: none; // replaced by bottom navigation bar on mobile
   }
 
   @include tablet {
@@ -138,6 +138,9 @@ $dude-red:            hsl(0,  79%,  55%);
       font-size: 1rem;
       transition: all $transition-fast;
     }
+
+    @include mobile { display: none; }
+    // Tablet: show the chevron so users can collapse the sidebar after expanding it
   }
 
   .logo {
@@ -261,6 +264,28 @@ $dude-red:            hsl(0,  79%,  55%);
       text-align: center;
     }
   }
+}
+
+// ── Tablet backdrop — dims content behind the expanded sidebar ─────────────────
+// Rendered as a sibling BEFORE <aside> in the template.
+// z-index is one step below the sidebar itself so it sits between sidebar and content.
+.sidebar-tablet-backdrop {
+  display: none;
+
+  @include tablet {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: calc(#{$z-fixed} - 1);
+    animation: backdropFadeIn 200ms ease both;
+    cursor: pointer;
+  }
+}
+
+@keyframes backdropFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .sidebar-footer {

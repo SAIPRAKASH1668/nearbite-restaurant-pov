@@ -23,6 +23,12 @@
   cursor: pointer;
   transition: all $transition-base;
   user-select: none;
+
+  @include mobile {
+    gap: 0;
+    padding: $spacing-sm;
+    border-radius: $radius-md;
+  }
   
   &:hover {
     border-color: $border-secondary;
@@ -48,6 +54,8 @@
   font-weight: $font-weight-semibold;
   transition: color $transition-base;
   min-width: 60px;
+
+  @include mobile { display: none; }
   
   &.online {
     color: $status-success;

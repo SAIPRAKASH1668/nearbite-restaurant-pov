@@ -9,8 +9,18 @@
 
 // ── Root ──────────────────────────────────────────────────────────────────────
 .ord-root {
+  width: 100%;        // must be explicit — max-width alone doesn't constrain on narrow viewports
   max-width: 1400px;
+  min-width: 0;       // allow shrinking below content width
+  overflow-x: hidden; // hard clip — prevents any child from blowing out the page width
   animation: ordFade 0.25s ease both;
+  box-sizing: border-box;
+
+  // Compensate for the fixed tab bar being taken out of normal flow.
+  // Tab bar height: icon(~24px) + gap(~2px) + label(~12px) + vert-padding(~15px) + border(3px) ≈ 58px.
+  // Using 3.75rem (60px) as a safe ceiling so the first card header is never obscured.
+  @include tablet { padding-top: 3.75rem; }
+  @include mobile { padding-top: 3.75rem; }
 }
 
 @keyframes ordFade {
@@ -26,11 +36,39 @@
   overflow-x: auto;
   gap: 0;
   position: sticky;
-  top: v.$navbar-height;   // lock just below the fixed navbar on scroll
+  top: var(--navbar-total-height);   // lock just below the fixed navbar on scroll
   z-index: 20;
   background: #FFFFFF;
 
   &::-webkit-scrollbar { height: 0; }
+
+  // ── Tablet: fixed positioning so cards NEVER scroll behind the tab bar ──
+  // The sticky approach causes the first card header to slip under the tabs
+  // after ~50px scroll. Fixed + padding-top compensation (see .ord-root) is
+  // the same pattern that Swiggy/Zomato partner apps use.
+  @include tablet {
+    position: fixed;
+    top: var(--navbar-total-height);
+    left: v.$sidebar-collapsed-width; // sidebar is always collapsed on tablet
+    right: 0;
+    width: auto;
+    margin-bottom: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); // subtle lift to separate from cards
+    z-index: 50;
+  }
+
+  // ── Mobile: same fix — full-width fixed tab bar ──
+  @include mobile {
+    position: fixed;
+    top: var(--navbar-total-height);
+    left: 0;
+    right: 0;
+    width: 100%;
+    margin-bottom: 0;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    z-index: 50;
+  }
 }
 
 .ord-tab {
@@ -53,6 +91,15 @@
   letter-spacing: 0.04em;
 
   i { font-size: 0.875rem; }
+
+  span:first-of-type {
+    // tab label text — very compact on mobile, full on tablet+
+    @include mobile {
+      font-size: 0.55rem;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+    }
+  }
 
   .ord-badge {
     background: #F0EEEC;
@@ -77,6 +124,37 @@
       color: #FFFFFF;
     }
   }
+
+  // Mobile: icon-stack layout with compact label, pill-style active highlight
+  @include mobile {
+    flex: 1;                   // equal-width tabs that fill the full bar
+    padding: 0.5rem 0.25rem 0.4375rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    border-bottom-width: 3px;
+    min-width: 0;
+    i { font-size: 1.05rem; }
+  }
+
+  @include tablet {
+    flex: 1;                   // equal-width — 5 tabs fill the bar, none overflow
+    padding: 0.5rem 0.375rem 0.4375rem;
+    flex-direction: column;    // icon on top, compact label below (same as mobile)
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    min-width: 0;
+    i { font-size: 1.0rem; }
+
+    span:first-of-type {       // compact label — truncates if needed
+      font-size: 0.6rem;
+      letter-spacing: 0.01em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+  }
 }
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
@@ -85,8 +163,12 @@
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1rem;
   align-items: start;
+  width: 100%;    // explicit width so the grid fills its block container exactly
+  min-width: 0;   // allow grid to shrink — prevents content from inflating past viewport
 
-  @media (max-width: 640px) { grid-template-columns: 1fr; }
+  // Tablet portrait (iPad mini/Air vertical): single-column for full card width
+  @include tablet   { grid-template-columns: 1fr; gap: 0.875rem; }
+  @include mobile   { grid-template-columns: 1fr; gap: 0.75rem; }
 }
 
 // ── Order Card ────────────────────────────────────────────────────────────────
@@ -98,8 +180,13 @@
   display: flex;
   flex-direction: column;
   transition: box-shadow 0.15s ease;
+  min-width: 0;       // CRITICAL: prevents grid item from expanding beyond its track
+  overflow: hidden;   // clips any internal content that escapes the card boundary
 
   &:hover { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07); }
+
+  @include mobile  { box-shadow: 0 2px 10px rgba(46, 36, 27, 0.07); }
+  @include tablet  { box-shadow: 0 2px 12px rgba(46, 36, 27, 0.07); }
 
   // Status-coded left border (like Swiggy partner app)
   &[data-status="PENDING"]           { border-left-color: #F59E0B; }
@@ -117,6 +204,9 @@
 .ord-head {
   padding: 0.875rem 0.875rem 0.625rem;
   border-bottom: 1px solid #F0EEEC;
+
+  @include mobile { padding: 1rem 1rem 0.75rem; }
+  @include tablet { padding: 1rem 1rem 0.75rem; }
 }
 
 .ord-id-row {
@@ -159,6 +249,9 @@
     color: v.$primary-orange;
     background: rgba(232, 58, 58, 0.04);
   }
+
+  @include mobile { width: 32px; height: 32px; font-size: 0.75rem; border-radius: 3px; }
+  @include tablet { width: 30px; height: 30px; font-size: 0.7rem; }
 }
 
 .ord-meta {
@@ -184,7 +277,11 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  margin-right: auto;
+  margin-right: auto;   // pushes status pill to far right on desktop
+
+  // Mobile/tablet: pill is hidden so no need to push anything; keep text flush
+  @include mobile { margin-right: 0; }
+  @include tablet { margin-right: 0; }
 
   i { font-size: 0.625rem; }
 }
@@ -199,6 +296,11 @@
   letter-spacing: 0.04em;
   border: 1px solid transparent;
   white-space: nowrap;
+
+  // Hidden on mobile/tablet — the active tab + left border colour already
+  // communicate status; showing it here only causes overflow on narrow cards
+  @include mobile { display: none; }
+  @include tablet { display: none; }
 
   &[data-status="PENDING"] {
     background: rgba(245,158,11,0.1);   color: #92400E; border-color: rgba(245,158,11,0.25);
@@ -232,6 +334,10 @@
   border-bottom: 1px solid #F0EEEC;
   height: 148px;       // fixed height — keeps all cards equal regardless of item count
   overflow: hidden;
+
+  // Mobile/tablet: let items breathe naturally — no fixed clip height
+  @include mobile { height: auto; overflow: visible; }
+  @include tablet { height: auto; overflow: visible; }
 }
 
 .ord-items-lbl {
@@ -298,6 +404,7 @@
   font-size: 0.78rem;
   color: v.$text-secondary;
   line-height: 1.4;
+  min-width: 0;   // CRITICAL: allows the flex item to shrink so -webkit-line-clamp works
 
   i {
     font-size: 0.6875rem;
@@ -311,6 +418,7 @@
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    min-width: 0;  // required so the long address text doesn't force card width wider
   }
 }
 
@@ -365,12 +473,17 @@
   display: flex;
   flex-direction: column;
   gap: 0.625rem;
+
+  @include mobile { padding: 0.875rem; gap: 0.75rem; }
+  @include tablet { padding: 0.875rem 1rem; gap: 0.75rem; }
 }
 
 .ord-amount {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  min-width: 0;  // allow flex children to shrink
+  gap: 0.5rem;
 }
 
 .ord-amount-sub {
@@ -379,6 +492,8 @@
   gap: 1px;
   font-size: 0.72rem;
   color: v.$text-muted;
+  min-width: 0;
+  flex: 1;
 }
 
 .ord-total {
@@ -386,11 +501,14 @@
   font-weight: 700;
   color: v.$text-primary;
   font-variant-numeric: tabular-nums;
+  flex-shrink: 0;  // never let the total be crushed or wrapped
 }
 
 .ord-actions {
   display: flex;
   gap: 0.5rem;
+
+  @include mobile { gap: 0.625rem; }
 }
 
 // ── Action Buttons ────────────────────────────────────────────────────────────
@@ -413,6 +531,18 @@
   white-space: nowrap;
 
   i { font-size: 0.75rem; }
+
+  // Premium touch targets on mobile/tablet
+  @include mobile {
+    min-height: 48px;
+    font-size: 0.8125rem;
+    border-radius: 3px;
+  }
+
+  @include tablet {
+    min-height: 44px;
+    font-size: 0.8125rem;
+  }
 }
 
 .ord-btn-accept {
@@ -534,8 +664,15 @@
   padding: 1.5rem;
   animation: ordFadeIn 0.18s ease;
 
-  @media (max-width: 768px) {
-    left: 0;  // full-screen on mobile (no sidebar)
+  // Tablet: sidebar is collapsed to 70px
+  @include tablet {
+    left: v.$sidebar-collapsed-width;
+    padding: 1.25rem;
+  }
+
+  // Mobile: full-screen bottom sheet
+  @include mobile {
+    left: 0;
     align-items: flex-end;
     padding: 0;
   }
@@ -558,10 +695,21 @@
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24), 0 4px 16px rgba(0,0,0,0.12);
   animation: ordModalIn 0.22s cubic-bezier(0.34, 1.22, 0.64, 1);
 
-  @media (max-width: 640px) {
-    max-height: 94vh;
-    border-radius: 4px 4px 0 0;
+  @include tablet {
+    max-width: 600px;
+    max-height: 90vh;
   }
+
+  @include mobile {
+    max-height: 94vh;
+    border-radius: 12px 12px 0 0; // premium bottom-sheet style
+    animation: ordSheetIn 0.28s cubic-bezier(0.34, 1.1, 0.64, 1);
+  }
+}
+
+@keyframes ordSheetIn {
+  from { transform: translateY(100%); opacity: 0.6; }
+  to   { transform: translateY(0);   opacity: 1; }
 }
 
 @keyframes ordModalIn {
@@ -668,6 +816,22 @@
   gap: 0;
   background: #FAFAF9;
   flex-wrap: wrap;
+
+  // Mobile: stack cells into a 2-col grid for quick scanning
+  @include mobile {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    padding: 0.875rem;
+
+    // Hide vertical dividers — not needed in grid layout
+    .ord-modal-meta-divider { display: none; }
+
+    .ord-modal-meta-cell {
+      padding: 0;
+      flex: unset;
+    }
+  }
 }
 
 .ord-modal-meta-cell {
@@ -991,7 +1155,14 @@
   flex-wrap: wrap;
   border-radius: 0 0 4px 4px;
 
-  @media (max-width: 640px) { border-radius: 0; }
+  @include mobile {
+    flex-direction: column;
+    gap: 0.625rem;
+    padding: 1rem;
+    border-radius: 0;
+    // Safe area inset for devices with a home indicator bar
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .ord-modal-act-btn {
@@ -1003,9 +1174,18 @@
 
   &.primary { flex: 2; }
 
-  @media (max-width: 480px) {
+  @include mobile {
     flex: unset;
     width: 100%;
     min-width: unset;
+    min-height: 52px;  // premium large tap target
+    font-size: 0.9375rem;
+    border-radius: 3px;
+
+    &.primary { order: -1; }  // primary action always on top in stacked layout
+  }
+
+  @include tablet {
+    min-height: 46px;
   }
 }

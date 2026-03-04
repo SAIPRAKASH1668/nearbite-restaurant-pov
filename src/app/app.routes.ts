@@ -13,6 +13,7 @@ import { ReviewsComponent } from './features/reviews/reviews.component';
 import { SettingsComponent } from './features/settings/settings.component';
 import { SupportComponent } from './features/support/support.component';
 import { GoOnlineComponent } from './features/go-online/go-online.component';
+import { PrinterSettingsComponent } from './features/printer-settings/printer-settings.component';
 
 export const routes: Routes = [
   {
@@ -65,6 +66,10 @@ export const routes: Routes = [
       {
         path: 'support',
         component: SupportComponent
+      },
+      {
+        path: 'printer-settings',
+        component: PrinterSettingsComponent
       }
     ]
   },

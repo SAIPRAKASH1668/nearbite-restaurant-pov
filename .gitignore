@@ -2,9 +2,16 @@
 
 # Compiled output
 /dist
+/www
 /tmp
 /out-tsc
 /bazel-out
+
+# Capacitor Android build artifacts
+/android/.gradle
+/android/app/build
+/android/build
+/android/local.properties
 
 # Node
 /node_modules

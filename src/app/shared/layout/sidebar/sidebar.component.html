@@ -1,4 +1,9 @@
-<aside class="sidebar" [class.collapsed]="isCollapsed">
+<!-- Tablet backdrop: tap anywhere outside the sidebar to collapse it -->
+<div class="sidebar-tablet-backdrop"
+     *ngIf="!isCollapsed"
+     (click)="toggleSidebar()"></div>
+
+<aside class="sidebar" [class.collapsed]="isCollapsed" [class.mobile-open]="isMobileOpen">
   <!-- Logo Section -->
   <div class="sidebar-header">
     <div class="logo" (click)="isCollapsed && toggleSidebar()">

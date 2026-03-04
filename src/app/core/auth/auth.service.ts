@@ -26,7 +26,7 @@ export class AuthService {
   public currentUser: Observable<User | null>;
   private readonly STORAGE_KEY = 'nearbite_user';
   private readonly TOKEN_STORAGE_KEY = 'nearbite_auth_token';
-  private readonly API_BASE_URL = '/api/v1';
+  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
 
   constructor(
     private router: Router,

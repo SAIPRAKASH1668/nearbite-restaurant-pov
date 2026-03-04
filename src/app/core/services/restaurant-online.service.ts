@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { RestaurantContextService } from './restaurant-context.service';
 
 const STORAGE_KEY = 'yumdude_restaurant_online';
-const API_BASE = 'api/v1';
+const API_BASE = 'https://api.dev.yumdude.com/api/v1';
 
 @Injectable({
   providedIn: 'root'

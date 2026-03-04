@@ -1,15 +1,53 @@
 <div class="app-layout">
-  <app-sidebar (sidebarToggle)="onSidebarToggle($event)"></app-sidebar>
-  
+  <app-sidebar
+    [isMobileOpen]="isMobileSidebarOpen"
+    (sidebarToggle)="onSidebarToggle($event)"
+    (mobileClose)="isMobileSidebarOpen = false">
+  </app-sidebar>
+
   <div class="main-wrapper" [class.sidebar-collapsed]="isSidebarCollapsed">
-    <app-navbar></app-navbar>
-    
+    <app-navbar (hamburgerClick)="onHamburgerClick()"></app-navbar>
+
     <main class="content">
       <router-outlet></router-outlet>
     </main>
-    
+
     <app-footer></app-footer>
   </div>
+
+  <!-- ── Mobile bottom navigation (hidden on tablet+desktop via CSS) ── -->
+  <nav class="bottom-nav">
+    <a routerLink="/dashboard" routerLinkActive="bottom-nav-item--active"
+       [routerLinkActiveOptions]="{exact: true}" class="bottom-nav-item">
+      <i class="fas fa-chart-line"></i>
+      <span>Dashboard</span>
+    </a>
+
+    <a routerLink="/dashboard/orders" routerLinkActive="bottom-nav-item--active"
+       class="bottom-nav-item bottom-nav-item--orders">
+      <i class="fas fa-bag-shopping"></i>
+      <span>Orders</span>
+      <span class="bottom-nav-badge" *ngIf="newOrdersCount > 0">{{ newOrdersCount > 99 ? '99+' : newOrdersCount }}</span>
+    </a>
+
+    <a routerLink="/dashboard/menu" routerLinkActive="bottom-nav-item--active"
+       class="bottom-nav-item">
+      <i class="fas fa-utensils"></i>
+      <span>Menu</span>
+    </a>
+
+    <a routerLink="/dashboard/reports" routerLinkActive="bottom-nav-item--active"
+       class="bottom-nav-item">
+      <i class="fas fa-chart-bar"></i>
+      <span>Reports</span>
+    </a>
+
+    <a routerLink="/dashboard/settings" routerLinkActive="bottom-nav-item--active"
+       class="bottom-nav-item">
+      <i class="fas fa-cog"></i>
+      <span>More</span>
+    </a>
+  </nav>
 </div>
 
 <!-- Premium online animation overlay (renders above content area) -->

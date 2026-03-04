@@ -30,6 +30,9 @@ export class DashboardComponent implements OnInit {
   chartBars: number[] = [42, 68, 55, 80, 63, 90, 74];
   chartLabels: string[] = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+  // Mobile accordion state for recent orders
+  expandedOrderId: string | null = null;
+
   constructor(
     private dashboardService: DashboardService,
     private cdr: ChangeDetectorRef
@@ -92,6 +95,10 @@ export class DashboardComponent implements OnInit {
 
   getStatusLabel(status: string): string {
     return status.charAt(0).toUpperCase() + status.slice(1);
+  }
+
+  toggleAccordion(orderNumber: string): void {
+    this.expandedOrderId = this.expandedOrderId === orderNumber ? null : orderNumber;
   }
 
   openFinancialDashboard(): void {

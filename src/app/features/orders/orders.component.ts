@@ -5,6 +5,8 @@ import { OrderService } from '../../core/services/order.service';
 import { Order, OrderStatus } from '../../core/models/order.model';
 import { Subscription } from 'rxjs';
 import { OrderRejectionModalComponent } from '../../shared/components/order-rejection-modal/order-rejection-modal.component';
+import { SoundService } from '../../core/services/sound.service';
+import { PrinterService } from '../../core/services/printer.service';
 
 @Component({
   selector: 'app-orders',
@@ -276,8 +278,14 @@ export class OrdersComponent implements OnInit, OnDestroy {
   constructor(
     private orderService: OrderService,
     private orderNotificationService: OrderNotificationService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private soundService: SoundService,
+    private printerService: PrinterService
   ) {}
+
+  testAlarm(): void {
+    this.soundService.playNewOrderAlarm();
+  }
 
   ngOnInit(): void {
     // ── PREVIEW MODE: load dummy data instead of live API ─────────────────
@@ -489,6 +497,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
    * Accept order (CONFIRMED → PREPARING, backend starts 5-min timer for rider notification)
    */
   acceptOrder(order: Order): void {
+    this.soundService.stopAlarm();
+    this.printerService.printOrderAccepted(order);   // auto-print KOT + Bill
     this.orderService.updateOrderStatus(order.orderId, OrderStatus.PREPARING).subscribe({
       next: () => {
         console.log('✅ Order accepted:', order.orderId);
@@ -516,7 +526,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
    */
   onRejectConfirm(reason: string): void {
     if (!this.selectedOrderForRejection) return;
-    
+    this.soundService.stopAlarm();
     this.orderService.updateOrderStatus(
       this.selectedOrderForRejection.orderId, 
       OrderStatus.CANCELLED,

@@ -26,7 +26,7 @@ export interface MenuResponse {
   providedIn: 'root'
 })
 export class MenuService {
-  private readonly API_BASE_URL = 'api/v1';
+  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
   
   private menuItemsSubject = new BehaviorSubject<MenuItem[]>([]);
   public menuItems$: Observable<MenuItem[]> = this.menuItemsSubject.asObservable();

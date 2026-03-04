@@ -30,7 +30,7 @@ export class WebSocketService {
 
     // Create STOMP client with SockJS
     this.stompClient = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws/orders'),
+      webSocketFactory: () => new SockJS('https://api.dev.yumdude.com/ws/orders'),
       debug: (str) => {
         console.log('📡 STOMP Debug:', str);
       },

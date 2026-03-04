@@ -7,8 +7,10 @@ $dude-red:   hsl(0,  79%,  55%);
 
 // ── Page root ──────────────────────────────────────────────────────────────
 .db-root {
+  width: 100%;
   max-width: 1400px;
   padding-bottom: 2rem;
+  overflow-x: clip;   // hard clip boundary — prevents any child from expanding doc width
   animation: dbFadeIn 0.35s ease both;
 }
 
@@ -22,18 +24,27 @@ $dude-red:   hsl(0,  79%,  55%);
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 1.5rem;
+  flex-wrap: wrap;             // wraps on any viewport, no hard breakpoint needed
+  gap: 1rem 1.5rem;
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
   border-bottom: 1.5px solid $border-primary;
 
   @media (max-width: $breakpoint-tablet) {
-    flex-direction: column;
-    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    gap: 0.75rem 1rem;
+  }
+
+  @include mobile {
+    margin-bottom: 1rem;
+    padding-bottom: 0.875rem;
+    flex-wrap: nowrap;
+    align-items: center;
   }
 }
 
-.db-header-left { display: flex; flex-direction: column; gap: 0.2rem; }
+.db-header-left { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
 
 .db-greeting {
   font-size: 0.8125rem;
@@ -42,6 +53,8 @@ $dude-red:   hsl(0,  79%,  55%);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin: 0;
+
+  @include mobile { display: none; }  // title alone is enough on small screens
 }
 
 .db-title {
@@ -51,6 +64,8 @@ $dude-red:   hsl(0,  79%,  55%);
   letter-spacing: -0.03em;
   margin: 0;
   line-height: 1.1;
+
+  @include mobile { font-size: 1.375rem; }
 }
 
 .db-date {
@@ -58,6 +73,8 @@ $dude-red:   hsl(0,  79%,  55%);
   color: $text-muted;
   margin: 0;
   margin-top: 0.15rem;
+
+  @include mobile { font-size: 0.75rem; }
 }
 
 .db-header-right {
@@ -66,7 +83,25 @@ $dude-red:   hsl(0,  79%,  55%);
   gap: 0.75rem;
   flex-shrink: 0;
 
-  @media (max-width: $breakpoint-tablet) { width: 100%; }
+  @media (max-width: $breakpoint-tablet) {
+    width: 100%;
+    .db-btn-primary, .db-btn-secondary { flex: 1; justify-content: center; }
+  }
+
+  @include mobile {
+    width: auto;
+    gap: 0.4rem;
+    // Icon-only compact squares on mobile — clean & minimal
+    .db-btn-primary span,
+    .db-btn-secondary span { display: none; }
+    .db-btn-primary, .db-btn-secondary {
+      flex: 0 0 38px;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      justify-content: center;
+    }
+  }
 }
 
 // ── Buttons (offset-shadow, no gradients) ──────────────────────────────
@@ -147,7 +182,22 @@ $dude-red:   hsl(0,  79%,  55%);
   margin-bottom: 1.5rem;
 
   @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: $breakpoint-tablet) { grid-template-columns: 1fr; }
+
+  // Tablet: clean 2×2
+  @media (max-width: $breakpoint-tablet) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.875rem;
+  }
+
+  // Mobile: clean 2×2 grid — all 4 metrics visible at a glance, zero horizontal scroll
+  @include mobile {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.625rem;
+    margin-bottom: 1.125rem;
+    overflow: visible;
+    padding-bottom: 0;
+  }
 }
 
 .db-stat {
@@ -157,11 +207,20 @@ $dude-red:   hsl(0,  79%,  55%);
   padding: 1.375rem 1.5rem;
   border-top-width: 3px;
   box-shadow: none;
+  overflow: hidden;
   transition: border-color 150ms ease;
+  min-width: 0;
 
-  &:hover {
-    border-color: #D0CCC8;
+  @media (max-width: $breakpoint-tablet) { padding: 1.125rem; }
+
+  // Mobile: fill grid cell naturally — premium compact card
+  @include mobile {
+    min-width: 0;
+    padding: 0.875rem;
+    box-shadow: 0 2px 10px rgba(46, 36, 27, 0.07);
   }
+
+  &:hover { border-color: #D0CCC8; }
 
   &--orders  { border-top-color: $primary-orange; }
   &--revenue { border-top-color: $status-success; }
@@ -171,9 +230,13 @@ $dude-red:   hsl(0,  79%,  55%);
 
 .db-stat-top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 0.5rem;
   margin-bottom: 1rem;
+
+  @media (max-width: $breakpoint-tablet) { margin-bottom: 0.625rem; }
+  @include mobile { margin-bottom: 0.5rem; }
 }
 
 .db-stat-label {
@@ -182,6 +245,10 @@ $dude-red:   hsl(0,  79%,  55%);
   color: $text-muted;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  line-height: 1.3;
+
+  @media (max-width: $breakpoint-tablet) { font-size: 0.72rem; letter-spacing: 0.03em; }
+  @include mobile { font-size: 0.7rem; letter-spacing: 0.02em; }
 }
 
 .db-stat-icon {
@@ -190,6 +257,9 @@ $dude-red:   hsl(0,  79%,  55%);
   display: flex; align-items: center; justify-content: center;
   font-size: 0.9rem;
   flex-shrink: 0;
+
+  @media (max-width: $breakpoint-tablet) { width: 32px; height: 32px; font-size: 0.85rem; }
+  @include mobile                         { width: 30px; height: 30px; font-size: 0.8rem; }
 
   &--red    { background: rgba($primary-orange, 0.1); color: $primary-orange; }
   &--green  { background: rgba($status-success, 0.1); color: $status-success; }
@@ -204,6 +274,12 @@ $dude-red:   hsl(0,  79%,  55%);
   letter-spacing: -0.04em;
   line-height: 1;
   margin-bottom: 0.625rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @media (max-width: $breakpoint-tablet) { font-size: 1.5rem; }
+  @include mobile { font-size: 1.55rem; margin-bottom: 0.4rem; }
 }
 
 .db-stat-change {
@@ -214,6 +290,28 @@ $dude-red:   hsl(0,  79%,  55%);
   font-weight: $font-weight-semibold;
   padding: 0.2rem 0.55rem;
   border-radius: 2px;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+
+  i { flex-shrink: 0; }
+  span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  @media (max-width: $breakpoint-tablet) {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  @include mobile {
+    font-size: 0.69rem;
+    padding: 0.15rem 0.375rem;
+    gap: 0.2rem;
+  }
 
   &--up      { color: $status-success; background: rgba($status-success, 0.1); }
   &--down    { color: $status-error;   background: rgba($status-error, 0.08); }
@@ -228,8 +326,19 @@ $dude-red:   hsl(0,  79%,  55%);
   gap: 1.25rem;
   margin-bottom: 1.5rem;
   align-items: start;
+  min-width: 0;   // prevent grid container from expanding beyond its containing block
+  width: 100%;    // explicit width ensures it fills .db-root
 
   @media (max-width: 1100px) { grid-template-columns: 1fr; }
+  @include mobile { grid-template-columns: 1fr; }  // explicit safety — no 360px second track
+  @media (max-width: $breakpoint-tablet) { gap: 0.875rem; }
+  @media (max-width: 480px) { gap: 0.625rem; margin-bottom: 1rem; }
+}
+
+// ── Mobile card reorder: pipeline + actions first, chart second ─────────────
+@media (max-width: $breakpoint-mobile) {
+  .db-chart-card    { order: 2; }
+  .db-pipeline-card { order: 1; }
 }
 
 // ── Shared card shell ──────────────────────────────────────────────────
@@ -239,6 +348,13 @@ $dude-red:   hsl(0,  79%,  55%);
   border-radius: 3px;
   padding: 1.5rem;
   box-shadow: none;
+  min-width: 0;    // CRITICAL: allow grid child to shrink below content min-width
+  max-width: 100%; // prevent expansion beyond grid track
+  overflow: hidden; // clip any residual internal overflow
+
+  @media (max-width: $breakpoint-tablet) { padding: 1.125rem; }
+  @media (max-width: 400px) { padding: 0.875rem; }
+  @include mobile { box-shadow: 0 3px 14px rgba(46, 36, 27, 0.08); }
 }
 
 .db-card-header {
@@ -247,6 +363,19 @@ $dude-red:   hsl(0,  79%,  55%);
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.5rem;
+
+  @media (max-width: $breakpoint-tablet) {
+    gap: 0.75rem;
+    margin-bottom: 1.125rem;
+    align-items: center;
+  }
+
+  @include mobile {
+    flex-wrap: nowrap;       // never wrap on mobile — tabs stay to the right
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.875rem;
+  }
 }
 
 .db-card-eyebrow {
@@ -269,12 +398,14 @@ $dude-red:   hsl(0,  79%,  55%);
 // ── Chart tabs ───────────────────────────────────────────────────────────────
 .db-chart-tabs {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.2rem;
   background: $bg-secondary;
   border: 1px solid $border-primary;
   border-radius: 3px;
-  padding: 0.2rem;
-  flex-shrink: 0;
+  padding: 0.175rem;
+  flex-shrink: 0;         // never grow to full width; stays compact beside title
+
+  @include mobile { gap: 0.125rem; padding: 0.15rem; }
 }
 
 .db-tab {
@@ -288,6 +419,10 @@ $dude-red:   hsl(0,  79%,  55%);
   color: $text-muted;
   cursor: pointer;
   transition: all 150ms ease;
+  white-space: nowrap;
+
+  @media (max-width: $breakpoint-tablet) { padding: 0.275rem 0.6rem; font-size: 0.725rem; }
+  @include mobile                         { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
 
   &--active { background: #fff; color: $primary-orange; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
   &:hover:not(.db-tab--active) { color: $text-secondary; }
@@ -301,10 +436,16 @@ $dude-red:   hsl(0,  79%,  55%);
   height: 160px;
   padding: 0 0.25rem;
   margin-bottom: 0.75rem;
+  width: 100%;    // fill card inner width
+  min-width: 0;   // allow shrink
+
+  @media (max-width: $breakpoint-tablet) { height: 130px; gap: 0.4rem; }
+  @media (max-width: 480px) { height: 110px; gap: 0.3rem; }
 }
 
 .db-bar-col {
   flex: 1;
+  min-width: 0;  // allow flex item to shrink below its text label width
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -332,6 +473,8 @@ $dude-red:   hsl(0,  79%,  55%);
   color: $text-muted;
   font-weight: $font-weight-medium;
   white-space: nowrap;
+
+  @media (max-width: 480px) { font-size: 0.6rem; }
 }
 
 .db-chart-footer {
@@ -348,11 +491,25 @@ $dude-red:   hsl(0,  79%,  55%);
 // ── Pipeline ─────────────────────────────────────────────────────────────────
 .db-pipeline {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr)); // minmax(0) lets columns shrink below text min-width
   gap: 0.5rem;
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid $border-primary;
+  min-width: 0;   // prevent pipeline from inflating its card
+
+  @media (max-width: $breakpoint-tablet) {
+    gap: 0.375rem;
+    margin-bottom: 1.125rem;
+    padding-bottom: 1.125rem;
+  }
+
+  @include mobile {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.625rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+  }
 }
 
 .db-pipe-stage {
@@ -360,6 +517,15 @@ $dude-red:   hsl(0,  79%,  55%);
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
+
+  // Mobile: mini card with coloured top accent
+  @include mobile {
+    gap: 0.3rem;
+    background: $bg-secondary;
+    border-radius: 3px;
+    padding: 0.9rem 0.5rem 0.75rem;
+    border-top: 3px solid $border-secondary;
+  }
 }
 
 .db-pipe-count {
@@ -368,12 +534,16 @@ $dude-red:   hsl(0,  79%,  55%);
   color: $text-primary;
   letter-spacing: -0.03em;
   line-height: 1;
+
+  @media (max-width: $breakpoint-tablet) { font-size: 1.2rem; }
+  @include mobile                         { font-size: 1.3rem; }
 }
 
 .db-pipe-bar {
   width: 100%; height: 3px;
   border-radius: 0;
   background: $border-primary;
+  @include mobile { display: none; }  // stage top-border replaces the bar on mobile
 }
 
 .db-pipe-stage--new   .db-pipe-bar  { background: $primary-orange; }
@@ -383,6 +553,16 @@ $dude-red:   hsl(0,  79%,  55%);
 .db-pipe-stage--new   .db-pipe-count { color: $primary-orange; }
 .db-pipe-stage--done  .db-pipe-count { color: $status-success; }
 
+// Mobile: coloured top-border accent per stage (replaces bar)
+@media (max-width: $breakpoint-mobile) {
+  .db-pipe-stage--new   { border-top-color: $primary-orange !important; }
+  .db-pipe-stage--prep  { border-top-color: $status-warning !important;
+                          .db-pipe-count { color: $status-warning; } }
+  .db-pipe-stage--ready { border-top-color: $status-info !important;
+                          .db-pipe-count { color: $status-info; } }
+  .db-pipe-stage--done  { border-top-color: $status-success !important; }
+}
+
 .db-pipe-label {
   font-size: 0.7rem;
   font-weight: $font-weight-semibold;
@@ -390,6 +570,15 @@ $dude-red:   hsl(0,  79%,  55%);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   text-align: center;
+  white-space: nowrap;
+
+  @media (max-width: $breakpoint-tablet) { font-size: 0.65rem; letter-spacing: 0.03em; }
+  @include mobile {
+    font-size: 0.65rem;
+    letter-spacing: 0.03em;
+    white-space: normal;
+    line-height: 1.2;
+  }
 }
 
 // ── Quick actions ───────────────────────────────────────────────────────────
@@ -415,6 +604,19 @@ $dude-red:   hsl(0,  79%,  55%);
   font-size: 0.875rem;
   font-weight: $font-weight-semibold;
   transition: background 150ms ease, color 150ms ease;
+
+  // Premium touch target — comfortable on mobile
+  @include mobile {
+    min-height: 52px;
+    padding: 0.9rem 0.5rem;
+    font-size: 0.9375rem;
+
+    .db-qa-icon {
+      width: 36px;
+      height: 36px;
+      font-size: 0.9rem;
+    }
+  }
 
   & + & { border-top: 1px solid $border-primary; }
 
@@ -481,12 +683,14 @@ $dude-red:   hsl(0,  79%,  55%);
   overflow-x: auto;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
+
+  @include mobile { display: none; }   // accordion handles mobile; table is tablet+
 }
 
 .db-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 680px;
+  min-width: 560px;
 
   thead tr { border-bottom: 1.5px solid $border-primary; }
 
@@ -513,6 +717,126 @@ $dude-red:   hsl(0,  79%,  55%);
     font-size: 0.875rem;
     color: $text-secondary;
     vertical-align: middle;
+  }
+
+  @media (max-width: $breakpoint-tablet) and (min-width: 768px) {
+    th, td { padding: 0.7rem 0.75rem; }
+    th { font-size: 0.7rem; }
+    td { font-size: 0.8125rem; }
+  }
+}
+
+// ── Mobile accordion — replaces table on phones ───────────────────────────────
+.db-accordion {
+  display: none;
+
+  @include mobile {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.db-acc-item {
+  border-bottom: 1px solid $border-primary;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  &:last-child { border-bottom: none; }
+}
+
+.db-acc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 0;
+  user-select: none;
+}
+
+.db-acc-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.db-acc-order {
+  font-size: 0.8125rem;
+  font-weight: $font-weight-bold;
+  color: $text-primary;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.01em;
+}
+
+.db-acc-customer {
+  font-size: 0.75rem;
+  color: $text-muted;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.db-acc-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.db-acc-chevron {
+  font-size: 0.65rem;
+  color: $text-muted;
+  transition: transform 220ms ease;
+}
+
+.db-acc-item--open .db-acc-chevron { transform: rotate(180deg); }
+
+// max-height collapse — fully reliable, no padding bleed
+.db-acc-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 260ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  .db-acc-item--open & { max-height: 240px; }  // generous cap well above actual content
+}
+
+.db-acc-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: $bg-secondary;
+  border-radius: 2px;
+  padding: 0.75rem;
+  margin-bottom: 0.625rem;
+}
+
+.db-acc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.db-acc-key {
+  font-size: 0.725rem;
+  font-weight: $font-weight-semibold;
+  color: $text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.db-acc-val {
+  font-size: 0.875rem;
+  font-weight: $font-weight-semibold;
+  color: $text-secondary;
+
+  &--amount {
+    color: $primary-orange;
+    font-size: 1rem;
+    font-weight: $font-weight-bold;
+    letter-spacing: -0.02em;
   }
 }
 

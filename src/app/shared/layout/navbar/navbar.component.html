@@ -1,6 +1,13 @@
 <header class="navbar">
   <div class="navbar-content">
-    <!-- Search Bar -->
+
+    <!-- Mobile title: brand logo + YumDude (no space), visible on mobile only -->
+    <div class="mobile-title">
+      <img class="mobile-logo" src="/favicon.svg" alt="" aria-hidden="true" />
+      <span class="mobile-brand-text"><span class="mbt-yum">Yum</span><span class="mbt-dude">Dude</span></span>
+    </div>
+
+    <!-- Search Bar (hidden on mobile, mobile-title shows instead) -->
     <div class="search-section">
       <div class="search-bar">
         <i class="fas fa-search search-icon"></i>
@@ -16,59 +23,25 @@
         (isOpenChange)="onRestaurantStatusChange($event)">
       </app-restaurant-status-toggle>
 
-      <!-- Notifications -->
-      <button class="action-btn notification-btn" (click)="toggleNotifications()">
-        <i class="fas fa-bell"></i>
-        <span class="badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
-      </button>
-
-      <!-- Notifications Dropdown -->
-      <div class="notifications-dropdown" *ngIf="showNotifications">
-        <div class="notifications-header">
-          <h3>Notifications</h3>
-          <button class="mark-read-btn" (click)="markAllRead()" *ngIf="unreadCount > 0">
-            Mark all read
-          </button>
-        </div>
-        <div class="notifications-list">
-          <div class="notification-item" 
-               *ngFor="let notification of notifications"
-               [class.unread]="!notification.read"
-               (click)="markAsRead(notification.id)">
-            <div class="notification-icon" [ngClass]="'type-' + notification.type">
-              <i class="fas" 
-                 [class.fa-shopping-cart]="notification.type === 'order'"
-                 [class.fa-credit-card]="notification.type === 'payment'"
-                 [class.fa-star]="notification.type === 'review'"
-                 [class.fa-info-circle]="notification.type === 'system'"></i>
-            </div>
-            <div class="notification-content">
-              <h4>{{ notification.title }}</h4>
-              <p>{{ notification.message }}</p>
-              <span class="notification-time">{{ notification.time }}</span>
-            </div>
-            <div class="read-indicator" *ngIf="!notification.read"></div>
-          </div>
-          <div class="empty-notifications" *ngIf="notifications.length === 0">
-            <i class="fas fa-bell-slash"></i>
-            <p>No notifications</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- User Menu -->
+      <!-- User Menu — avatar only; name/restaurant shown inside dropdown -->
       <div class="user-menu" (click)="toggleUserMenu()">
         <div class="user-avatar">
           <i class="fas fa-user"></i>
         </div>
-        <div class="user-info">
-          <p class="user-name">{{ ownerName || currentUser?.name }}</p>
-          <p class="restaurant-name">{{ restaurantName || currentUser?.restaurantName }}</p>
-        </div>
-        <i class="fas fa-chevron-down dropdown-icon"></i>
 
         <!-- Dropdown Menu -->
         <div class="dropdown-menu" *ngIf="showUserMenu">
+          <!-- Profile header — shown on mobile/tablet where user-info is hidden -->
+          <div class="dropdown-profile">
+            <div class="dropdown-profile-avatar">
+              <i class="fas fa-user"></i>
+            </div>
+            <div class="dropdown-profile-info">
+              <p class="dropdown-profile-name">{{ ownerName || currentUser?.name || 'Owner' }}</p>
+              <p class="dropdown-profile-restaurant">{{ restaurantName || currentUser?.restaurantName || 'Restaurant' }}</p>
+            </div>
+          </div>
+          <div class="dropdown-divider dropdown-divider--profile"></div>
           <a href="#" class="dropdown-item">
             <i class="fas fa-user-circle"></i>
             <span>My Profile</span>
@@ -77,8 +50,12 @@
             <i class="fas fa-cog"></i>
             <span>Settings</span>
           </a>
+          <a routerLink="/dashboard/printer-settings" class="dropdown-item">
+            <i class="fas fa-print"></i>
+            <span>Printer Settings</span>
+          </a>
           <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item" (click)="logout()">
+          <a href="#" class="dropdown-item dropdown-item--danger" (click)="logout()">
             <i class="fas fa-sign-out-alt"></i>
             <span>Logout</span>
           </a>

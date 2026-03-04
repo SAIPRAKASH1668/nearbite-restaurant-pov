@@ -6,7 +6,10 @@
   top: 0;
   right: 0;
   left: $sidebar-width;
-  height: $navbar-height;
+  // Expand navbar height to absorb the status bar area
+  height: calc(#{$navbar-height} + env(safe-area-inset-top, 0px));
+  // Push navbar content below the status bar
+  padding-top: env(safe-area-inset-top, 0px);
   background: #FFFFFF;
   border-bottom: 1px solid #E8E5E2;
   z-index: $z-sticky;
@@ -15,6 +18,10 @@
 
   @include mobile {
     left: 0;
+  }
+
+  @include tablet {
+    left: $sidebar-collapsed-width;
   }
 }
 
@@ -26,7 +33,54 @@
 
   @include mobile {
     padding: 0 $spacing-md;
-    gap: $spacing-md;
+    gap: $spacing-sm;
+  }
+}
+
+// ── Hamburger (deprecated — removed in favour of bottom nav on mobile) ────────
+.hamburger-btn {
+  display: none; // no longer rendered; sidebar hidden on mobile, tablet uses fixed sidebar
+}
+
+// ── Mobile title (mobile only) — logo + YumDude wordmark ───────────────────
+.mobile-title {
+  display: none;
+
+  @include mobile {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+    font-family: $font-family;
+  }
+}
+
+.mobile-logo {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.mobile-brand-text {
+  display: flex;
+  align-items: baseline;
+
+  .mbt-yum {
+    color: hsl(43, 100%, 55%);
+    font-size: 1.15rem;
+    font-weight: $font-weight-bold;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .mbt-dude {
+    color: $primary-orange;
+    font-size: 1.15rem;
+    font-weight: $font-weight-bold;
+    letter-spacing: -0.02em;
+    line-height: 1;
   }
 }
 
@@ -35,8 +89,7 @@
   max-width: 600px;
 
   @include mobile {
-    max-width: none;
-    flex: 0 1 auto;
+    display: none;
   }
 
   @include tablet {
@@ -83,214 +136,7 @@
   gap: $spacing-lg;
 
   @include mobile {
-    gap: $spacing-md;
-  }
-}
-
-.action-btn {
-  position: relative;
-  background: transparent;
-  border: none;
-  color: $text-secondary;
-  font-size: $font-size-xl;
-  width: 44px;
-  height: 44px;
-  border-radius: $radius-md;
-  @include flex-center;
-  cursor: pointer;
-  transition: all $transition-fast;
-
-  &:hover {
-    background: $bg-tertiary;
-    color: $text-primary;
-  }
-
-  .badge {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    background: $primary-orange;
-    color: white;
-    font-size: $font-size-xs;
-    font-weight: $font-weight-bold;
-    padding: 2px 6px;
-    border-radius: $radius-full;
-    min-width: 18px;
-    text-align: center;
-    box-shadow: $shadow-sm;
-  }
-}
-
-.notification-btn {
-  position: relative;
-}
-
-.notifications-dropdown {
-  position: absolute;
-  top: calc(100% + #{$spacing-sm});
-  right: 120px;
-  width: 380px;
-  max-height: 500px;
-  background: $bg-card;
-  border: 1px solid $border-primary;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-xl;
-  z-index: $z-dropdown;
-  animation: slideInUp $transition-fast;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-
-  @include mobile {
-    right: 0;
-    width: calc(100vw - 32px);
-    max-height: 70vh;
-  }
-
-  .notifications-header {
-    @include flex-between;
-    padding: $spacing-lg;
-    border-bottom: 1px solid $border-primary;
-    background: $bg-secondary;
-
-    h3 {
-      @include text-subtitle;
-      font-size: $font-size-base;
-      margin: 0;
-    }
-
-    .mark-read-btn {
-      background: transparent;
-      border: none;
-      color: $primary-orange;
-      font-family: $font-family;
-      font-size: $font-size-xs;
-      font-weight: $font-weight-medium;
-      cursor: pointer;
-      transition: color $transition-fast;
-      padding: $spacing-xs $spacing-sm;
-      border-radius: $radius-sm;
-
-      &:hover {
-        color: $accent-orange;
-        background: rgba($primary-orange, 0.08);
-      }
-    }
-  }
-
-  .notifications-list {
-    overflow-y: auto;
-    max-height: 400px;
-    @include custom-scrollbar;
-  }
-
-  .notification-item {
-    display: flex;
-    align-items: flex-start;
-    gap: $spacing-md;
-    padding: $spacing-md $spacing-lg;
-    border-bottom: 1px solid $border-primary;
-    cursor: pointer;
-    transition: all $transition-fast;
-    position: relative;
-
-    &:last-child {
-      border-bottom: none;
-    }
-
-    &:hover {
-      background: $bg-tertiary;
-    }
-
-    &.unread {
-      background: rgba($primary-light, 0.05);
-
-      .notification-content h4 {
-        color: $text-primary;
-        font-weight: $font-weight-semibold;
-      }
-    }
-
-    .notification-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: $radius-md;
-      @include flex-center;
-      flex-shrink: 0;
-      font-size: $font-size-lg;
-
-      &.type-order {
-        background: rgba($status-new, 0.15);
-        color: $status-new;
-      }
-
-      &.type-payment {
-        background: rgba($status-success, 0.15);
-        color: $status-success;
-      }
-
-      &.type-review {
-        background: rgba($status-warning, 0.15);
-        color: $status-warning;
-      }
-
-      &.type-system {
-        background: rgba($text-muted, 0.15);
-        color: $text-secondary;
-      }
-    }
-
-    .notification-content {
-      flex: 1;
-      min-width: 0;
-
-      h4 {
-        @include text-body;
-        font-size: $font-size-sm;
-        font-weight: $font-weight-medium;
-        margin: 0 0 $spacing-xs;
-        color: $text-secondary;
-      }
-
-      p {
-        @include text-muted;
-        font-size: $font-size-xs;
-        margin: 0 0 $spacing-xs;
-        @include truncate;
-      }
-
-      .notification-time {
-        @include text-muted;
-        font-size: $font-size-xs;
-        opacity: 0.7;
-      }
-    }
-
-    .read-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: $primary-light;
-      flex-shrink: 0;
-      margin-top: $spacing-xs;
-    }
-  }
-
-  .empty-notifications {
-    @include flex-center;
-    flex-direction: column;
-    gap: $spacing-md;
-    padding: $spacing-3xl;
-    color: $text-muted;
-
-    i {
-      font-size: $font-size-4xl;
-      opacity: 0.3;
-    }
-
-    p {
-      font-size: $font-size-sm;
-    }
+    gap: $spacing-sm;
   }
 }
 
@@ -309,9 +155,7 @@
   }
 
   @include mobile {
-    .user-info {
-      display: none;
-    }
+    padding: $spacing-sm;
   }
 
   .user-avatar {
@@ -323,38 +167,6 @@
     font-size: $font-size-lg;
     color: #FFFFFF;
     flex-shrink: 0;
-  }
-
-  .user-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-
-    .user-name {
-      @include text-body;
-      font-weight: $font-weight-semibold;
-      font-size: $font-size-sm;
-      color: $text-primary;
-      line-height: 1;
-      margin: 0;
-    }
-
-    .restaurant-name {
-      @include text-muted;
-      font-size: $font-size-xs;
-      line-height: 1;
-      margin: 0;
-    }
-  }
-
-  .dropdown-icon {
-    color: $text-muted;
-    font-size: $font-size-sm;
-    transition: transform $transition-fast;
-  }
-
-  &:hover .dropdown-icon {
-    transform: rotate(180deg);
   }
 
   .dropdown-menu {
@@ -370,19 +182,30 @@
     z-index: $z-dropdown;
     animation: slideInUp $transition-fast;
 
+    @include mobile {
+      min-width: min(280px, calc(100vw - 2rem));
+      right: -$spacing-sm;
+    }
+
     .dropdown-item {
       display: flex;
       align-items: center;
       gap: $spacing-md;
-      padding: $spacing-md $spacing-lg;
-      color: $text-secondary;
+      padding: $spacing-sm $spacing-lg;
       text-decoration: none;
-      transition: all $transition-fast;
       font-size: $font-size-sm;
+      color: $text-secondary;
+      transition: background $transition-fast, color $transition-fast;
+      cursor: pointer;
 
       &:hover {
         background: $bg-tertiary;
         color: $text-primary;
+      }
+
+      &--danger {
+        color: $status-error;
+        &:hover { background: rgba($status-error, 0.06); color: darken($status-error, 10%); }
       }
 
       i {
@@ -396,6 +219,58 @@
       height: 1px;
       background: $border-primary;
       margin: $spacing-sm 0;
+
+      &--profile { margin-bottom: 0; }
+    }
+
+    // Profile header — always shown in dropdown (name never shown in navbar)
+    .dropdown-profile {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+      padding: $spacing-md $spacing-lg;
+      background: $bg-secondary;
+
+      &-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: $radius-md;
+        background: $primary-orange;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: $font-size-base;
+        color: #fff;
+        flex-shrink: 0;
+      }
+
+      &-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      &-name {
+        font-size: $font-size-sm;
+        font-weight: $font-weight-bold;
+        color: $text-primary;
+        margin: 0;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      &-restaurant {
+        font-size: $font-size-xs;
+        color: $text-muted;
+        margin: 0;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
   }
 }

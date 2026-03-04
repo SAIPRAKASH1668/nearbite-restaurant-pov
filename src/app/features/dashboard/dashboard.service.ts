@@ -34,7 +34,7 @@ interface OrdersResponse {
   providedIn: 'root'
 })
 export class DashboardService {
-  private readonly API_BASE_URL = '/api/v1';
+  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
 
   constructor(
     private http: HttpClient,

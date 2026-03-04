@@ -1,80 +1,30 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, RouterLink, NavigationEnd } from '@angular/router';
 import { Subscription, filter, distinctUntilChanged } from 'rxjs';
 import { AuthService, User } from '../../../core/auth/auth.service';
 import { RestaurantContextService } from '../../../core/services/restaurant-context.service';
 import { RestaurantOnlineService } from '../../../core/services/restaurant-online.service';
 import { RestaurantStatusToggleComponent } from '../../components/restaurant-status-toggle/restaurant-status-toggle.component';
 
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-  type: 'order' | 'payment' | 'review' | 'system';
-}
-
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, RestaurantStatusToggleComponent],
+  imports: [CommonModule, RouterLink, RestaurantStatusToggleComponent],
   templateUrl: './navbar.component.html',
   styleUrl: './navbar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NavbarComponent implements OnInit, OnDestroy {
-  private readonly API_BASE_URL = 'api/v1';
+  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
+  @Output() hamburgerClick = new EventEmitter<void>();
   currentUser: User | null = null;
   restaurantName: string = '';
   ownerName: string = '';
   showUserMenu = false;
-  showNotifications = false;
   isRestaurantOpen: boolean = false;
-  notifications: Notification[] = [
-    {
-      id: '1',
-      title: 'New Order Received',
-      message: 'Order #ORD-1236 from Rahul Mehta',
-      time: '2 mins ago',
-      read: false,
-      type: 'order'
-    },
-    {
-      id: '2',
-      title: 'Payment Received',
-      message: 'Payment of ₹850 received for Order #ORD-1234',
-      time: '15 mins ago',
-      read: false,
-      type: 'payment'
-    },
-    {
-      id: '3',
-      title: 'New Review',
-      message: 'You received a 5-star review from Priya Sharma',
-      time: '1 hour ago',
-      read: false,
-      type: 'review'
-    },
-    {
-      id: '4',
-      title: 'Menu Update',
-      message: 'Successfully updated Butter Chicken availability',
-      time: '2 hours ago',
-      read: true,
-      type: 'system'
-    },
-    {
-      id: '5',
-      title: 'Order Completed',
-      message: 'Order #ORD-1230 marked as completed',
-      time: '3 hours ago',
-      read: true,
-      type: 'order'
-    }
-  ];
+  currentPageTitle = 'Dashboard';
 
   private onlineSub!: Subscription;
   private navSub!: Subscription;
@@ -102,9 +52,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
     // Refresh online status + restaurant name on every route navigation
     this.navSub = this.router.events
       .pipe(filter(e => e instanceof NavigationEnd))
-      .subscribe(() => {
+      .subscribe((event) => {
+        const nav = event as NavigationEnd;
+        this.currentPageTitle = this.getPageTitle(nav.urlAfterRedirects);
         this.onlineService.loadFromApi();
         this.fetchRestaurantName();
+        this.cdr.markForCheck();
       });
     // Fetch name as soon as the restaurant ID is available (handles race on first load)
     this.restaurantIdSub = this.restaurantContext.restaurantId$
@@ -130,35 +83,26 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
   }
 
-  get unreadCount(): number {
-    return this.notifications.filter(n => !n.read).length;
-  }
-
-  toggleNotifications(): void {
-    this.showNotifications = !this.showNotifications;
-    if (this.showUserMenu) this.showUserMenu = false;
-  }
-
   toggleUserMenu(): void {
     this.showUserMenu = !this.showUserMenu;
-    if (this.showNotifications) this.showNotifications = false;
-  }
-
-  markAsRead(id: string): void {
-    const notification = this.notifications.find(n => n.id === id);
-    if (notification) {
-      notification.read = true;
-    }
-  }
-
-  markAllRead(): void {
-    this.notifications.forEach(n => n.read = true);
   }
 
   logout(): void {
     this.showUserMenu = false;
-    this.onlineService.setOnline(false); // reset offline state before leaving
+    this.onlineService.setOnline(false);
     this.authService.logout();
+  }
+
+  private getPageTitle(url: string): string {
+    if (url.includes('/orders'))   return 'Orders';
+    if (url.includes('/menu'))     return 'Menu';
+    if (url.includes('/reports'))  return 'Reports';
+    if (url.includes('/payments')) return 'Payments';
+    if (url.includes('/reviews'))  return 'Reviews';
+    if (url.includes('/settings')) return 'Settings';
+    if (url.includes('/support'))  return 'Support';
+    if (url.includes('/welcome'))  return 'Welcome';
+    return 'Dashboard';
   }
 
   onRestaurantStatusChange(status: boolean): void {

@@ -10,11 +10,11 @@
     <div class="db-header-right">
       <button class="db-btn-secondary" (click)="loadData()">
         <i class="fas fa-rotate-right"></i>
-        Refresh
+        <span>Refresh</span>
       </button>
       <button class="db-btn-primary" (click)="openFinancialDashboard()">
         <i class="fas fa-chart-line"></i>
-        Financial Report
+        <span>Financial Report</span>
       </button>
     </div>
   </div>
@@ -203,7 +203,7 @@
       <p>No orders yet today</p>
     </div>
 
-    <!-- Table -->
+    <!-- Table (tablet and up) -->
     <div class="db-table-wrap" *ngIf="recentOrders.length > 0">
       <table class="db-table">
         <thead>
@@ -231,6 +231,43 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Mobile accordion (mobile only) -->
+    <div class="db-accordion" *ngIf="recentOrders.length > 0">
+      <div class="db-acc-item"
+           *ngFor="let order of recentOrders"
+           [class.db-acc-item--open]="expandedOrderId === order.orderNumber"
+           (click)="toggleAccordion(order.orderNumber)">
+        <div class="db-acc-header">
+          <div class="db-acc-left">
+            <span class="db-acc-order">{{ order.orderNumber }}</span>
+            <span class="db-acc-customer">{{ order.customerName }}</span>
+          </div>
+          <div class="db-acc-right">
+            <span class="db-badge" [ngClass]="getStatusClass(order.status)">
+              {{ getStatusLabel(order.status) }}
+            </span>
+            <i class="fas fa-chevron-down db-acc-chevron"></i>
+          </div>
+        </div>
+        <div class="db-acc-body">
+          <div class="db-acc-rows">
+            <div class="db-acc-row">
+              <span class="db-acc-key">Amount</span>
+              <span class="db-acc-val db-acc-val--amount">₹{{ order.amount }}</span>
+            </div>
+            <div class="db-acc-row">
+              <span class="db-acc-key">Items</span>
+              <span class="db-acc-val">{{ order.items }} items</span>
+            </div>
+            <div class="db-acc-row">
+              <span class="db-acc-key">Time</span>
+              <span class="db-acc-val">{{ order.time }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

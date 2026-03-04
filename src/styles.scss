@@ -14,12 +14,24 @@
   box-sizing: border-box;
 }
 
+:root {
+  // Total navbar height including Android/iOS status bar — used by sticky/fixed
+  // elements in all feature components so they sit flush below the navbar.
+  --navbar-total-height: calc(70px + env(safe-area-inset-top, 0px));
+}
+
 html,
 body {
   height: 100%;
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;   // clip instead of hidden — avoids creating a scroll container that eats right padding
   scroll-behavior: smooth;
+
+  // Safe area insets for mobile notch, status bar and navigation bar
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
   
   // Hide scrollbar for all browsers
   -ms-overflow-style: none;  // IE and Edge
@@ -37,6 +49,23 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+// ====================================
+// Capacitor / Mobile Safe Area Fix
+// Prevents content from going under status bar (top)
+// and Android navigation bar (bottom)
+// ====================================
+app-root {
+  display: block;
+  // Do NOT add padding-top here — the navbar already absorbs the status bar
+  // inset via its own padding-top + expanded height. Adding it here as well
+  // would double-count the offset and create a visible gap on every screen.
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  min-height: 100dvh;
+  box-sizing: border-box;
 }
 
 // Typography

@@ -5,12 +5,13 @@ import { catchError, tap } from 'rxjs/operators';
 import { Order, OrdersResponse, OrderStatus, UpdateOrderStatusRequest, UpdateOrderStatusResponse } from '../models/order.model';
 import { RestaurantContextService } from './restaurant-context.service';
 import { WebSocketService } from './websocket.service';
+import { SoundService } from './sound.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OrderService {
-  private readonly API_BASE_URL = 'api/v1';
+  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
   private readonly POLLING_INTERVAL = 30000; // 30 seconds fallback polling
   
   private ordersSubject = new BehaviorSubject<Order[]>([]);
@@ -25,7 +26,8 @@ export class OrderService {
   constructor(
     private http: HttpClient,
     private restaurantContext: RestaurantContextService,
-    private webSocketService: WebSocketService
+    private webSocketService: WebSocketService,
+    private soundService: SoundService
   ) {
     this.initializeOrderSync();
   }
@@ -50,7 +52,11 @@ export class OrderService {
   fetchOrders(): void {
     const restaurantId = this.restaurantContext.getRestaurantId();
     this.loadingSubject.next(true);
-    
+
+    // Snapshot existing IDs before the fetch — used to detect new arrivals
+    const existingIds = new Set(this.ordersSubject.value.map(o => o.orderId));
+    const isInitialFetch = existingIds.size === 0;
+
     this.http.get<OrdersResponse>(`${this.API_BASE_URL}/orders?restaurantId=${restaurantId}`)
       .pipe(
         tap(response => {
@@ -61,6 +67,16 @@ export class OrderService {
               console.log('🔐 Order with OTP:', order.orderId, 'pickupOtp:', order.pickupOtp || (order as any).pickupOtp);
             }
           });
+
+          // Play alarm when polling detects brand-new orders (skip on initial page load)
+          if (!isInitialFetch) {
+            const hasNewOrders = response.orders.some(o => !existingIds.has(o.orderId));
+            if (hasNewOrders) {
+              console.log('🔔 New order(s) detected via polling — playing alarm');
+              this.soundService.playNewOrderAlarm();
+            }
+          }
+
           this.ordersSubject.next(response.orders);
           this.loadingSubject.next(false);
         }),

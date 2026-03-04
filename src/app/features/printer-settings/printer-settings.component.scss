@@ -1,0 +1,437 @@
+@use '../../../styles/variables' as *;
+
+.ps-root {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 20px 16px;
+  max-width: 640px;
+  margin: 0 auto;
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 480px) {
+    padding: 24px;
+  }
+}
+
+.ps-header {
+  margin-bottom: 32px;
+}
+
+.ps-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: $text-primary;
+  margin: 0 0 8px;
+
+  i { margin-right: 8px; color: $primary-orange; }
+}
+
+.ps-subtitle {
+  font-size: 14px;
+  color: $text-secondary;
+  margin: 0;
+}
+
+.ps-section {
+  margin-bottom: 32px;
+}
+
+.ps-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $text-secondary;
+  margin: 0 0 12px;
+}
+
+// ── Print status badge ────────────────────────────────────────────────────────
+
+.ps-status-row {
+  margin-bottom: 20px;
+}
+
+.ps-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+
+  &.badge--idle   { background: rgba($text-secondary, 0.12); color: $text-secondary; }
+  &.badge--warn   { background: rgba(#f59e0b, 0.15);         color: #b45309; }
+  &.badge--ok     { background: rgba($status-success, 0.15); color: $status-success; }
+  &.badge--error  { background: rgba($status-error, 0.15);   color: $status-error; }
+}
+
+// ── Paper width selector ──────────────────────────────────────────────────────
+
+.ps-paper-row {
+  display: flex;
+  gap: 12px;
+}
+
+.ps-paper-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 12px;
+  border-radius: 10px;
+  border: 2px solid $border-primary;
+  background: $bg-card;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  i    { font-size: 22px; color: $text-secondary; }
+
+  &--active {
+    border-color: $primary-orange;
+    background: rgba($primary-orange, 0.06);
+
+    i { color: $primary-orange; }
+
+    .ps-paper-label { color: $primary-orange; }
+  }
+}
+
+.ps-paper-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.ps-paper-hint {
+  font-size: 11px;
+  color: $text-secondary;
+}
+
+// ── Active printer card ───────────────────────────────────────────────────────
+
+.ps-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  background: $bg-card;
+  border: 2px solid $primary-orange;
+  border-radius: 12px;
+}
+
+.ps-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.ps-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+
+  &--active {
+    background: rgba($primary-orange, 0.1);
+    color: $primary-orange;
+  }
+}
+
+.ps-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ps-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-card-address {
+  font-size: 12px;
+  color: $text-secondary;
+  margin: 0;
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-card-actions {
+  display: flex;
+  gap: 8px;
+
+  .ps-btn {
+    flex: 1;
+  }
+
+  // Trash button should not grow
+  .ps-btn--danger {
+    flex: 0 0 auto;
+  }
+}
+
+// ── Buttons ───────────────────────────────────────────────────────────────────
+
+.ps-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &--primary {
+    background: $primary-orange;
+    color: #fff;
+  }
+
+  &--outline {
+    background: transparent;
+    color: $primary-orange;
+    border: 1.5px solid $primary-orange;
+    padding: 8px 14px;
+  }
+
+  &--danger {
+    background: transparent;
+    color: $status-error;
+    border: 1.5px solid $status-error;
+    padding: 8px 12px;
+  }
+
+  &--ghost {
+    background: transparent;
+    color: $text-secondary;
+    border: 1.5px solid $border-primary;
+    padding: 8px 14px;
+    white-space: nowrap;
+  }
+}
+
+.icon--ok    { color: $status-success; }
+.icon--error { color: $status-error; }
+
+// ── Hint ──────────────────────────────────────────────────────────────────────
+
+.ps-hint {
+  font-size: 13px;
+  color: $text-secondary;
+  margin-bottom: 14px;
+  line-height: 1.6;
+
+  i { color: $primary-orange; margin-right: 4px; }
+}
+
+// ── Alert panels ─────────────────────────────────────────────────────────────
+
+.ps-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  margin-top: 12px;
+  font-size: 14px;
+
+  > i { font-size: 18px; margin-top: 2px; flex-shrink: 0; }
+
+  &--error {
+    background: rgba($status-error, 0.10);
+    border: 1px solid rgba($status-error, 0.35);
+    color: $status-error;
+    > i { color: $status-error; }
+  }
+
+  &--warn {
+    background: rgba(#f59e0b, 0.10);
+    border: 1px solid rgba(#f59e0b, 0.35);
+    color: #92400e;
+    > i { color: #d97706; }
+  }
+
+  &--info {
+    background: rgba($primary-orange, 0.08);
+    border: 1px solid rgba($primary-orange, 0.25);
+    color: $text-secondary;
+    > i { color: $primary-orange; }
+  }
+}
+
+.ps-alert-body {
+  flex: 1;
+
+  strong {
+    display: block;
+    margin-bottom: 4px;
+    color: $text-primary;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+// ── Device list ───────────────────────────────────────────────────────────────
+
+.ps-device-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ps-device {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: $bg-card;
+  border: 2px solid $border-primary;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: rgba($primary-orange, 0.5);
+  }
+
+  &--selected {
+    border-color: $primary-orange;
+    background: rgba($primary-orange, 0.06);
+  }
+}
+
+.ps-device-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: $bg-secondary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: $text-secondary;
+  flex-shrink: 0;
+}
+
+.ps-device-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ps-device-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-primary;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-device-address {
+  font-size: 11px;
+  color: $text-secondary;
+  margin: 0;
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-device-check {
+  font-size: 20px;
+  color: $primary-orange;
+  flex-shrink: 0;
+}
+
+.ps-device-select-hint {
+  font-size: 18px;
+  color: $border-primary;
+  flex-shrink: 0;
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+.ps-empty {
+  text-align: center;
+  padding: 28px 16px;
+  color: $text-secondary;
+  font-size: 14px;
+  line-height: 1.6;
+
+  .ps-empty-icon {
+    font-size: 40px;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.25;
+  }
+
+  .ps-empty-sub {
+    font-size: 13px;
+    margin-top: 6px;
+    opacity: 0.8;
+  }
+}
+
+// ── Scan tip (shown while scanning is in progress) ────────────────────────────
+
+.ps-scan-tip {
+  margin-top: 14px;
+}
+
+// ── Info box ───────────────────────────────────────────────────────────────────
+
+.ps-infobox {
+  background: $bg-card;
+  border-left: 4px solid $primary-orange;
+  border-radius: 8px;
+  padding: 16px 20px;
+
+  h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: $text-primary;
+    margin: 0 0 10px;
+
+    i { color: $primary-orange; margin-right: 6px; }
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 18px;
+    color: $text-secondary;
+    font-size: 13px;
+    line-height: 1.9;
+  }
+}
+
