@@ -60,9 +60,9 @@
 
       <!-- Thumbnail -->
       <div class="mn-thumb"
-        [style.background-image]="item.image ? 'url(' + item.image + ')' : 'none'"
-        [class.no-img]="!item.image">
-        <i class="fas fa-utensils" *ngIf="!item.image"></i>
+        [style.background-image]="item.image?.length ? 'url(' + item.image[0] + ')' : 'none'"
+        [class.no-img]="!item.image?.length">
+        <i class="fas fa-utensils" *ngIf="!item.image?.length"></i>
       </div>
 
       <!-- Name + description -->
@@ -208,19 +208,53 @@
             <span>Media &amp; Availability</span>
           </div>
 
-          <div class="mn-media-row">
-            <!-- Image preview -->
-            <div class="mn-img-preview"
-              [style.background-image]="newItem.image ? 'url(' + newItem.image + ')' : 'none'"
-              [class.has-img]="!!newItem.image">
-              <i class="fas fa-camera" *ngIf="!newItem.image"></i>
+          <!-- Multi-image upload grid -->
+          <div class="mn-item-img-section"
+            (dragover)="$event.preventDefault()"
+            (dragleave)="$event.preventDefault()"
+            (drop)="onItemImageDrop($event)">
+
+            <div class="mn-item-img-header">
+              <span class="mn-item-img-title">Dish Photos <span>(optional)</span></span>
+              <span class="mn-item-img-count">{{ totalImageCount }} / {{ MAX_ITEM_IMAGES }}</span>
             </div>
-            <div class="mn-fg mn-full">
-              <label>Image URL</label>
-              <input type="url" [(ngModel)]="newItem.image" name="imageUrl"
-                placeholder="https://example.com/dish.jpg" />
-              <span class="mn-field-hint">Paste a direct image link for the dish photo</span>
+
+            <div class="mn-item-img-grid">
+              <!-- Saved / existing images -->
+              <div class="mn-item-img-tile"
+                *ngFor="let url of newItem.image; let i = index">
+                <img [src]="url" alt="Dish photo" />
+                <button type="button" class="mn-tile-remove"
+                  (click)="removeExistingImage(i)">&#x2715;</button>
+              </div>
+
+              <!-- Pending new images (not yet uploaded) -->
+              <div class="mn-item-img-tile mn-tile-pending"
+                *ngFor="let preview of pendingImagePreviews; let i = index">
+                <img [src]="preview" alt="New photo" />
+                <span class="mn-tile-new-badge">New</span>
+                <button type="button" class="mn-tile-remove"
+                  (click)="removePendingImage(i)">&#x2715;</button>
+              </div>
+
+              <!-- Add tile -->
+              <div class="mn-item-img-tile mn-tile-add"
+                *ngIf="totalImageCount < MAX_ITEM_IMAGES"
+                (click)="itemFileInput.click()">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                <span>Add</span>
+              </div>
             </div>
+
+            <p class="mn-item-img-hint">
+              Tap + or drag &amp; drop · JPG / PNG / WebP · Max 10 MB each · Up to {{ MAX_ITEM_IMAGES }} photos
+            </p>
+            <!-- Hidden file input — multiple allowed -->
+            <input #itemFileInput type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+              multiple hidden (change)="onItemImageSelect($event)" />
           </div>
 
           <!-- Availability toggle -->

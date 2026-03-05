@@ -4,7 +4,6 @@ import { BehaviorSubject, Observable, interval, Subscription } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { Order, OrdersResponse, OrderStatus, UpdateOrderStatusRequest, UpdateOrderStatusResponse } from '../models/order.model';
 import { RestaurantContextService } from './restaurant-context.service';
-import { WebSocketService } from './websocket.service';
 import { SoundService } from './sound.service';
 
 @Injectable({
@@ -21,28 +20,20 @@ export class OrderService {
   public loading$: Observable<boolean> = this.loadingSubject.asObservable();
   
   private pollingSubscription?: Subscription;
-  private webSocketSubscription?: Subscription;
 
   constructor(
     private http: HttpClient,
     private restaurantContext: RestaurantContextService,
-    private webSocketService: WebSocketService,
     private soundService: SoundService
   ) {
     this.initializeOrderSync();
   }
 
   /**
-   * Initialize order synchronization (REST + WebSocket)
+   * Initialize order synchronization (REST polling)
    */
   private initializeOrderSync(): void {
-    // Don't auto-fetch on service initialization to avoid race conditions
     // Components should call fetchOrders() when they're ready
-    
-    // Subscribe to WebSocket for real-time updates
-    this.subscribeToWebSocket();
-    
-    // Setup fallback polling in case WebSocket fails
     this.setupPolling();
   }
 
@@ -92,20 +83,6 @@ export class OrderService {
           this.loadingSubject.next(false);
         }
       });
-  }
-
-  /**
-   * Subscribe to WebSocket for real-time new orders
-   */
-  private subscribeToWebSocket(): void {
-    this.webSocketSubscription = this.webSocketService.messages$.subscribe(
-      (message: any) => {
-        if (message.type === 'NEW_ORDER' || message.type === 'ORDER_UPDATE') {
-          const newOrder = message.data as Order;
-          this.addOrUpdateOrder(newOrder);
-        }
-      }
-    );
   }
 
   /**
@@ -159,11 +136,8 @@ export class OrderService {
    */
   private setupPolling(): void {
     this.pollingSubscription = interval(this.POLLING_INTERVAL).subscribe(() => {
-      // Only poll if WebSocket is disconnected
-      if (!this.webSocketService.isConnected()) {
-        console.log('WebSocket disconnected, using polling fallback');
-        this.fetchOrders();
-      }
+      console.log('⏱ Polling for new orders...');
+      this.fetchOrders();
     });
   }
 
@@ -205,6 +179,5 @@ export class OrderService {
    */
   ngOnDestroy(): void {
     this.pollingSubscription?.unsubscribe();
-    this.webSocketSubscription?.unsubscribe();
   }
 }

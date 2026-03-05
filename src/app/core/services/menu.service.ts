@@ -13,7 +13,7 @@ export interface MenuItem {
   isVeg: boolean;
   isAvailable: boolean;
   description: string;
-  image: string;
+  image: string[];
 }
 
 export interface MenuResponse {
@@ -86,6 +86,30 @@ export class MenuService {
       }),
       catchError(error => {
         console.error('❌ Error updating item availability:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Add new menu item (no auto-refresh — use in sequential flows like create→upload→update).
+   */
+  addMenuItemRaw(itemData: Partial<MenuItem>): Observable<MenuItem> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    return this.http.post<MenuItem>(
+      `${this.API_BASE_URL}/restaurants/${restaurantId}/menu`,
+      {
+        name: itemData.itemName,
+        restaurantPrice: itemData.price,
+        category: itemData.category,
+        isVeg: itemData.isVeg,
+        isAvailable: itemData.isAvailable,
+        description: itemData.description,
+        image: itemData.image
+      }
+    ).pipe(
+      catchError(error => {
+        console.error('❌ Error adding menu item (raw):', error);
         throw error;
       })
     );

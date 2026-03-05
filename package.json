@@ -39,6 +39,7 @@
     "@capacitor/android": "^8.1.0",
     "@capacitor/cli": "^8.1.0",
     "@capacitor/core": "^8.1.0",
+    "@capacitor/push-notifications": "^8.0.1",
     "@capacitor/status-bar": "^8.0.1",
     "@e-is/capacitor-bluetooth-serial": "^6.0.3",
     "@stomp/stompjs": "^7.2.1",

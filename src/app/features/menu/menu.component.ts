@@ -2,6 +2,8 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MenuService, MenuItem } from '../../core/services/menu.service';
+import { ImageUploadService } from '../../core/services/image-upload.service';
+import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 import { NotificationService } from '../../shared/components/notification/notification.service';
 import { Subscription } from 'rxjs';
 
@@ -20,6 +22,12 @@ export class MenuComponent implements OnInit, OnDestroy {
   savingItem = false;
   isEditMode = false;
   editingItemId: string | null = null;
+
+  // ── Item image upload state ────────────────────────────────────────────────
+  pendingImageFiles: File[] = [];
+  pendingImagePreviews: string[] = [];
+  readonly MAX_ITEM_IMAGES = 6;
+  private readonly MAX_ITEM_IMAGE_MB = 10;
   
   private menuSubscription?: Subscription;
   
@@ -32,13 +40,15 @@ export class MenuComponent implements OnInit, OnDestroy {
     isAvailable: true,
     description: '',
     isVeg: true,
-    image: ''
+    image: []
   };
 
   menuItems: MenuItem[] = [];
 
   constructor(
     private menuService: MenuService,
+    private imageUploadService: ImageUploadService,
+    private restaurantContext: RestaurantContextService,
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -151,6 +161,9 @@ export class MenuComponent implements OnInit, OnDestroy {
       isVeg: item.isVeg,
       image: item.image
     };
+    // Clear any pending uploads from a previous open
+    this.pendingImageFiles = [];
+    this.pendingImagePreviews = [];
     this.showAddItemForm = true;
   }
 
@@ -158,6 +171,8 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.showAddItemForm = false;
     this.isEditMode = false;
     this.editingItemId = null;
+    this.pendingImageFiles = [];
+    this.pendingImagePreviews = [];
     this.resetForm();
   }
 
@@ -176,12 +191,14 @@ export class MenuComponent implements OnInit, OnDestroy {
       isAvailable: true,
       description: '',
       isVeg: true,
-      image: ''
+      image: []
     };
     this.customCategoryName = '';
+    this.pendingImageFiles = [];
+    this.pendingImagePreviews = [];
   }
 
-  saveNewItem(): void {
+  async saveNewItem(): Promise<void> {
     // Handle custom category
     if (this.newItem.category === '_new' && this.customCategoryName.trim()) {
       this.newItem.category = this.customCategoryName.trim();
@@ -195,38 +212,113 @@ export class MenuComponent implements OnInit, OnDestroy {
 
     this.savingItem = true;
 
-    if (this.isEditMode && this.editingItemId) {
-      // Update existing item
-      this.menuService.updateMenuItem(this.editingItemId, this.newItem).subscribe({
-        next: (updatedItem) => {
-          console.log('✅ Menu item updated:', updatedItem);
-          this.notificationService.success(`${this.newItem.itemName} updated successfully!`);
-          this.closeAddItemForm();
-          this.savingItem = false;
-        },
-        error: (error) => {
-          console.error('❌ Error updating menu item:', error);
-          this.notificationService.error('Failed to update menu item. Please try again.');
-          this.savingItem = false;
-          this.cdr.detectChanges();
+    try {
+      if (this.isEditMode && this.editingItemId) {
+        // ── EDIT FLOW ────────────────────────────────────────────────────────────
+        // Keep existing saved URLs + append any newly uploaded ones
+        const keptImages: string[] = [...(this.newItem.image ?? [])];
+        if (this.pendingImageFiles.length) {
+          const newUrls = await this.uploadAllPendingImages(this.editingItemId);
+          keptImages.push(...newUrls);
         }
-      });
-    } else {
-      // Add new item
-      this.menuService.addMenuItem(this.newItem).subscribe({
-        next: (addedItem) => {
-          console.log('✅ Menu item added:', addedItem);
-          this.notificationService.success(`${this.newItem.itemName} added successfully!`);
-          this.closeAddItemForm();
-          this.savingItem = false;
-        },
-        error: (error) => {
-          console.error('❌ Error adding menu item:', error);
-          this.notificationService.error('Failed to add menu item. Please try again.');
-          this.savingItem = false;
-          this.cdr.detectChanges();
+        await this.menuService.updateMenuItem(this.editingItemId, { ...this.newItem, image: keptImages }).toPromise();
+        this.notificationService.success(`${this.newItem.itemName} updated successfully!`);
+
+      } else {
+        // ── CREATE FLOW ──────────────────────────────────────────────────────────
+        // Step 1: Create item (no image yet) to obtain the itemId
+        const created = await this.menuService.addMenuItemRaw({ ...this.newItem, image: [] }).toPromise();
+        const newItemId = created!.itemId;
+
+        if (this.pendingImageFiles.length && newItemId) {
+          // Step 2: Upload all pending images in one API call
+          const imageUrls = await this.uploadAllPendingImages(newItemId);
+          // Step 3: Update item with CDN URLs (updateMenuItem auto-refreshes list)
+          await this.menuService.updateMenuItem(newItemId, { ...this.newItem, image: imageUrls }).toPromise();
+        } else {
+          // No images — manually trigger list refresh
+          this.menuService.fetchMenuItems();
         }
-      });
+
+        this.notificationService.success(`${this.newItem.itemName} added to menu!`);
+      }
+
+      this.closeAddItemForm();
+
+    } catch (err: any) {
+      console.error('❌ Error saving menu item:', err);
+      this.notificationService.error('Failed to save item. Please try again.');
+    } finally {
+      this.savingItem = false;
+      this.cdr.detectChanges();
     }
+  }
+
+  // ── Item image handlers ──────────────────────────────────────────────────────
+  async onItemImageSelect(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      await this.addItemImageFiles(Array.from(input.files));
+      input.value = '';
+    }
+  }
+
+  async onItemImageDrop(event: DragEvent): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+    const files = Array.from(event.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/'));
+    if (files.length) {
+      await this.addItemImageFiles(files);
+    }
+  }
+
+  removeExistingImage(index: number): void {
+    const imgs = [...(this.newItem.image ?? [])];
+    imgs.splice(index, 1);
+    this.newItem.image = imgs;
+  }
+
+  removePendingImage(index: number): void {
+    this.pendingImageFiles.splice(index, 1);
+    this.pendingImagePreviews.splice(index, 1);
+  }
+
+  get totalImageCount(): number {
+    return (this.newItem.image?.length ?? 0) + this.pendingImagePreviews.length;
+  }
+
+  private async addItemImageFiles(files: File[]): Promise<void> {
+    const maxBytes = this.MAX_ITEM_IMAGE_MB * 1024 * 1024;
+    const slotsLeft = this.MAX_ITEM_IMAGES - this.totalImageCount;
+    if (slotsLeft <= 0) {
+      this.notificationService.warning(`Maximum ${this.MAX_ITEM_IMAGES} photos allowed`);
+      return;
+    }
+    const toAdd = files.slice(0, slotsLeft);
+    if (files.length > slotsLeft) {
+      this.notificationService.warning(`Only ${slotsLeft} slot(s) remaining — added first ${slotsLeft}`);
+    }
+    for (const file of toAdd) {
+      if (file.size > maxBytes) {
+        this.notificationService.warning(`"${file.name}" exceeds ${this.MAX_ITEM_IMAGE_MB} MB and was skipped`);
+        continue;
+      }
+      const preview = await this.imageUploadService.fileToBase64(file);
+      this.pendingImageFiles.push(file);
+      this.pendingImagePreviews.push(preview);
+    }
+    this.cdr.detectChanges();
+  }
+
+  private async uploadAllPendingImages(itemId: string): Promise<string[]> {
+    if (!this.pendingImageFiles.length) return [];
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    const base64List = await Promise.all(
+      this.pendingImageFiles.map(f => this.imageUploadService.fileToBase64(f))
+    );
+    const response = await this.imageUploadService
+      .uploadItemImages(restaurantId, itemId, base64List)
+      .toPromise();
+    return response?.images?.map((img: any) => img.url) ?? [];
   }
 }
