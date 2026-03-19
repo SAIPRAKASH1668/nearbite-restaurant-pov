@@ -53,18 +53,9 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    console.log('🎯 [MODAL COMPONENT] Initialized - Subscribing to order notifications...');
-    
-    // Subscribe to new orders globally
     this.subscription = this.notificationService.getNewOrders().subscribe(
       (order: IncomingOrder) => {
-        console.log('🔔 [MODAL COMPONENT] Received order notification:', order);
-        
-        // Add to queue
         this.orderQueue.push(order);
-        console.log(`📋 [MODAL COMPONENT] Order added to queue. Queue size: ${this.orderQueue.length}`);
-        
-        // If no modal is currently showing, display the next order
         if (!this.showModal) {
           this.displayNextOrder();
         }
@@ -81,12 +72,9 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
     }
 
     setTimeout(() => {
-      this.currentOrder = this.orderQueue[0]; // Get first order but don't remove yet
+      this.currentOrder = this.orderQueue[0];
       this.showModal = true;
       this.isProcessing = false;
-      console.log(`✅ [MODAL COMPONENT] Displaying order: ${this.currentOrder?.orderNumber}. Remaining in queue: ${this.orderQueue.length}`);
-      
-      // Force change detection
       this.cdr.detectChanges();
     }, 0);
   }

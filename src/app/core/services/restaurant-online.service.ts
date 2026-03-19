@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { RestaurantContextService } from './restaurant-context.service';
 
+import { environment } from '../../../environments/environment';
+
 const STORAGE_KEY = 'yumdude_restaurant_online';
-const API_BASE = 'https://api.dev.yumdude.com/api/v1';
+const API_BASE = environment.apiUrl;
 
 @Injectable({
   providedIn: 'root'
@@ -92,13 +95,43 @@ export class RestaurantOnlineService {
     if (!restaurantId) return;
 
     this.http.put(`${API_BASE}/restaurants/${restaurantId}`, { isOpen: value }).subscribe({
-      next: () => console.log(`✓ Restaurant status updated in DB: isOpen=${value}`),
-      error: (err) => console.error('❌ Failed to update restaurant status in DB:', err)
+      next: () => {},
+      error: () => {}
     });
   }
 
   /** Cache value in localStorage as offline fallback */
   private _persist(value: boolean): void {
     localStorage.setItem(STORAGE_KEY, String(value));
+  }
+
+  // ── Operating Hours ───────────────────────────────────────────────────────
+
+  /**
+   * Fetch opensAt and closesAt from the restaurant table.
+   * Returns empty strings if unavailable.
+   */
+  fetchOperatingHours(): Observable<{ opensAt: string; closesAt: string }> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    if (!restaurantId) {
+      return of({ opensAt: '', closesAt: '' });
+    }
+    return this.http.get<any>(`${API_BASE}/restaurants/${restaurantId}`).pipe(
+      map((res: any) => ({
+        opensAt:  res.opensAt  || '',
+        closesAt: res.closesAt || ''
+      })),
+      catchError(() => of({ opensAt: '', closesAt: '' }))
+    );
+  }
+
+  /**
+   * Persist opensAt and closesAt to the restaurant table.
+   * Matches the AWS PUT /restaurants/{id} API which accepts opensAt / closesAt.
+   */
+  updateOperatingHours(opensAt: string, closesAt: string): Observable<any> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    if (!restaurantId) return of(null);
+    return this.http.put(`${API_BASE}/restaurants/${restaurantId}`, { opensAt, closesAt });
   }
 }

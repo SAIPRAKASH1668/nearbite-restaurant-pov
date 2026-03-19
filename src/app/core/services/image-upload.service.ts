@@ -1,6 +1,7 @@
 ﻿import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, of, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 /** Shape returned by POST /api/v1/images/upload */
 export interface ImageUploadResponse {
@@ -21,7 +22,7 @@ interface CacheEntry {
   providedIn: 'root'
 })
 export class ImageUploadService {
-  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
+  private readonly API_BASE_URL = environment.apiUrl;
   private readonly CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
   private cache = new Map<string, CacheEntry>();

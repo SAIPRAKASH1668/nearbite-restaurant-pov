@@ -96,6 +96,302 @@
   line-height: 1.5;
 }
 
+// ── Operating Hours Card ─────────────────────────────────────────────────────
+.st-hours-card {
+  margin-top: 1.5rem;
+
+  @include mobile { margin-top: 1rem; }
+}
+
+// Unsaved pill badge
+.st-unsaved-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: v.$radius-full;
+  background: rgba(v.$status-warning, 0.12);
+  border: 1.5px solid rgba(v.$status-warning, 0.35);
+  color: darken(#F59E0B, 10%);
+  font-size: 0.72rem;
+  font-weight: v.$font-weight-semibold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: v.$status-warning;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+}
+
+// card head — make room for the pill on the right
+.st-hours-card .st-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  .st-card-head-info { flex: 1; min-width: 0; }
+}
+
+// Loading skeleton
+.st-hours-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 0 0.25rem;
+  color: v.$text-muted;
+  font-size: 0.875rem;
+}
+
+// Summary chip (when schedule is saved)
+.st-hours-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.875rem;
+  border-radius: v.$radius-md;
+  background: rgba(v.$status-success, 0.08);
+  border: 1.5px solid rgba(v.$status-success, 0.22);
+  color: darken(#10B981, 8%);
+  font-size: 0.8125rem;
+  margin-bottom: 1.25rem;
+
+  svg { flex-shrink: 0; color: v.$status-success; }
+  strong { font-weight: v.$font-weight-bold; }
+
+  @include mobile { flex-wrap: wrap; font-size: 0.78rem; }
+}
+
+// Notice chip (no hours set)
+.st-hours-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0.875rem;
+  border-radius: v.$radius-md;
+  background: rgba(v.$status-info, 0.07);
+  border: 1.5px solid rgba(v.$status-info, 0.2);
+  color: v.$text-secondary;
+  font-size: 0.8rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+
+  svg { flex-shrink: 0; margin-top: 0.1rem; color: v.$status-info; }
+}
+
+// Two-column grid for time pickers
+.st-hours-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 0 1.25rem;
+  margin-bottom: 1.5rem;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+// Arrow divider between the two fields
+.st-hours-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2.25rem; // visually aligns with the input field vertically
+  color: v.$text-muted;
+
+  @include mobile {
+    padding: 0.375rem 0;
+    justify-content: flex-start;
+    padding-left: 0.25rem;
+
+    svg { transform: rotate(90deg); }
+  }
+}
+
+// Individual time field
+.st-hours-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  @include mobile { margin-bottom: 0.625rem; }
+}
+
+.st-hours-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: v.$font-weight-semibold;
+  color: v.$text-secondary;
+  letter-spacing: 0.01em;
+  cursor: default;
+}
+
+.st-hours-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &--open  { background: v.$status-success; box-shadow: 0 0 0 3px rgba(v.$status-success, 0.18); }
+  &--close { background: v.$status-error;   box-shadow: 0 0 0 3px rgba(v.$status-error,   0.12); }
+}
+
+// Time input wrapper
+.st-time-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border: 1.5px solid v.$border-primary;
+  border-radius: v.$radius-md;
+  background: v.$bg-primary;
+  overflow: hidden;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+
+  &:focus-within {
+    border-color: v.$primary-orange;
+    box-shadow: 0 0 0 3px rgba(v.$primary-orange, 0.12);
+  }
+}
+
+.st-time-prefix {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.75rem;
+  height: 44px;
+  border-right: 1.5px solid v.$border-primary;
+  color: v.$text-muted;
+  background: v.$bg-secondary;
+  flex-shrink: 0;
+  transition: border-color 150ms ease;
+
+  .st-time-wrap:focus-within & {
+    border-right-color: rgba(v.$primary-orange, 0.3);
+    color: v.$primary-orange;
+  }
+}
+
+.st-time-input {
+  flex: 1;
+  height: 44px;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: v.$font-family;
+  font-size: 0.9375rem;
+  font-weight: v.$font-weight-semibold;
+  color: v.$text-primary;
+  padding: 0 0.75rem;
+  min-width: 0;
+  cursor: pointer;
+
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  // Native time picker styling — Chromium
+  &::-webkit-calendar-picker-indicator {
+    opacity: 0.5;
+    cursor: pointer;
+    filter: invert(40%) sepia(50%) saturate(400%) hue-rotate(330deg);
+
+    &:hover { opacity: 0.9; }
+  }
+
+  @include mobile { font-size: 0.875rem; }
+}
+
+.st-time-display {
+  padding: 0 0.75rem 0 0;
+  font-size: 0.78rem;
+  font-weight: v.$font-weight-semibold;
+  color: v.$primary-orange;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  @include mobile { display: none; } // compact on mobile
+}
+
+.st-hours-hint {
+  font-size: 0.75rem;
+  color: v.$text-muted;
+  margin: 0;
+  line-height: 1.4;
+}
+
+// Actions row
+.st-hours-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  @include mobile { gap: 0.5rem; }
+}
+
+// Save button
+.st-btn-save-hours {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 42px;
+  padding: 0 1.375rem;
+  background: v.$primary-orange;
+  color: #fff;
+  border: 2px solid darken(#E83A3A, 8%);
+  border-radius: v.$radius-md;
+  font-family: v.$font-family;
+  font-size: 0.875rem;
+  font-weight: v.$font-weight-bold;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 0 v.$dark-orange;
+  transition: transform 80ms ease, box-shadow 80ms ease, background 120ms ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) { background: v.$accent-orange; }
+  &:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 v.$dark-orange; }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  &.saving { background: v.$text-muted; border-color: v.$text-muted; box-shadow: none; cursor: wait; }
+
+  @include mobile { flex: 1; justify-content: center; }
+}
+
+// Discard button
+.st-btn-discard-hours {
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 1.125rem;
+  background: transparent;
+  color: v.$text-muted;
+  border: 1.5px solid v.$border-primary;
+  border-radius: v.$radius-md;
+  font-family: v.$font-family;
+  font-size: 0.875rem;
+  font-weight: v.$font-weight-semibold;
+  cursor: pointer;
+  transition: color 120ms, border-color 120ms;
+
+  &:hover:not(:disabled) { color: v.$status-error; border-color: rgba(v.$status-error, 0.45); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  @include mobile { flex: 1; justify-content: center; }
+}
+
 // ── Carousel ──────────────────────────────────────────────────────────────────
 .st-carousel {
   display: flex;

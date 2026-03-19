@@ -27,6 +27,10 @@ export interface Restaurant {
   
   // Operational status
   isOpen: boolean;
+
+  // Operating hours (HH:mm 24-hour format, e.g. "09:00")
+  opensAt?: string;   // Opening time — when the restaurant starts accepting orders
+  closesAt?: string;  // Closing time — when the restaurant stops accepting orders
   
   // Restaurant details
   cuisine: string[]; // Array of cuisine types

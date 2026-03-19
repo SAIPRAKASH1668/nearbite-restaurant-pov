@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, map, of } from 'rxjs';
 import { RestaurantContextService } from '../services/restaurant-context.service';
+import { environment } from '../../../environments/environment';
 
 export interface User {
   token: string;
@@ -26,7 +27,7 @@ export class AuthService {
   public currentUser: Observable<User | null>;
   private readonly STORAGE_KEY = 'nearbite_user';
   private readonly TOKEN_STORAGE_KEY = 'nearbite_auth_token';
-  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
+  private readonly API_BASE_URL = environment.apiUrl;
 
   constructor(
     private router: Router,

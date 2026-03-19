@@ -177,16 +177,12 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   private loadRealDataFromAWS(): void {
     const restaurantId = this.restaurantContextService.getRestaurantId();
     
-    console.log('Loading AWS earnings for restaurant:', restaurantId);
-    console.log('Date range:', this.startDate, 'to', this.endDate);
-    
     this.paymentService.getRestaurantEarnings(
       restaurantId,
       this.startDate,
       this.endDate
     ).subscribe({
       next: (response) => {
-        console.log('AWS earnings response:', response);
         this.realEarnings = response.history;
         
         // Convert AWS earnings to Payment format for table display
@@ -205,11 +201,9 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
         this.isLoading = false;
         this.cdr.markForCheck();
       },
-      error: (error) => {
-        console.error('Failed to load AWS earnings, falling back to mock data:', error);
-        // Fallback to mock data on error
-        this.useRealData = false;
-        this.loadMockData();
+      error: () => {
+        this.isLoading = false;
+        this.cdr.markForCheck();
       }
     });
   }

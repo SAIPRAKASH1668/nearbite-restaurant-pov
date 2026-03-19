@@ -4,6 +4,7 @@ import { Observable, of, forkJoin } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 import { Order, OrderStatus } from '../../core/models/order.model';
+import { environment } from '../../../environments/environment';
 
 export interface DashboardStats {
   todayOrders: number;
@@ -34,7 +35,7 @@ interface OrdersResponse {
   providedIn: 'root'
 })
 export class DashboardService {
-  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
+  private readonly API_BASE_URL = environment.apiUrl;
 
   constructor(
     private http: HttpClient,
@@ -46,13 +47,11 @@ export class DashboardService {
    */
   getStats(): Observable<DashboardStats> {
     const restaurantId = this.restaurantContext.getRestaurantId();
-    console.log('DashboardService.getStats: Starting with restaurantId:', restaurantId);
     
     return this.http.get<OrdersResponse>(`${this.API_BASE_URL}/orders`, {
       params: { restaurantId }
     }).pipe(
       map(response => {
-        console.log('DashboardService.getStats: Received response:', response);
         const orders = response.orders;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -114,7 +113,6 @@ export class DashboardService {
           revenueChangePercent,
           avgOrderValueChangePercent
         };
-        console.log('DashboardService.getStats: Computed stats:', stats);
         return stats;
       }),
       catchError(error => {
@@ -138,13 +136,11 @@ export class DashboardService {
    */
   getRecentOrders(): Observable<RecentOrder[]> {
     const restaurantId = this.restaurantContext.getRestaurantId();
-    console.log('DashboardService.getRecentOrders: Starting with restaurantId:', restaurantId);
     
     return this.http.get<OrdersResponse>(`${this.API_BASE_URL}/orders`, {
       params: { restaurantId }
     }).pipe(
       map(response => {
-        console.log('DashboardService.getRecentOrders: Received response:', response);
         // Sort by createdAt descending and take first 5
         const recentOrders = response.orders
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -159,7 +155,6 @@ export class DashboardService {
           status: this.mapOrderStatus(order.status),
           time: this.getRelativeTime(order.createdAt)
         }));
-        console.log('DashboardService.getRecentOrders: Mapped orders:', orders);
         return orders;
       }),
       catchError(error => {

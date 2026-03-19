@@ -1,9 +1,11 @@
 import { Component, OnInit, OnDestroy, HostListener, ElementRef, ViewChild, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 import { ImageUploadService } from '../../core/services/image-upload.service';
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
+import { RestaurantOnlineService } from '../../core/services/restaurant-online.service';
 import { NotificationService } from '../../shared/components/notification/notification.service';
 
 interface PendingFile {
@@ -15,7 +17,7 @@ interface PendingFile {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })
@@ -38,6 +40,15 @@ export class SettingsComponent implements OnInit, OnDestroy {
   // ── Lightbox ───────────────────────────────────────────────────────────────
   lightboxOpen = false;
 
+  // ── Operating Hours state ─────────────────────────────────────────────────
+  opensAt: string = '';
+  closesAt: string = '';
+  /** Tracks the last-persisted values — used by template for summary chip and unsaved detection */
+  _savedOpensAt: string = '';
+  _savedClosesAt: string = '';
+  savingHours = false;
+  hoursLoaded = false;
+
   // ── In-flight subscription tracking ────────────────────────────────────────
   private galleryLoadSub?: Subscription;
 
@@ -49,6 +60,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   constructor(
     private imageUploadService: ImageUploadService,
     private restaurantContext: RestaurantContextService,
+    private restaurantOnlineService: RestaurantOnlineService,
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
@@ -56,11 +68,64 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadGallery();
+    this.loadOperatingHours();
   }
 
   ngOnDestroy(): void {
     document.body.style.overflow = '';
     this.galleryLoadSub?.unsubscribe();
+  }
+
+  // ── Operating Hours ────────────────────────────────────────────────────────
+
+  get hoursUnsaved(): boolean {
+    return this.opensAt !== this._savedOpensAt || this.closesAt !== this._savedClosesAt;
+  }
+
+  loadOperatingHours(): void {
+    this.hoursLoaded = false;
+    this.restaurantOnlineService.fetchOperatingHours().subscribe({
+      next: ({ opensAt, closesAt }) => {
+        this.opensAt        = opensAt;
+        this.closesAt       = closesAt;
+        this._savedOpensAt  = opensAt;
+        this._savedClosesAt = closesAt;
+        this.hoursLoaded = true;
+        this.cdr.markForCheck();
+      },
+      error: () => { this.hoursLoaded = true; }
+    });
+  }
+
+  saveOperatingHours(): void {
+    if (this.savingHours) return;
+    this.savingHours = true;
+    this.restaurantOnlineService
+      .updateOperatingHours(this.opensAt, this.closesAt)
+      .pipe(finalize(() => { this.savingHours = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: () => {
+          this._savedOpensAt  = this.opensAt;
+          this._savedClosesAt = this.closesAt;
+          this.notificationService.success('Operating hours saved successfully');
+        },
+        error: () => this.notificationService.error('Failed to save hours. Please try again.')
+      });
+  }
+
+  resetHours(): void {
+    this.opensAt  = this._savedOpensAt;
+    this.closesAt = this._savedClosesAt;
+  }
+
+  formatDisplayTime(time: string): string {
+    if (!time) return '–';
+    const [hStr, mStr] = time.split(':');
+    const h = parseInt(hStr, 10);
+    const m = parseInt(mStr, 10);
+    const period = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
   }
 
   // ── Keyboard (carousel + lightbox) ────────────────────────────────────────

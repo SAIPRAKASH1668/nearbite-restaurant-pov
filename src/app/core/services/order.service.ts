@@ -5,12 +5,13 @@ import { catchError, tap } from 'rxjs/operators';
 import { Order, OrdersResponse, OrderStatus, UpdateOrderStatusRequest, UpdateOrderStatusResponse } from '../models/order.model';
 import { RestaurantContextService } from './restaurant-context.service';
 import { SoundService } from './sound.service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OrderService {
-  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
+  private readonly API_BASE_URL = environment.apiUrl;
   private readonly POLLING_INTERVAL = 30000; // 30 seconds fallback polling
   
   private ordersSubject = new BehaviorSubject<Order[]>([]);
@@ -51,19 +52,10 @@ export class OrderService {
     this.http.get<OrdersResponse>(`${this.API_BASE_URL}/orders?restaurantId=${restaurantId}`)
       .pipe(
         tap(response => {
-          console.log('✓ Orders fetched successfully:', response);
-          // Debug: Check if pickupOtp exists in any order
-          response.orders.forEach(order => {
-            if (order.pickupOtp || (order as any).pickupOtp) {
-              console.log('🔐 Order with OTP:', order.orderId, 'pickupOtp:', order.pickupOtp || (order as any).pickupOtp);
-            }
-          });
-
           // Play alarm when polling detects brand-new orders (skip on initial page load)
           if (!isInitialFetch) {
             const hasNewOrders = response.orders.some(o => !existingIds.has(o.orderId));
             if (hasNewOrders) {
-              console.log('🔔 New order(s) detected via polling — playing alarm');
               this.soundService.playNewOrderAlarm();
             }
           }
@@ -72,14 +64,12 @@ export class OrderService {
           this.loadingSubject.next(false);
         }),
         catchError(error => {
-          console.error('❌ Error fetching orders:', error);
           this.loadingSubject.next(false);
           throw error;
         })
       )
       .subscribe({
-        error: (err) => {
-          console.error('❌ Subscription error:', err);
+        error: () => {
           this.loadingSubject.next(false);
         }
       });
@@ -119,12 +109,9 @@ export class OrderService {
       payload
     ).pipe(
       tap(updatedOrder => {
-        // Optimistic update: immediately update local state
         this.addOrUpdateOrder(updatedOrder);
       }),
       catchError(error => {
-        console.error('Error updating order status:', error);
-        // Refresh orders to get correct state
         this.fetchOrders();
         throw error;
       })
@@ -136,7 +123,6 @@ export class OrderService {
    */
   private setupPolling(): void {
     this.pollingSubscription = interval(this.POLLING_INTERVAL).subscribe(() => {
-      console.log('⏱ Polling for new orders...');
       this.fetchOrders();
     });
   }

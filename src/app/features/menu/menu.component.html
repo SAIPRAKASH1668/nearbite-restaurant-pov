@@ -49,7 +49,9 @@
     <span class="mn-col-thumb"></span>
     <span class="mn-col-item">Item</span>
     <span class="mn-col-cat">Category</span>
-    <span class="mn-col-price">Price</span>
+    <span class="mn-col-menprice">Menu Price</span>
+    <span class="mn-col-hike">Hike %</span>
+    <span class="mn-col-disprice">Cust. Price</span>
     <span class="mn-col-avail">Available</span>
     <span class="mn-col-act">Edit</span>
   </div>
@@ -72,14 +74,23 @@
           <span class="mn-name">{{ item.itemName }}</span>
         </div>
         <p class="mn-desc" *ngIf="item.description">{{ item.description }}</p>
+        <!-- Price meta visible on mobile/tablet where extra columns are hidden -->
+        <p class="mn-price-meta">Menu ₹{{ item.restaurantPrice }} &middot; +{{ item.hikePercentage }}%</p>
       </div>
 
       <!-- Category -->
       <div class="mn-cat-cell">
         <span class="mn-cat-tag">{{ item.category }}</span>
+        <span class="mn-subcat-tag" *ngIf="item.subCategory">{{ item.subCategory }}</span>
       </div>
 
-      <!-- Price -->
+      <!-- Menu Price -->
+      <div class="mn-menprice-cell">₹{{ item.restaurantPrice }}</div>
+
+      <!-- Hike % -->
+      <div class="mn-hike-cell">{{ item.hikePercentage }}%</div>
+
+      <!-- Display / Customer Price -->
       <div class="mn-price-cell">₹{{ item.price }}</div>
 
       <!-- Availability Toggle -->
@@ -181,22 +192,48 @@
               <label>Category <span class="mn-req">*</span></label>
               <select [(ngModel)]="newItem.category" name="category" required (change)="onCategoryChange($event)">
                 <option value="" disabled>Select category</option>
-                <option *ngFor="let cat of categories.slice(1)" [value]="cat">{{ cat }}</option>
-                <option value="_new">+ Add New Category</option>
+                <option *ngFor="let cat of formCategories" [value]="cat">{{ cat }}</option>
               </select>
             </div>
-            <div class="mn-fg" *ngIf="newItem.category === '_new'">
-              <label>New Category Name <span class="mn-req">*</span></label>
-              <input type="text" [(ngModel)]="customCategoryName" name="customCategory"
-                placeholder="e.g. Desserts" required />
-            </div>
             <div class="mn-fg">
-              <label>Price (₹) <span class="mn-req">*</span></label>
+              <label>Sub Category</label>
+              <select [(ngModel)]="newItem.subCategory" name="subCategory"
+                [disabled]="subCategories.length === 0">
+                <option value="">{{ subCategories.length === 0 ? 'No sub categories' : 'Select sub category' }}</option>
+                <option *ngFor="let sub of subCategories" [value]="sub">{{ sub }}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mn-form-row">
+            <div class="mn-fg">
+              <label>Menu Price (₹) <span class="mn-req">*</span></label>
               <div class="mn-price-input-wrap">
                 <span class="mn-price-prefix">₹</span>
-                <input type="number" [(ngModel)]="newItem.price" name="price"
-                  placeholder="0" min="0" required />
+                <input type="number" [(ngModel)]="newItem.restaurantPrice" name="restaurantPrice"
+                  placeholder="0" min="0" required
+                  (ngModelChange)="onRestaurantPriceChange()" />
               </div>
+            </div>
+          </div>
+
+          <!-- Hike % + Customer Price preview -->
+          <div class="mn-form-row mn-form-row-hike">
+            <div class="mn-fg">
+              <label>
+                Hike %
+                <span class="mn-hike-max-hint" *ngIf="maxHikePercentage > 0">(max {{ maxHikePercentage }}%)</span>
+              </label>
+              <div class="mn-price-input-wrap">
+                <input type="number" [(ngModel)]="newItem.hikePercentage" name="hikePercentage"
+                  placeholder="0" min="0" [max]="maxHikePercentage" step="0.5"
+                  (ngModelChange)="onHikePercentageChange()" />
+                <span class="mn-price-suffix">%</span>
+              </div>
+            </div>
+            <div class="mn-fg">
+              <label>Customer Price <span class="mn-disprice-badge">preview</span></label>
+              <div class="mn-disprice-preview">₹{{ computedDisplayPrice | number:'1.0-1' }}</div>
             </div>
           </div>
         </div>

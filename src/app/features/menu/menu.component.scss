@@ -164,8 +164,8 @@
 }
 
 // ── List: column header ───────────────────────────────────────────────────────
-// grid: thumbnail | info | category | price | availability | edit
-$mn-cols: 64px 1fr 140px 90px 88px 56px;
+// grid: thumbnail | info | category | menu price | hike % | display price | availability | edit
+$mn-cols: 64px 1fr 130px 85px 65px 95px 88px 56px;
 
 .mn-list-head {
   display: grid;
@@ -188,6 +188,9 @@ $mn-cols: 64px 1fr 140px 90px 88px 56px;
   }
 
   .mn-col-price,
+  .mn-col-menprice,
+  .mn-col-hike,
+  .mn-col-disprice,
   .mn-col-avail,
   .mn-col-act { text-align: center; }
 
@@ -220,7 +223,9 @@ $mn-cols: 64px 1fr 140px 90px 88px 56px;
     padding: 0.875rem 0.75rem;
     border-bottom: 1px solid #F0EEEC;
 
-    .mn-cat-cell  { display: none; }
+    .mn-cat-cell      { display: none; }
+    .mn-menprice-cell { display: none; }
+    .mn-hike-cell     { display: none; }
     .mn-price-cell {
       grid-column: 3;
       grid-row: 1;
@@ -261,7 +266,9 @@ $mn-cols: 64px 1fr 140px 90px 88px 56px;
     border-left: 3px solid #10B981;
     &[data-unavailable] { border-left-color: #D1CEC9; }
 
-    .mn-cat-cell  { display: none; }
+    .mn-cat-cell      { display: none; }
+    .mn-menprice-cell { display: none; }
+    .mn-hike-cell     { display: none; }
     .mn-price-cell {
       grid-column: 3;
       grid-row: 1;
@@ -372,10 +379,6 @@ $mn-cols: 64px 1fr 140px 90px 88px 56px;
 }
 
 // ── Category cell ─────────────────────────────────────────────────────────────
-.mn-cat-cell {
-  display: flex;
-  align-items: center;
-}
 
 .mn-cat-tag {
   display: inline-flex;
@@ -394,13 +397,67 @@ $mn-cols: 64px 1fr 140px 90px 88px 56px;
   max-width: 120px;
 }
 
-// ── Price ─────────────────────────────────────────────────────────────────────
+.mn-subcat-tag {
+  display: inline-flex;
+  margin-top: 4px;
+  padding: 2px 6px;
+  background: rgba(232, 58, 58, 0.06);
+  border: 1px solid rgba(232, 58, 58, 0.18);
+  border-radius: 2px;
+  font-size: 0.65rem;
+  font-weight: 500;
+  color: v.$primary-orange;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.mn-cat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+// ── Price — customer-facing display price ────────────────────────────────────
 .mn-price-cell {
   text-align: center;
   font-size: 1.0625rem;
   font-weight: 700;
   color: v.$text-primary;
   font-variant-numeric: tabular-nums;
+}
+
+// ── Menu Price (restaurant internal) ─────────────────────────────────────────
+.mn-menprice-cell {
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: v.$text-secondary;
+  font-variant-numeric: tabular-nums;
+}
+
+// ── Hike % ───────────────────────────────────────────────────────────────────
+.mn-hike-cell {
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #059669;   // green accent — positive margin indicator
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+// ── Price meta (mobile/tablet: shown inside .mn-info) ────────────────────────
+.mn-price-meta {
+  font-size: 0.7rem;
+  color: v.$text-muted;
+  margin: 0.15rem 0 0;
+  line-height: 1.3;
+  display: none;    // hidden on desktop — shown by breakpoint below
+
+  @include tablet { display: block; }
+  @include mobile { display: block; }
 }
 
 // ── Availability toggle ───────────────────────────────────────────────────────
@@ -835,6 +892,50 @@ $mn-cols: 64px 1fr 140px 90px 88px 56px;
   margin-top: 0.125rem;
 }
 
+// Hike % config hint next to label
+.mn-hike-max-hint {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: #059669;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 0.25rem;
+}
+
+// Display price preview (read-only field in form)
+.mn-disprice-preview {
+  background: #F0F9F4;
+  border: 1.5px solid #A7F3D0;
+  border-radius: 3px;
+  padding: 0.5625rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #065F46;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+}
+
+.mn-disprice-badge {
+  display: inline-block;
+  background: rgba(16,185,129,0.1);
+  color: #059669;
+  border-radius: 2px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-left: 0.3rem;
+  vertical-align: middle;
+}
+
+// Hike + display price row — always stays 2 columns even on mobile
+.mn-form-row-hike {
+  grid-template-columns: 1fr 1fr !important;
+
+  @include mobile { grid-template-columns: 1fr 1fr !important; }
+}
+
 // Veg / Non-Veg food-type toggle
 .mn-type-row {
   display: flex;
@@ -888,7 +989,7 @@ $mn-cols: 64px 1fr 140px 90px 88px 56px;
   }
 }
 
-// Price input prefix
+// Price input prefix / suffix
 .mn-price-input-wrap {
   position: relative;
 
@@ -903,8 +1004,24 @@ $mn-cols: 64px 1fr 140px 90px 88px 56px;
     pointer-events: none;
   }
 
+  .mn-price-suffix {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: v.$text-secondary;
+    pointer-events: none;
+  }
+
   input {
     padding-left: 1.75rem !important;
+  }
+
+  // When suffix is present (hike % field), pad right side too
+  &:has(.mn-price-suffix) input {
+    padding-right: 2rem !important;
   }
 }
 

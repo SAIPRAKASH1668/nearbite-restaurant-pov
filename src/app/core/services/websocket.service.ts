@@ -2,6 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { Subject, Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 /**
  * WebSocket Service for real-time order updates
@@ -24,35 +25,27 @@ export class WebSocketService {
    */
   connect(): void {
     if (this.connected) {
-      console.log('✅ Already connected to WebSocket');
       return;
     }
 
     // Create STOMP client with SockJS
     this.stompClient = new Client({
-      webSocketFactory: () => new SockJS('https://api.dev.yumdude.com/ws/orders'),
-      debug: (str) => {
-        console.log('📡 STOMP Debug:', str);
-      },
+      webSocketFactory: () => new SockJS(environment.wsUrl),
+      debug: environment.production ? () => {} : (str) => { console.log('STOMP:', str); },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
       onConnect: () => {
-        console.log('✅ Connected to WebSocket');
         this.connected = true;
         
-        // Subscribe to order topic
         this.stompClient?.subscribe('/topic/orders', (message: IMessage) => {
-          // Run inside Angular zone to ensure change detection
           this.ngZone.run(() => {
             const order = JSON.parse(message.body);
-            console.log('📦 Received order:', order);
             this.orderSubject.next(order);
           });
         });
       },
       onDisconnect: () => {
-        console.log('❌ Disconnected from WebSocket');
         this.connected = false;
       },
       onStompError: (frame) => {
@@ -71,7 +64,6 @@ export class WebSocketService {
     if (this.stompClient) {
       this.stompClient.deactivate();
       this.connected = false;
-      console.log('🔌 Disconnected from WebSocket');
     }
   }
 

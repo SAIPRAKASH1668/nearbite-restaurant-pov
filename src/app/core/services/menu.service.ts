@@ -3,13 +3,20 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { RestaurantContextService } from './restaurant-context.service';
+import { environment } from '../../../environments/environment';
 
 export interface MenuItem {
   restaurant_id: string;
   itemId: string;
   itemName: string;
+  /** Computed customer-facing price: restaurantPrice * (1 + hikePercentage / 100) */
   price: number;
+  /** Menu / dine-in price set by the restaurant */
+  restaurantPrice: number;
+  /** Hike markup applied on top of restaurantPrice (%) */
+  hikePercentage: number;
   category: string;
+  subCategory?: string;
   isVeg: boolean;
   isAvailable: boolean;
   description: string;
@@ -26,7 +33,7 @@ export interface MenuResponse {
   providedIn: 'root'
 })
 export class MenuService {
-  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
+  private readonly API_BASE_URL = environment.apiUrl;
   
   private menuItemsSubject = new BehaviorSubject<MenuItem[]>([]);
   public menuItems$: Observable<MenuItem[]> = this.menuItemsSubject.asObservable();
@@ -49,12 +56,10 @@ export class MenuService {
     this.http.get<MenuResponse>(`${this.API_BASE_URL}/restaurants/${restaurantId}/menu`)
       .pipe(
         tap(response => {
-          console.log('✓ Menu items fetched successfully:', response);
           this.menuItemsSubject.next(response.items);
           this.loadingSubject.next(false);
         }),
         catchError(error => {
-          console.error('❌ Error fetching menu items:', error);
           this.loadingSubject.next(false);
           throw error;
         })
@@ -100,8 +105,10 @@ export class MenuService {
       `${this.API_BASE_URL}/restaurants/${restaurantId}/menu`,
       {
         name: itemData.itemName,
-        restaurantPrice: itemData.price,
+        restaurantPrice: itemData.restaurantPrice,
+        hikePercentage: itemData.hikePercentage ?? 0,
         category: itemData.category,
+        subCategory: itemData.subCategory,
         isVeg: itemData.isVeg,
         isAvailable: itemData.isAvailable,
         description: itemData.description,
@@ -124,8 +131,10 @@ export class MenuService {
       `${this.API_BASE_URL}/restaurants/${restaurantId}/menu`,
       {
         name: itemData.itemName,
-        restaurantPrice: itemData.price,
+        restaurantPrice: itemData.restaurantPrice,
+        hikePercentage: itemData.hikePercentage ?? 0,
         category: itemData.category,
+        subCategory: itemData.subCategory,
         isVeg: itemData.isVeg,
         isAvailable: itemData.isAvailable,
         description: itemData.description,
@@ -133,12 +142,9 @@ export class MenuService {
       }
     ).pipe(
       tap(() => {
-        console.log('✅ Menu item added successfully');
-        // Refresh menu items to get the latest list
         this.fetchMenuItems();
       }),
       catchError(error => {
-        console.error('❌ Error adding menu item:', error);
         throw error;
       })
     );
@@ -153,8 +159,10 @@ export class MenuService {
       `${this.API_BASE_URL}/restaurants/${restaurantId}/menu/${itemId}`,
       {
         name: itemData.itemName,
-        price: itemData.price,
+        restaurantPrice: itemData.restaurantPrice,
+        hikePercentage: itemData.hikePercentage,
         category: itemData.category,
+        subCategory: itemData.subCategory,
         isVeg: itemData.isVeg,
         isAvailable: itemData.isAvailable,
         description: itemData.description,
@@ -162,12 +170,9 @@ export class MenuService {
       }
     ).pipe(
       tap(() => {
-        console.log('✅ Menu item updated successfully');
-        // Refresh menu items to get the latest list
         this.fetchMenuItems();
       }),
       catchError(error => {
-        console.error('❌ Error updating menu item:', error);
         throw error;
       })
     );

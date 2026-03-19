@@ -31,8 +31,9 @@ export class LoginComponent implements OnInit {
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
 
-    // Get return url from route parameters or default to '/dashboard/welcome'
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard/welcome';
+    // Get return url from route parameters — only allow relative URLs to prevent open redirects
+    const raw = this.route.snapshot.queryParams['returnUrl'] || '/dashboard/welcome';
+    this.returnUrl = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard/welcome';
   }
 
   get f() {

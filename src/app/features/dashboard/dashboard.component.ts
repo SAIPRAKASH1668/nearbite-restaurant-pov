@@ -56,7 +56,6 @@ export class DashboardComponent implements OnInit {
 
   loadData(): void {
     this.isLoading = true;
-    console.log('Dashboard: Starting to load data...');
     this.cdr.detectChanges();
 
     // Wait for both API calls to complete before hiding loader
@@ -66,19 +65,16 @@ export class DashboardComponent implements OnInit {
     })
     .pipe(
       finalize(() => {
-        console.log('Dashboard: Finalizing, setting isLoading to false');
         this.isLoading = false;
         this.cdr.detectChanges();
       })
     )
     .subscribe({
       next: (result) => {
-        console.log('Dashboard: Data loaded successfully', result);
         this.stats = result.stats;
         this.recentOrders = result.orders;
       },
-      error: (error) => {
-        console.error('Dashboard: Error loading data:', error);
+      error: () => {
       }
     });
   }

@@ -20,8 +20,6 @@ export class App implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    console.log('🚀 App component initialized');
-
     // Fix status bar on Android — make it transparent so safe-area-inset-top works
     if (Capacitor.isNativePlatform()) {
       StatusBar.setOverlaysWebView({ overlay: true });

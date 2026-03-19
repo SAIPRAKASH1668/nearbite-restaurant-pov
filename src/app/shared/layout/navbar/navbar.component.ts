@@ -6,6 +6,7 @@ import { Subscription, filter, distinctUntilChanged } from 'rxjs';
 import { AuthService, User } from '../../../core/auth/auth.service';
 import { RestaurantContextService } from '../../../core/services/restaurant-context.service';
 import { RestaurantOnlineService } from '../../../core/services/restaurant-online.service';
+import { environment } from '../../../../environments/environment';
 import { RestaurantStatusToggleComponent } from '../../components/restaurant-status-toggle/restaurant-status-toggle.component';
 
 @Component({
@@ -17,7 +18,7 @@ import { RestaurantStatusToggleComponent } from '../../components/restaurant-sta
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NavbarComponent implements OnInit, OnDestroy {
-  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
+  private readonly API_BASE_URL = environment.apiUrl;
   @Output() hamburgerClick = new EventEmitter<void>();
   currentUser: User | null = null;
   restaurantName: string = '';
@@ -117,10 +118,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
           // Fire the premium splash animation
           this.onlineService.triggerAnimation();
         } else {
-          // Went offline — navigate to welcome screen (deselects all sidebar items)
           this.router.navigate(['/dashboard/welcome']);
         }
-        console.log(`✅ Restaurant is now ${status ? 'Online' : 'Offline'}`);
       },
       error: (error) => {
         console.error('Failed to update restaurant status:', error);

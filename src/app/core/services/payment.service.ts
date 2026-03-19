@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 import { 
   Payment, 
   EarningsSummary, 
@@ -22,7 +23,7 @@ import {
 })
 export class PaymentService {
   
-  private readonly API_BASE_URL = 'https://api.dev.yumdude.com/api/v1';
+  private readonly API_BASE_URL = environment.apiUrl;
   private mockRestaurantId = 'REST_001';
   private cachedMockPayments: Payment[] | null = null;
 

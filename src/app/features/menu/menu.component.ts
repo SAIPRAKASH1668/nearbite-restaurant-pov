@@ -5,6 +5,8 @@ import { MenuService, MenuItem } from '../../core/services/menu.service';
 import { ImageUploadService } from '../../core/services/image-upload.service';
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 import { NotificationService } from '../../shared/components/notification/notification.service';
+import { ConfigService } from '../../core/services/config.service';
+import { FoodCategoryService } from '../../core/services/food-category.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -18,30 +20,47 @@ export class MenuComponent implements OnInit, OnDestroy {
   selectedCategory = 'all';
   showAddItemForm = false;
   loading = true;
-  customCategoryName = '';
   savingItem = false;
   isEditMode = false;
   editingItemId: string | null = null;
+  /** Max allowed hike % for the current restaurant price — updates reactively on new items */
+  maxHikePercentage = 0;
 
   // ── Item image upload state ────────────────────────────────────────────────
   pendingImageFiles: File[] = [];
   pendingImagePreviews: string[] = [];
   readonly MAX_ITEM_IMAGES = 6;
   private readonly MAX_ITEM_IMAGE_MB = 10;
-  
+  /** Subcategories shown in the form for the currently selected category */
+  subCategories: string[] = [];
   private menuSubscription?: Subscription;
-  
+
+  /** Category filter tabs — derived from actual items in menu (not config) */
   categories: string[] = ['All'];
+
+  /** Category options for the form — sourced from food-categories API */
+  get formCategories(): string[] {
+    return this.foodCategoryService.getCategories();
+  }
 
   newItem: Partial<MenuItem> = {
     itemName: '',
     category: '',
-    price: 0,
+    subCategory: '',
+    restaurantPrice: 0,
+    hikePercentage: 0,
     isAvailable: true,
     description: '',
     isVeg: true,
     image: []
   };
+
+  /** Customer-facing display price computed from restaurantPrice + hikePercentage (nearest 0.5). */
+  get computedDisplayPrice(): number {
+    const price = this.newItem.restaurantPrice ?? 0;
+    const hike  = this.newItem.hikePercentage  ?? 0;
+    return Math.round(price * (1 + hike / 100) * 2) / 2;
+  }
 
   menuItems: MenuItem[] = [];
 
@@ -50,6 +69,8 @@ export class MenuComponent implements OnInit, OnDestroy {
     private imageUploadService: ImageUploadService,
     private restaurantContext: RestaurantContextService,
     private notificationService: NotificationService,
+    private configService: ConfigService,
+    private foodCategoryService: FoodCategoryService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -68,34 +89,35 @@ export class MenuComponent implements OnInit, OnDestroy {
     
     // Subscribe to menu items
     this.menuSubscription = this.menuService.menuItems$.subscribe(items => {
-      console.log('📦 Menu items updated:', items.length, 'items');
       this.menuItems = items;
-      this.updateCategories(items);
+      this.updateCategoryTabs(items);
       this.cdr.detectChanges();
     });
     
     // Fetch menu items
     this.menuService.fetchMenuItems();
+
+    // Load global config (hike thresholds) and food categories in parallel
+    this.configService.loadConfig().subscribe();
+
+    this.foodCategoryService.load().subscribe(map => {
+      const cats = Object.keys(map).sort();
+      if (!this.newItem.category && cats.length > 0) {
+        this.newItem.category = cats[0];
+        this.subCategories = map[cats[0]] ?? [];
+      }
+      this.cdr.detectChanges();
+    });
   }
 
   ngOnDestroy(): void {
     this.menuSubscription?.unsubscribe();
   }
 
-  updateCategories(items: MenuItem[]): void {
-    // Extract unique categories from menu items
-    const uniqueCategories = [...new Set(items.map(item => item.category))];
-    // Sort categories alphabetically
-    uniqueCategories.sort();
-    // Always include 'All' as first category
-    this.categories = ['All', ...uniqueCategories];
-    
-    // Set default category for new items if not set
-    if (!this.newItem.category && uniqueCategories.length > 0) {
-      this.newItem.category = uniqueCategories[0];
-    }
-    
-    console.log('📋 Categories extracted:', this.categories);
+  updateCategoryTabs(items: MenuItem[]): void {
+    // Filter tabs only reflect categories that have at least one item
+    const unique = [...new Set(items.map(item => item.category).filter(Boolean))].sort();
+    this.categories = ['All', ...unique];
   }
 
   selectCategory(category: string): void {
@@ -118,7 +140,9 @@ export class MenuComponent implements OnInit, OnDestroy {
       const updatedItemData: Partial<MenuItem> = {
         itemName: item.itemName,
         category: item.category,
-        price: item.price,
+        subCategory: item.subCategory,
+        restaurantPrice: item.restaurantPrice,
+        hikePercentage: item.hikePercentage,
         isVeg: item.isVeg,
         isAvailable: newStatus,
         description: item.description,
@@ -128,7 +152,6 @@ export class MenuComponent implements OnInit, OnDestroy {
       this.loading = true;
       this.menuService.updateMenuItem(itemId, updatedItemData).subscribe({
         next: () => {
-          console.log('✅ Item availability updated');
           const statusText = newStatus ? 'available' : 'unavailable';
           this.notificationService.success(`${item.itemName} marked as ${statusText}`);
         },
@@ -152,10 +175,14 @@ export class MenuComponent implements OnInit, OnDestroy {
   openEditItemForm(item: MenuItem): void {
     this.isEditMode = true;
     this.editingItemId = item.itemId;
+    this.maxHikePercentage = this.configService.getMaxHikeForPrice(item.restaurantPrice);
+    this.subCategories = this.foodCategoryService.getSubCategories(item.category);
     this.newItem = {
       itemName: item.itemName,
       category: item.category,
-      price: item.price,
+      subCategory: item.subCategory ?? '',
+      restaurantPrice: item.restaurantPrice,
+      hikePercentage: item.hikePercentage,
       isAvailable: item.isAvailable,
       description: item.description,
       isVeg: item.isVeg,
@@ -177,35 +204,55 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   onCategoryChange(event: any): void {
-    const value = event.target.value;
-    if (value === '_new') {
-      this.customCategoryName = '';
-    }
+    const cat = event.target.value as string;
+    this.subCategories = this.foodCategoryService.getSubCategories(cat);
+    this.newItem.subCategory = '';
   }
 
   resetForm(): void {
+    this.maxHikePercentage = 0;
+    const cats = this.foodCategoryService.getCategories();
+    const defaultCat = cats.length > 0 ? cats[0] : '';
+    this.subCategories = defaultCat ? this.foodCategoryService.getSubCategories(defaultCat) : [];
     this.newItem = {
       itemName: '',
-      category: this.categories.length > 1 ? this.categories[1] : '',
-      price: 0,
+      category: defaultCat,
+      subCategory: '',
+      restaurantPrice: 0,
+      hikePercentage: 0,
       isAvailable: true,
       description: '',
       isVeg: true,
       image: []
     };
-    this.customCategoryName = '';
     this.pendingImageFiles = [];
     this.pendingImagePreviews = [];
   }
 
-  async saveNewItem(): Promise<void> {
-    // Handle custom category
-    if (this.newItem.category === '_new' && this.customCategoryName.trim()) {
-      this.newItem.category = this.customCategoryName.trim();
-    }
+  /**
+   * Called when restaurantPrice changes on a NEW item.
+   * Reactively updates the default hike % to the config max for the new price tier.
+   */
+  onRestaurantPriceChange(): void {
+    if (this.isEditMode) return;
+    const price = this.newItem.restaurantPrice ?? 0;
+    this.maxHikePercentage = this.configService.getMaxHikeForPrice(price);
+    this.newItem.hikePercentage = this.maxHikePercentage;
+  }
 
+  /**
+   * Called when the hike % field changes — clamps value between 0 and config max.
+   */
+  onHikePercentageChange(): void {
+    const max = this.maxHikePercentage;
+    const current = this.newItem.hikePercentage ?? 0;
+    if (current > max) this.newItem.hikePercentage = max;
+    if (current < 0)   this.newItem.hikePercentage = 0;
+  }
+
+  async saveNewItem(): Promise<void> {
     // Validate required fields
-    if (!this.newItem.itemName || !this.newItem.category || !this.newItem.price || this.newItem.price <= 0) {
+    if (!this.newItem.itemName || !this.newItem.category || !this.newItem.restaurantPrice || this.newItem.restaurantPrice <= 0) {
       this.notificationService.warning('Please fill all required fields');
       return;
     }
