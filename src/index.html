@@ -19,6 +19,23 @@
   <script>
     window.global = window;
   </script>
+
+  <!--
+    Epson ePOS SDK — enables WiFi printing directly from the browser.
+    Required for network printers (Epson TM-T82X, TM-T88, TM-T20) when running
+    the web version WITHOUT the Android app.
+
+    HOW TO INSTALL:
+      1. Go to https://download.epson-biz.com/?service=pos
+      2. Search "ePOS SDK for JavaScript" and download the zip
+      3. Extract → copy the  epos-X.XX.X.js  file into  src/assets/
+      4. Rename it to  epos-sdk.js  (or update the src below)
+
+    The printer's ePOS-Print function must be enabled (it is ON by default
+    for all Epson TM-T82X network models). The browser connects to the printer's
+    built-in WebSocket server on port 8008 — no raw TCP, no backend proxy needed.
+  -->
+  <script src="assets/epos-sdk.js" onerror="console.warn('[NearBite] Epson ePOS SDK not found at assets/epos-sdk.js — WiFi printing in browser is disabled. See index.html for setup instructions.')"></script>
 </head>
 <body>
   <app-root></app-root>

@@ -3,7 +3,7 @@
   <!-- Header -->
   <div class="ps-header">
     <h2 class="ps-title"><i class="fas fa-print"></i> Printer Settings</h2>
-    <p class="ps-subtitle">Assign Bluetooth or USB printers to KOT and Bill queues. Multiple printers per queue are supported.</p>
+    <p class="ps-subtitle">Assign Bluetooth, USB, or Network (WiFi) printers to KOT and Bill queues. Multiple printers per queue are supported.</p>
   </div>
 
   <!-- ── Print status badge ───────────────────────────────────────────────── -->
@@ -16,6 +16,36 @@
          [class.fa-times-circle]="printStatus === 'error'"></i>
       {{ statusLabel }}
     </span>
+  </div>
+
+  <!-- ── 0. printerAPI test buttons ────────────────────────────────────────── -->
+  <div class="ps-section ps-test-section">
+    <h3 class="ps-section-title">Quick Test</h3>
+    <p class="ps-hint"><i class="fas fa-info-circle"></i> These buttons call <code>window.printerAPI</code> directly — useful for testing the Electron / native bridge.</p>
+    <div class="ps-test-bar">
+
+      <button class="ps-test-btn ps-test-btn--settings"
+        (click)="callOpenSettings()">
+        <i class="fas fa-sliders"></i>
+        <span>Open Printer Settings</span>
+      </button>
+
+      <button class="ps-test-btn ps-test-btn--bill"
+        (click)="callPrintBill()">
+        <i class="fas fa-receipt"></i>
+        <span>Print Bill</span>
+      </button>
+
+      <button class="ps-test-btn ps-test-btn--kot"
+        (click)="callPrintKOT()">
+        <i class="fas fa-utensils"></i>
+        <span>Print KOT</span>
+      </button>
+
+    </div>
+    <p class="ps-test-unavail" *ngIf="!printerAPIAvailable">
+      <i class="fas fa-circle-exclamation"></i> <code>window.printerAPI</code> is not available in this environment.
+    </p>
   </div>
 
   <!-- ── 1. Paper width ───────────────────────────────────────────────────── -->
@@ -63,17 +93,17 @@
             <span>No KOT printers yet</span>
           </div>
           <div *ngFor="let p of kotPrinters" class="ps-configured-device">
-            <div class="ps-cd-icon" [class.ps-cd-icon--usb]="p.type === 'usb'">
-              <i class="fas" [class.fa-print]="p.type !== 'usb'" [class.fa-plug]="p.type === 'usb'"></i>
+            <div class="ps-cd-icon" [class.ps-cd-icon--usb]="p.type === 'usb'" [class.ps-cd-icon--net]="p.type === 'network'">
+              <i class="fas" [class.fa-print]="p.type === 'bluetooth'" [class.fa-plug]="p.type === 'usb'" [class.fa-wifi]="p.type === 'network'"></i>
             </div>
             <div class="ps-cd-info">
               <span class="ps-cd-name">{{ p.name }}</span>
               <span class="ps-cd-addr">
-                <span class="ps-conn-badge" [class.ps-conn-badge--usb]="p.type === 'usb'" [class.ps-conn-badge--bt]="p.type !== 'usb'">
-                  <i class="fas" [class.fa-plug]="p.type === 'usb'" [class.fa-bluetooth-b]="p.type !== 'usb'"></i>
-                  {{ p.type === 'usb' ? 'USB' : 'BT' }}
+                <span class="ps-conn-badge" [class.ps-conn-badge--usb]="p.type === 'usb'" [class.ps-conn-badge--bt]="p.type === 'bluetooth'" [class.ps-conn-badge--net]="p.type === 'network'">
+                  <i class="fas" [class.fa-plug]="p.type === 'usb'" [class.fa-bluetooth-b]="p.type === 'bluetooth'" [class.fa-wifi]="p.type === 'network'"></i>
+                  {{ p.type === 'usb' ? 'USB' : p.type === 'network' ? 'WiFi' : 'BT' }}
                 </span>
-                {{ p.address }}
+                {{ p.type === 'network' ? p.address + ':' + (p.port ?? 9100) : p.address }}
               </span>
             </div>
             <div class="ps-cd-actions">
@@ -111,17 +141,17 @@
             <span>No Bill printers yet</span>
           </div>
           <div *ngFor="let p of billPrinters" class="ps-configured-device">
-            <div class="ps-cd-icon" [class.ps-cd-icon--usb]="p.type === 'usb'">
-              <i class="fas" [class.fa-print]="p.type !== 'usb'" [class.fa-plug]="p.type === 'usb'"></i>
+            <div class="ps-cd-icon" [class.ps-cd-icon--usb]="p.type === 'usb'" [class.ps-cd-icon--net]="p.type === 'network'">
+              <i class="fas" [class.fa-print]="p.type === 'bluetooth'" [class.fa-plug]="p.type === 'usb'" [class.fa-wifi]="p.type === 'network'"></i>
             </div>
             <div class="ps-cd-info">
               <span class="ps-cd-name">{{ p.name }}</span>
               <span class="ps-cd-addr">
-                <span class="ps-conn-badge" [class.ps-conn-badge--usb]="p.type === 'usb'" [class.ps-conn-badge--bt]="p.type !== 'usb'">
-                  <i class="fas" [class.fa-plug]="p.type === 'usb'" [class.fa-bluetooth-b]="p.type !== 'usb'"></i>
-                  {{ p.type === 'usb' ? 'USB' : 'BT' }}
+                <span class="ps-conn-badge" [class.ps-conn-badge--usb]="p.type === 'usb'" [class.ps-conn-badge--bt]="p.type === 'bluetooth'" [class.ps-conn-badge--net]="p.type === 'network'">
+                  <i class="fas" [class.fa-plug]="p.type === 'usb'" [class.fa-bluetooth-b]="p.type === 'bluetooth'" [class.fa-wifi]="p.type === 'network'"></i>
+                  {{ p.type === 'usb' ? 'USB' : p.type === 'network' ? 'WiFi' : 'BT' }}
                 </span>
-                {{ p.address }}
+                {{ p.type === 'network' ? p.address + ':' + (p.port ?? 9100) : p.address }}
               </span>
             </div>
             <div class="ps-cd-actions">
@@ -307,6 +337,82 @@
       </div>
     </div>
 
+    <!-- ── Network / WiFi Printer ─────────────────────────────────────────── -->
+    <div class="ps-net-divider">
+      <span><i class="fas fa-wifi"></i> Network / WiFi Printer</span>
+    </div>
+    <p class="ps-hint ps-hint--indent">
+      Enter the IP address of your Epson TM-T82X or any ESC/POS network printer. Make sure it's on the same WiFi network.
+    </p>
+
+    <div class="ps-net-form">
+      <div class="ps-net-row ps-net-row--name">
+        <label class="ps-net-label">Printer Name <span class="ps-net-optional">(optional)</span></label>
+        <input class="ps-net-input"
+          type="text"
+          placeholder="e.g. Epson TM-T82X (Kitchen)"
+          [value]="netName"
+          (input)="netName = $any($event.target).value" />
+      </div>
+      <div class="ps-net-row">
+        <div class="ps-net-col ps-net-col--ip">
+          <label class="ps-net-label">IP Address</label>
+          <input class="ps-net-input"
+            type="text"
+            placeholder="192.168.1.100"
+            [value]="netHost"
+            (input)="netHost = $any($event.target).value" />
+        </div>
+        <div class="ps-net-col ps-net-col--port">
+          <label class="ps-net-label">Port</label>
+          <input class="ps-net-input"
+            type="number"
+            min="1"
+            max="65535"
+            [value]="netPort"
+            (input)="netPort = +$any($event.target).value" />
+        </div>
+      </div>
+
+      <!-- Connection test button + result -->
+      <div class="ps-net-test-row">
+        <button class="ps-btn ps-btn--ghost ps-btn--sm"
+          (click)="testNetworkConnection()"
+          [disabled]="!isNetworkFormValid || netTesting">
+          <i class="fas"
+             [class.fa-circle-dot]="!netTesting && netTestOk === null"
+             [class.fa-spinner]="netTesting"
+             [class.fa-spin]="netTesting"
+             [class.fa-check-circle]="netTestOk === true"
+             [class.fa-times-circle]="netTestOk === false"
+             [class.ps-icon--ok]="netTestOk === true"
+             [class.ps-icon--err]="netTestOk === false"></i>
+          {{ netTesting ? 'Testing...' : netTestOk === true ? 'Reachable' : netTestOk === false ? 'Unreachable' : 'Test Connection' }}
+        </button>
+      </div>
+
+      <!-- Validation / error message -->
+      <p *ngIf="netError" class="ps-net-error"><i class="fas fa-exclamation-circle"></i> {{ netError }}</p>
+
+      <!-- Add buttons -->
+      <div class="ps-net-add-row">
+        <button class="ps-add-btn"
+          [disabled]="!isNetworkFormValid"
+          [class.ps-add-btn--active]="isNetworkFormValid && isInKot(netHost)"
+          (click)="isInKot(netHost) ? removeKot(netHost) : addNetworkToKot()">
+          <i class="fas" [class.fa-check]="isInKot(netHost)" [class.fa-utensils]="!isInKot(netHost)"></i>
+          Add to KOT
+        </button>
+        <button class="ps-add-btn ps-add-btn--bill"
+          [disabled]="!isNetworkFormValid"
+          [class.ps-add-btn--active]="isNetworkFormValid && isInBill(netHost)"
+          (click)="isInBill(netHost) ? removeBill(netHost) : addNetworkToBill()">
+          <i class="fas" [class.fa-check]="isInBill(netHost)" [class.fa-receipt]="!isInBill(netHost)"></i>
+          Add to Bill
+        </button>
+      </div>
+    </div>
+
   </div>
 
   <!-- ── 4. How it works ──────────────────────────────────────────────────── -->
@@ -317,21 +423,33 @@
         <li><strong>KOT</strong> (Kitchen Order Ticket) prints on all KOT printers immediately when you accept an order.</li>
         <li><strong>Customer Bill</strong> prints on all Bill printers — a full tax invoice with item breakdown and totals.</li>
         <li>Both documents are sent automatically — no manual action needed.</li>
-        <li>Supported: 80 mm &amp; 58 mm ESC/POS printers via <strong>Bluetooth</strong> (Xprinter XP-58/80, Epson TM-T20, TVS RP-3200) or <strong>USB cable</strong> (OTG adapter on phones).</li>
+        <li>Supported: 80 mm &amp; 58 mm ESC/POS printers via <strong>Bluetooth</strong> (Xprinter XP-58/80, Epson TM-T20, TVS RP-3200), <strong>USB cable</strong> (OTG adapter on phones), or <strong>Network/WiFi</strong> (Epson TM-T82X, TM-T88 — works from both the Android app and the browser via Epson ePOS SDK).</li>
         <li>You can add the same printer to both pools to receive both KOT and Bill.</li>
       </ul>
     </div>
   </div>
 
   <!-- Browser notice -->
-  <div class="ps-section" *ngIf="!printerService.isNativeApp()">
-    <div class="ps-alert ps-alert--info">
-      <i class="fas fa-desktop"></i>
+  <div class="ps-section" *ngIf="!isNativeApp">
+
+    <!-- ePOS SDK loaded → network printing works in browser -->
+    <div class="ps-alert ps-alert--ok" *ngIf="eposSdkAvailable">
+      <i class="fas fa-wifi"></i>
       <div class="ps-alert-body">
-        <strong>Browser preview mode.</strong>
-        <p>Bluetooth printing works only in the installed Android app. Mock devices are shown for testing.</p>
+        <strong>WiFi printing active — browser mode.</strong>
+        <p>Epson ePOS SDK loaded. Network/WiFi printers (TM-T82X, TM-T88, TM-T20) can print directly from this browser tab. Bluetooth and USB require the Android app.</p>
       </div>
     </div>
+
+    <!-- ePOS SDK missing → network printing won't work -->
+    <div class="ps-alert ps-alert--warn" *ngIf="!eposSdkAvailable">
+      <i class="fas fa-triangle-exclamation"></i>
+      <div class="ps-alert-body">
+        <strong>Browser mode — WiFi printing not available yet.</strong>
+        <p>Place <code>epos-sdk.js</code> (Epson ePOS SDK) in <code>src/assets/</code> to enable printer support from the browser. See <code>src/index.html</code> for download instructions. Bluetooth and USB require the Android app.</p>
+      </div>
+    </div>
+
   </div>
 
 </div>

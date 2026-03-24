@@ -38,6 +38,14 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
   usbScanDone   = false;
   usbScanError: string | null = null;
 
+  // ── Network / WiFi printer form ────────────────────────────────────────────
+  netName    = '';
+  netHost    = '';
+  netPort    = 9100;
+  netTesting = false;
+  netTestOk: boolean | null = null;
+  netError: string | null   = null;
+
   // ── Per-device test state ──────────────────────────────────────────────────
   testingAddress: string | null = null;
   testResults = new Map<string, 'success' | 'error'>();
@@ -157,6 +165,53 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
     this.refreshPools();
   }
 
+  // ── Network / WiFi printer ─────────────────────────────────────────────────
+
+  get isNetworkFormValid(): boolean {
+    return this.netHost.trim().length > 0 && this.netPort > 0 && this.netPort < 65536;
+  }
+
+  addNetworkToKot(): void {
+    if (!this.isNetworkFormValid) { this.netError = 'Enter a valid IP address and port.'; return; }
+    this.printerService.addKotPrinter({
+      name:    this.netName.trim() || this.netHost.trim(),
+      address: this.netHost.trim(),
+      type:    'network',
+      port:    this.netPort,
+    });
+    this.refreshPools();
+    this.netError = null;
+  }
+
+  addNetworkToBill(): void {
+    if (!this.isNetworkFormValid) { this.netError = 'Enter a valid IP address and port.'; return; }
+    this.printerService.addBillPrinter({
+      name:    this.netName.trim() || this.netHost.trim(),
+      address: this.netHost.trim(),
+      type:    'network',
+      port:    this.netPort,
+    });
+    this.refreshPools();
+    this.netError = null;
+  }
+
+  async testNetworkConnection(): Promise<void> {
+    if (!this.isNetworkFormValid || this.netTesting) return;
+    this.netTesting = true;
+    this.netTestOk  = null;
+    this.netError   = null;
+    try {
+      await this.printerService.testNetworkConnection(this.netHost.trim(), this.netPort);
+      this.netTestOk = true;
+    } catch (e: any) {
+      this.netTestOk = false;
+      this.netError  = e?.message || 'Could not reach printer.';
+    } finally {
+      this.netTesting = false;
+      this.cdr.detectChanges();
+    }
+  }
+
   removeKot(address: string): void {
     this.printerService.removeKotPrinter(address);
     this.refreshPools();
@@ -203,8 +258,32 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
+  // ── printerAPI test buttons (Electron / native bridge) ──────────────────
+
+  callOpenSettings(): void {
+    (window as any).printerAPI?.openSettings();
+  }
+
+  callPrintBill(): void {
+    (window as any).printerAPI?.printBill();
+  }
+
+  callPrintKOT(): void {
+    (window as any).printerAPI?.printKOT();
+  }
+
+  get printerAPIAvailable(): boolean {
+    return typeof (window as any).printerAPI !== 'undefined';
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
   get isNativeApp(): boolean {
     return this.printerService.isNativeApp();
+  }
+
+  get eposSdkAvailable(): boolean {
+    return this.printerService.isEposSdkAvailable();
   }
 
   get statusBadgeClass(): string {

@@ -269,6 +269,13 @@
     > i { color: $status-error; }
   }
 
+  &--ok {
+    background: rgba(#22c55e, 0.10);
+    border: 1px solid rgba(#22c55e, 0.35);
+    color: #166534;
+    > i { color: #16a34a; }
+  }
+
   &--warn {
     background: rgba(#f59e0b, 0.10);
     border: 1px solid rgba(#f59e0b, 0.35);
@@ -297,6 +304,69 @@
     margin: 0;
     font-size: 13px;
     line-height: 1.5;
+  }
+}
+
+// ── printerAPI test buttons ─────────────────────────────────────────────────
+
+.ps-test-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.ps-test-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+
+  &:active { transform: scale(0.97); }
+
+  i { font-size: 15px; }
+
+  &--settings {
+    background: #f3f0eb;
+    color: #2e241b;
+    border: 1px solid rgba(#2e241b, 0.15);
+    &:hover { background: darken(#f3f0eb, 4%); }
+  }
+
+  &--bill {
+    background: rgba($primary-orange, 0.12);
+    color: darken($primary-orange, 8%);
+    border: 1px solid rgba($primary-orange, 0.30);
+    &:hover { background: rgba($primary-orange, 0.20); }
+  }
+
+  &--kot {
+    background: rgba(#ffc52e, 0.18);
+    color: #7a5800;
+    border: 1px solid rgba(#ffc52e, 0.50);
+    &:hover { background: rgba(#ffc52e, 0.28); }
+  }
+}
+
+.ps-test-unavail {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #92400e;
+
+  i { margin-right: 4px; }
+
+  code {
+    background: rgba(#f59e0b, 0.12);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 12px;
   }
 }
 
@@ -789,5 +859,150 @@
       color: #fff;
     }
   }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+// ── Network / WiFi printer colours ───────────────────────────────────────────
+
+$net-color: #1976d2;  // Material Blue — distinct from orange (BT) and teal (USB)
+
+.ps-cd-icon--net {
+  background: rgba($net-color, 0.1) !important;
+  i { color: $net-color !important; }
+}
+
+.ps-avail-icon--net {
+  background: rgba($net-color, 0.1);
+  color: $net-color;
+}
+
+.ps-conn-badge--net {
+  background: rgba($net-color, 0.12);
+  color: $net-color;
+  border-color: rgba($net-color, 0.25);
+}
+
+// ── Network form ──────────────────────────────────────────────────────────────
+
+.ps-net-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 12px;
+  color: $text-secondary;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: $border-primary;
+  }
+
+  i { color: $net-color; }
+}
+
+.ps-net-form {
+  background: $bg-card;
+  border: 1.5px solid $border-primary;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ps-net-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &--name { /* full width single row */ }
+}
+
+.ps-net-row:not(.ps-net-row--name) {
+  flex-direction: row;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.ps-net-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &--ip   { flex: 1; }
+  &--port { width: 90px; flex-shrink: 0; }
+}
+
+.ps-net-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ps-net-optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  opacity: 0.7;
+}
+
+.ps-net-input {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1.5px solid $border-primary;
+  background: #fff;
+  font-size: 13px;
+  font-family: 'Poppins', sans-serif;
+  color: $text-primary;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &::placeholder { color: lighten($text-secondary, 20%); }
+  &:focus { border-color: $primary-orange; }
+}
+
+.ps-net-test-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ps-net-error {
+  font-size: 12px;
+  color: #e53935;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  i { font-size: 11px; }
+}
+
+.ps-net-add-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+  border-top: 1px solid $border-primary;
+}
+
+.ps-btn--sm {
+  font-size: 12px;
+  padding: 6px 14px;
+  height: 32px;
 }
 
