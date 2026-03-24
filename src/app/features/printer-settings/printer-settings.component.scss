@@ -435,3 +435,359 @@
   }
 }
 
+// ── USB printer: connection type badge ────────────────────────────────────────
+
+.ps-card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ps-conn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+
+  &--bt {
+    background: #e3f2fd;
+    color: #1565c0;
+    i { color: #1976d2; }
+  }
+
+  &--usb {
+    background: #e8f5e9;
+    color: #2e7d32;
+    i { color: #388e3c; }
+  }
+}
+
+// ── USB printer: icon variant ─────────────────────────────────────────────────
+
+.ps-card-icon--usb {
+  background: #e8f5e9 !important;
+  color: #388e3c !important;
+}
+
+.ps-device-icon--usb {
+  background: #e8f5e9;
+  color: #388e3c;
+}
+
+// ── USB printer: permission indicator ─────────────────────────────────────────
+
+.ps-usb-perm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e53935;
+  margin-top: 4px;
+
+  i { font-size: 10px; }
+
+  &--ok {
+    color: #43a047;
+  }
+}
+
+// ── Printer pools layout ──────────────────────────────────────────────────────
+
+.ps-pools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 540px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ps-pool {
+  border: 1.5px solid $border-primary;
+  border-radius: 14px;
+  overflow: hidden;
+  background: $bg-card;
+}
+
+.ps-pool-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+
+  i { font-size: 14px; }
+
+  &--kot  { background: $primary-orange; }
+  &--bill { background: #0f9d77; }
+}
+
+.ps-pool-name { flex: 1; }
+
+.ps-pool-count {
+  background: rgba(255,255,255,0.25);
+  border-radius: 20px;
+  padding: 2px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ps-pool-body {
+  padding: 8px 0;
+  min-height: 64px;
+}
+
+.ps-pool-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  font-size: 12px;
+  color: $text-secondary;
+
+  i { font-size: 14px; opacity: 0.4; }
+}
+
+// ── Configured device row (inside a pool) ─────────────────────────────────────
+
+.ps-configured-device {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+
+  &:last-child { border-bottom: none; }
+}
+
+.ps-cd-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba($primary-orange, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  i { color: $primary-orange; font-size: 14px; }
+
+  &--usb {
+    background: rgba(#0f9d77, 0.1);
+    i { color: #0f9d77; }
+  }
+}
+
+.ps-cd-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.ps-cd-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-cd-addr {
+  font-size: 11px;
+  color: $text-secondary;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-cd-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ps-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  font-size: 13px;
+
+  &:active { transform: scale(0.9); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &--test {
+    background: rgba($primary-orange, 0.1);
+    color: $primary-orange;
+    &:hover:not(:disabled) { background: rgba($primary-orange, 0.2); }
+  }
+
+  &--remove {
+    background: rgba(#e53935, 0.08);
+    color: #e53935;
+    &:hover { background: rgba(#e53935, 0.16); }
+  }
+}
+
+.ps-icon--ok  { color: #43a047 !important; }
+.ps-icon--err { color: #e53935 !important; }
+
+// ── Scan controls row ─────────────────────────────────────────────────────────
+
+.ps-scan-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.ps-btn--secondary {
+  background: #fff;
+  color: #0f9d77;
+  border: 1.5px solid #0f9d77;
+
+  &:hover:not(:disabled) {
+    background: rgba(#0f9d77, 0.06);
+  }
+}
+
+.ps-results-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 16px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ps-hint--indent {
+  padding-left: 4px;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+// ── Available device row (scan results) ───────────────────────────────────────
+
+.ps-avail-device {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: $bg-card;
+  border: 1.5px solid $border-primary;
+  margin-bottom: 10px;
+}
+
+.ps-avail-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba($primary-orange, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: $primary-orange;
+  font-size: 15px;
+
+  &--usb {
+    background: rgba(#0f9d77, 0.1);
+    color: #0f9d77;
+  }
+}
+
+.ps-avail-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.ps-avail-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-avail-addr {
+  font-size: 11px;
+  color: $text-secondary;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.ps-avail-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ps-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid $primary-orange;
+  background: transparent;
+  color: $primary-orange;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+
+  i { font-size: 11px; }
+  &:active { transform: scale(0.95); }
+
+  &--bill {
+    border-color: #0f9d77;
+    color: #0f9d77;
+  }
+
+  &--active {
+    background: $primary-orange;
+    color: #fff;
+    border-color: $primary-orange;
+
+    &.ps-add-btn--bill {
+      background: #0f9d77;
+      border-color: #0f9d77;
+      color: #fff;
+    }
+  }
+}
+

@@ -1189,3 +1189,78 @@
     min-height: 46px;
   }
 }
+
+// ── Printer: no-printer nudge ────────────────────────────────────────────
+.ord-printer-nudge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 1rem 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  color: #7b5800;
+
+  i.fa-print { color: #f9a825; font-size: 1rem; flex-shrink: 0; }
+
+  span { flex: 1; }
+
+  .ord-printer-nudge-link {
+    white-space: nowrap;
+    color: #E8352A;
+    font-weight: 600;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.8125rem;
+
+    i { font-size: 0.7rem; }
+
+    &:hover { text-decoration: underline; }
+  }
+}
+
+// ── Printer: print status toast ──────────────────────────────────────────
+.ord-print-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 1rem 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid transparent;
+  animation: ord-toast-in 0.25s ease;
+
+  i { font-size: 1rem; flex-shrink: 0; }
+
+  &--connecting, &--printing {
+    background: #fff8e1;
+    border-color: #ffe082;
+    color: #7b5800;
+    i { color: #f9a825; }
+  }
+
+  &--success {
+    background: #e8f5e9;
+    border-color: #a5d6a7;
+    color: #1b5e20;
+    i { color: #43a047; }
+  }
+
+  &--error {
+    background: #fdecea;
+    border-color: #ef9a9a;
+    color: #b71c1c;
+    i { color: #e53935; }
+  }
+}
+
+@keyframes ord-toast-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

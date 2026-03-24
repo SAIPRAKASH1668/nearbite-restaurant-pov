@@ -3,18 +3,17 @@
   <!-- Header -->
   <div class="ps-header">
     <h2 class="ps-title"><i class="fas fa-print"></i> Printer Settings</h2>
-    <p class="ps-subtitle">Connect your Bluetooth thermal printer for automatic KOT &amp; customer bill printing.</p>
+    <p class="ps-subtitle">Assign Bluetooth or USB printers to KOT and Bill queues. Multiple printers per queue are supported.</p>
   </div>
 
   <!-- ── Print status badge ───────────────────────────────────────────────── -->
-  <div class="ps-status-row" *ngIf="savedPrinter">
+  <div class="ps-status-row" *ngIf="printStatus !== 'idle'">
     <span class="ps-badge" [ngClass]="statusBadgeClass">
       <i class="fas"
          [class.fa-circle-notch]="printStatus === 'connecting' || printStatus === 'printing'"
          [class.fa-spin]="printStatus === 'connecting' || printStatus === 'printing'"
          [class.fa-check-circle]="printStatus === 'success'"
-         [class.fa-times-circle]="printStatus === 'error'"
-         [class.fa-wifi]="printStatus === 'idle'"></i>
+         [class.fa-times-circle]="printStatus === 'error'"></i>
       {{ statusLabel }}
     </span>
   </div>
@@ -46,153 +45,268 @@
     </div>
   </div>
 
-  <!-- ── 2. Active printer ────────────────────────────────────────────────── -->
+  <!-- ── 2. Configured printer pools ─────────────────────────────────────── -->
   <div class="ps-section">
-    <h3 class="ps-section-title">Active Printer</h3>
+    <h3 class="ps-section-title">Configured Printers</h3>
+    <div class="ps-pools">
 
-    <div class="ps-card" *ngIf="savedPrinter; else noPrinter">
-      <!-- Row 1: icon + name/address -->
-      <div class="ps-card-top">
-        <div class="ps-card-icon ps-card-icon--active">
-          <i class="fas fa-print"></i>
+      <!-- KOT pool -->
+      <div class="ps-pool">
+        <div class="ps-pool-head ps-pool-head--kot">
+          <i class="fas fa-utensils"></i>
+          <span class="ps-pool-name">KOT Printers</span>
+          <span class="ps-pool-count">{{ kotPrinters.length }}</span>
         </div>
-        <div class="ps-card-info">
-          <p class="ps-card-name">{{ savedPrinter.name }}</p>
-          <p class="ps-card-address">{{ savedPrinter.address }}</p>
+        <div class="ps-pool-body">
+          <div *ngIf="kotPrinters.length === 0" class="ps-pool-empty">
+            <i class="fas fa-plus-circle"></i>
+            <span>No KOT printers yet</span>
+          </div>
+          <div *ngFor="let p of kotPrinters" class="ps-configured-device">
+            <div class="ps-cd-icon" [class.ps-cd-icon--usb]="p.type === 'usb'">
+              <i class="fas" [class.fa-print]="p.type !== 'usb'" [class.fa-plug]="p.type === 'usb'"></i>
+            </div>
+            <div class="ps-cd-info">
+              <span class="ps-cd-name">{{ p.name }}</span>
+              <span class="ps-cd-addr">
+                <span class="ps-conn-badge" [class.ps-conn-badge--usb]="p.type === 'usb'" [class.ps-conn-badge--bt]="p.type !== 'usb'">
+                  <i class="fas" [class.fa-plug]="p.type === 'usb'" [class.fa-bluetooth-b]="p.type !== 'usb'"></i>
+                  {{ p.type === 'usb' ? 'USB' : 'BT' }}
+                </span>
+                {{ p.address }}
+              </span>
+            </div>
+            <div class="ps-cd-actions">
+              <button class="ps-icon-btn ps-icon-btn--test"
+                (click)="testOn(p)"
+                [disabled]="isTesting(p.address)"
+                [title]="testResult(p.address) === 'success' ? 'Print OK!' : testResult(p.address) === 'error' ? 'Failed' : 'Test print'">
+                <i class="fas"
+                   [class.fa-print]="!isTesting(p.address) && !testResult(p.address)"
+                   [class.fa-spinner]="isTesting(p.address)"
+                   [class.fa-spin]="isTesting(p.address)"
+                   [class.fa-check]="testResult(p.address) === 'success'"
+                   [class.fa-times]="testResult(p.address) === 'error'"
+                   [class.ps-icon--ok]="testResult(p.address) === 'success'"
+                   [class.ps-icon--err]="testResult(p.address) === 'error'"></i>
+              </button>
+              <button class="ps-icon-btn ps-icon-btn--remove" (click)="removeKot(p.address)" title="Remove">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-      <!-- Row 2: actions (full width, always visible) -->
-      <div class="ps-card-actions">
-        <button
-          class="ps-btn ps-btn--outline"
-          (click)="doTestPrint()"
-          [disabled]="testPrinting || printStatus === 'printing' || printStatus === 'connecting'"
-          title="Print a test page">
-          <i class="fas"
-             [class.fa-vial]="!testPrinting && !testSuccess && !testError"
-             [class.fa-spinner]="testPrinting"
-             [class.fa-spin]="testPrinting"
-             [class.fa-check]="testSuccess && !testPrinting"
-             [class.fa-times]="testError && !testPrinting"
-             [class.icon--ok]="testSuccess"
-             [class.icon--error]="testError"></i>
-          {{ testPrinting ? 'Printing…' : testSuccess ? 'Printed OK' : testError ? 'Failed' : 'Test Print' }}
-        </button>
-        <button class="ps-btn ps-btn--danger" (click)="clearPrinter()" title="Remove printer">
-          <i class="fas fa-trash-alt"></i> Remove
-        </button>
-      </div>
-    </div>
 
-    <ng-template #noPrinter>
-      <div class="ps-empty">
-        <i class="fas fa-print ps-empty-icon"></i>
-        <p>No printer configured. Scan and select a paired device below.</p>
+      <!-- Bill pool -->
+      <div class="ps-pool">
+        <div class="ps-pool-head ps-pool-head--bill">
+          <i class="fas fa-receipt"></i>
+          <span class="ps-pool-name">Bill Printers</span>
+          <span class="ps-pool-count">{{ billPrinters.length }}</span>
+        </div>
+        <div class="ps-pool-body">
+          <div *ngIf="billPrinters.length === 0" class="ps-pool-empty">
+            <i class="fas fa-plus-circle"></i>
+            <span>No Bill printers yet</span>
+          </div>
+          <div *ngFor="let p of billPrinters" class="ps-configured-device">
+            <div class="ps-cd-icon" [class.ps-cd-icon--usb]="p.type === 'usb'">
+              <i class="fas" [class.fa-print]="p.type !== 'usb'" [class.fa-plug]="p.type === 'usb'"></i>
+            </div>
+            <div class="ps-cd-info">
+              <span class="ps-cd-name">{{ p.name }}</span>
+              <span class="ps-cd-addr">
+                <span class="ps-conn-badge" [class.ps-conn-badge--usb]="p.type === 'usb'" [class.ps-conn-badge--bt]="p.type !== 'usb'">
+                  <i class="fas" [class.fa-plug]="p.type === 'usb'" [class.fa-bluetooth-b]="p.type !== 'usb'"></i>
+                  {{ p.type === 'usb' ? 'USB' : 'BT' }}
+                </span>
+                {{ p.address }}
+              </span>
+            </div>
+            <div class="ps-cd-actions">
+              <button class="ps-icon-btn ps-icon-btn--test"
+                (click)="testOn(p)"
+                [disabled]="isTesting(p.address)"
+                [title]="testResult(p.address) === 'success' ? 'Print OK!' : testResult(p.address) === 'error' ? 'Failed' : 'Test print'">
+                <i class="fas"
+                   [class.fa-print]="!isTesting(p.address) && !testResult(p.address)"
+                   [class.fa-spinner]="isTesting(p.address)"
+                   [class.fa-spin]="isTesting(p.address)"
+                   [class.fa-check]="testResult(p.address) === 'success'"
+                   [class.fa-times]="testResult(p.address) === 'error'"
+                   [class.ps-icon--ok]="testResult(p.address) === 'success'"
+                   [class.ps-icon--err]="testResult(p.address) === 'error'"></i>
+              </button>
+              <button class="ps-icon-btn ps-icon-btn--remove" (click)="removeBill(p.address)" title="Remove">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </ng-template>
+
+    </div><!-- /ps-pools -->
   </div>
 
-  <!-- ── 3. Scan paired devices ───────────────────────────────────────────── -->
+  <!-- ── 3. Add a Printer ─────────────────────────────────────────────────── -->
   <div class="ps-section">
-    <h3 class="ps-section-title">Paired Bluetooth Devices</h3>
-
-    <div class="ps-hint">
+    <h3 class="ps-section-title">Add a Printer</h3>
+    <p class="ps-hint">
       <i class="fas fa-info-circle"></i>
-      Go to <strong>Android Settings → Bluetooth</strong>, pair your printer once, then tap
-      <strong>Load Paired Devices</strong> below to select it.
+      Scan for paired Bluetooth printers or detect USB-connected printers, then add them to a queue.
+    </p>
+
+    <div class="ps-scan-controls">
+      <button class="ps-btn ps-btn--primary" (click)="scanBt()" [disabled]="btScanning">
+        <i class="fas"
+           [class.fa-bluetooth-b]="!btScanning"
+           [class.fa-spinner]="btScanning"
+           [class.fa-spin]="btScanning"></i>
+        {{ btScanning ? 'Scanning…' : 'Scan Bluetooth' }}
+      </button>
+      <button class="ps-btn ps-btn--secondary" (click)="scanUsb()" [disabled]="usbScanning">
+        <i class="fas"
+           [class.fa-plug]="!usbScanning"
+           [class.fa-spinner]="usbScanning"
+           [class.fa-spin]="usbScanning"></i>
+        {{ usbScanning ? 'Detecting…' : 'Detect USB' }}
+      </button>
     </div>
 
-    <button class="ps-btn ps-btn--primary" (click)="scan()" [disabled]="scanning">
-      <i class="fas"
-         [class.fa-search]="!scanning"
-         [class.fa-spinner]="scanning"
-         [class.fa-spin]="scanning"></i>
-      {{ scanning ? 'Loading…' : 'Load Paired Devices' }}
-    </button>
-
-    <!-- Scanning tip -->
-    <div *ngIf="scanning" class="ps-alert ps-alert--info ps-scan-tip">
-      <i class="fas fa-bluetooth-b"></i>
-      <div class="ps-alert-body">
-        <p>
-          If a <strong>permission dialog</strong> appears, tap <em>Allow</em>.<br>
-          Bluetooth must be <strong>ON</strong> to load paired devices.
-        </p>
-      </div>
+    <!-- BT: permission instructions -->
+    <div *ngIf="!btScanDone && !btScanning" class="ps-hint ps-hint--indent">
+      Go to <strong>Android Settings → Bluetooth</strong>, pair your printer once, then tap <strong>Scan Bluetooth</strong>.
     </div>
 
-    <!-- ── Error states ──────────────────────────────────────────────────── -->
-
-    <!-- Permissions denied -->
-    <div *ngIf="scanError === 'PERMISSIONS_DENIED'" class="ps-alert ps-alert--error">
+    <!-- BT: permission denied -->
+    <div *ngIf="btScanError === 'PERMISSIONS_DENIED'" class="ps-alert ps-alert--error">
       <i class="fas fa-shield-alt"></i>
       <div class="ps-alert-body">
         <strong>Bluetooth permission denied.</strong>
-        <p>Open <em>App Settings → Permissions</em> and allow <em>Nearby devices</em>, then tap Scan again.</p>
+        <p>Please grant the <em>Nearby devices</em> permission in <em>Settings → Apps → NearBite → Permissions</em>, then retry.</p>
+        <button class="ps-btn ps-btn--ghost" (click)="scanBt()">Retry</button>
       </div>
-      <button class="ps-btn ps-btn--ghost" (click)="scan()">
-        <i class="fas fa-redo"></i> Retry
-      </button>
     </div>
 
-    <!-- Bluetooth disabled -->
-    <div *ngIf="scanError === 'BLUETOOTH_DISABLED'" class="ps-alert ps-alert--warn">
+    <!-- BT: bluetooth disabled -->
+    <div *ngIf="btScanError === 'BLUETOOTH_DISABLED'" class="ps-alert ps-alert--warn">
       <i class="fas fa-bluetooth-b"></i>
       <div class="ps-alert-body">
         <strong>Bluetooth is turned off.</strong>
-        <p>
-          Please enable Bluetooth from your device's <em>Quick Settings</em> or
-          <em>Settings → Bluetooth</em>, then tap <strong>Retry</strong>.
-        </p>
+        <p>Please enable Bluetooth from your device's Quick Settings or <em>Settings → Bluetooth</em>, then tap <strong>Retry</strong>.</p>
+        <button class="ps-btn ps-btn--ghost" (click)="scanBt()">Retry</button>
       </div>
-      <button class="ps-btn ps-btn--ghost" (click)="scan()">
-        <i class="fas fa-redo"></i> Retry
-      </button>
     </div>
 
-    <!-- Generic scan failure -->
-    <div *ngIf="scanError === 'SCAN_FAILED' || scanError === 'UNKNOWN'" class="ps-alert ps-alert--error">
+    <!-- BT: scan failed -->
+    <div *ngIf="btScanError === 'SCAN_FAILED' || btScanError === 'UNKNOWN'" class="ps-alert ps-alert--error">
       <i class="fas fa-exclamation-triangle"></i>
       <div class="ps-alert-body">
         <strong>Scan failed.</strong>
         <p>Make sure Bluetooth is on and the printer is already paired in Android Settings.</p>
+        <button class="ps-btn ps-btn--ghost" (click)="scanBt()">Retry</button>
       </div>
-      <button class="ps-btn ps-btn--ghost" (click)="scan()">
-        <i class="fas fa-redo"></i> Retry
-      </button>
     </div>
 
-    <!-- ── Device list ───────────────────────────────────────────────────── -->
-    <div class="ps-device-list" *ngIf="scanDone && !scanError">
+    <!-- BT: scanning tip -->
+    <div *ngIf="btScanning" class="ps-alert ps-alert--info ps-scan-tip">
+      <i class="fas fa-circle-notch fa-spin"></i>
+      <div class="ps-alert-body">
+        <p>Reading paired Bluetooth devices…</p>
+      </div>
+    </div>
 
-      <div *ngIf="devices.length === 0" class="ps-empty">
+    <!-- BT results -->
+    <div *ngIf="btScanDone && !btScanError">
+      <p class="ps-results-label"><i class="fas fa-bluetooth-b"></i> Bluetooth Devices</p>
+      <div *ngIf="btDevices.length === 0" class="ps-empty">
         <i class="fas fa-bluetooth-b ps-empty-icon"></i>
         <p>No paired Bluetooth devices found.</p>
-        <p class="ps-empty-sub">Please pair your printer from <strong>Android Settings → Bluetooth</strong> first.</p>
+        <p class="ps-empty-sub">Pair your printer from <strong>Android Settings → Bluetooth</strong> first.</p>
       </div>
-
-      <div
-        class="ps-device"
-        *ngFor="let d of devices"
-        [class.ps-device--selected]="isSelected(d)"
-        (click)="selectDevice(d)"
-        role="button"
-        [attr.aria-pressed]="isSelected(d)">
-        <div class="ps-device-icon">
-          <i class="fas fa-print"></i>
+      <div *ngFor="let d of btDevices" class="ps-avail-device">
+        <div class="ps-avail-icon">
+          <i class="fas fa-bluetooth-b"></i>
         </div>
-        <div class="ps-device-info">
-          <p class="ps-device-name">{{ d.name }}</p>
-          <p class="ps-device-address">{{ d.address }}</p>
+        <div class="ps-avail-info">
+          <span class="ps-avail-name">{{ d.name }}</span>
+          <span class="ps-avail-addr">{{ d.address }}</span>
         </div>
-        <div class="ps-device-check" *ngIf="isSelected(d)">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <div class="ps-device-select-hint" *ngIf="!isSelected(d)">
-          <i class="far fa-circle"></i>
+        <div class="ps-avail-actions">
+          <button class="ps-add-btn"
+            [class.ps-add-btn--active]="isInKot(d.address)"
+            (click)="isInKot(d.address) ? removeKot(d.address) : addToKot(d)">
+            <i class="fas" [class.fa-check]="isInKot(d.address)" [class.fa-utensils]="!isInKot(d.address)"></i>
+            KOT
+          </button>
+          <button class="ps-add-btn ps-add-btn--bill"
+            [class.ps-add-btn--active]="isInBill(d.address)"
+            (click)="isInBill(d.address) ? removeBill(d.address) : addToBill(d)">
+            <i class="fas" [class.fa-check]="isInBill(d.address)" [class.fa-receipt]="!isInBill(d.address)"></i>
+            Bill
+          </button>
         </div>
       </div>
     </div>
+
+    <!-- USB: error -->
+    <div *ngIf="usbScanError" class="ps-alert ps-alert--error">
+      <i class="fas fa-exclamation-triangle"></i>
+      <div class="ps-alert-body">
+        <strong>USB detection failed.</strong>
+        <p>{{ usbScanError }}</p>
+        <button class="ps-btn ps-btn--ghost" (click)="scanUsb()">Retry</button>
+      </div>
+    </div>
+
+    <!-- USB: scanning tip -->
+    <div *ngIf="usbScanning" class="ps-alert ps-alert--info ps-scan-tip">
+      <i class="fas fa-circle-notch fa-spin"></i>
+      <div class="ps-alert-body">
+        <p>Checking connected USB devices…</p>
+      </div>
+    </div>
+
+    <!-- USB results -->
+    <div *ngIf="usbScanDone && !usbScanError">
+      <p class="ps-results-label"><i class="fas fa-plug"></i> USB Devices</p>
+      <div *ngIf="usbDevices.length === 0" class="ps-empty">
+        <i class="fas fa-plug ps-empty-icon"></i>
+        <p>No USB devices detected.</p>
+        <p class="ps-empty-sub">Connect the printer via USB cable (OTG adapter may be required).</p>
+      </div>
+      <div *ngFor="let d of usbDevices" class="ps-avail-device">
+        <div class="ps-avail-icon ps-avail-icon--usb">
+          <i class="fas fa-plug"></i>
+        </div>
+        <div class="ps-avail-info">
+          <span class="ps-avail-name">{{ d.productName || d.deviceName }}</span>
+          <span class="ps-avail-addr">
+            {{ d.manufacturerName }}
+            <span class="ps-usb-perm" [class.ps-usb-perm--ok]="d.hasPermission">
+              <i class="fas" [class.fa-lock-open]="d.hasPermission" [class.fa-lock]="!d.hasPermission"></i>
+              {{ d.hasPermission ? 'Permission OK' : 'No permission' }}
+            </span>
+          </span>
+        </div>
+        <div class="ps-avail-actions">
+          <button class="ps-add-btn"
+            [class.ps-add-btn--active]="isInKot(d.deviceName)"
+            (click)="isInKot(d.deviceName) ? removeKot(d.deviceName) : addUsbToKot(d)">
+            <i class="fas" [class.fa-check]="isInKot(d.deviceName)" [class.fa-utensils]="!isInKot(d.deviceName)"></i>
+            KOT
+          </button>
+          <button class="ps-add-btn ps-add-btn--bill"
+            [class.ps-add-btn--active]="isInBill(d.deviceName)"
+            (click)="isInBill(d.deviceName) ? removeBill(d.deviceName) : addUsbToBill(d)">
+            <i class="fas" [class.fa-check]="isInBill(d.deviceName)" [class.fa-receipt]="!isInBill(d.deviceName)"></i>
+            Bill
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ── 4. How it works ──────────────────────────────────────────────────── -->
@@ -200,10 +314,11 @@
     <div class="ps-infobox">
       <h4><i class="fas fa-lightbulb"></i> How printing works</h4>
       <ul>
-        <li><strong>KOT</strong> (Kitchen Order Ticket) prints on the kitchen printer immediately when you accept an order.</li>
-        <li><strong>Customer Bill</strong> prints a full tax invoice with item breakdown and totals.</li>
+        <li><strong>KOT</strong> (Kitchen Order Ticket) prints on all KOT printers immediately when you accept an order.</li>
+        <li><strong>Customer Bill</strong> prints on all Bill printers — a full tax invoice with item breakdown and totals.</li>
         <li>Both documents are sent automatically — no manual action needed.</li>
-        <li>Supported: 80 mm &amp; 58 mm ESC/POS Bluetooth thermal printers (Xprinter XP-58, XP-80, Epson TM-T20, TVS RP-3200, etc.)</li>
+        <li>Supported: 80 mm &amp; 58 mm ESC/POS printers via <strong>Bluetooth</strong> (Xprinter XP-58/80, Epson TM-T20, TVS RP-3200) or <strong>USB cable</strong> (OTG adapter on phones).</li>
+        <li>You can add the same printer to both pools to receive both KOT and Bill.</li>
       </ul>
     </div>
   </div>

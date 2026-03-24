@@ -1,17 +1,18 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { OrderNotificationService } from '../../core/services/order-notification.service';
 import { OrderService } from '../../core/services/order.service';
 import { Order, OrderStatus } from '../../core/models/order.model';
 import { Subscription } from 'rxjs';
 import { OrderRejectionModalComponent } from '../../shared/components/order-rejection-modal/order-rejection-modal.component';
 import { SoundService } from '../../core/services/sound.service';
-import { PrinterService } from '../../core/services/printer.service';
+import { PrinterService, PrintStatus } from '../../core/services/printer.service';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, OrderRejectionModalComponent],
+  imports: [CommonModule, RouterLink, OrderRejectionModalComponent],
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.scss'
 })
@@ -22,7 +23,15 @@ export class OrdersComponent implements OnInit, OnDestroy {
   // Subscriptions
   private ordersSubscription?: Subscription;
   private newOrderSubscription?: Subscription;
-  
+  private printerStatusSub?: Subscription;
+
+  // Printer feedback
+  printStatus: PrintStatus = 'idle';
+
+  get hasPrinter(): boolean {
+    return this.printerService.hasAnyPrinter();
+  }
+
   // Orders state
   allOrders: Order[] = [];
   loading = true;
@@ -43,6 +52,11 @@ export class OrdersComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.printerStatusSub = this.printerService.status$.subscribe(s => {
+      this.printStatus = s;
+      this.cdr.detectChanges();
+    });
+
     this.loading = true;
     this.ordersSubscription = this.orderService.orders$.subscribe(orders => {
       this.allOrders = orders;
@@ -56,6 +70,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.ordersSubscription?.unsubscribe();
     this.newOrderSubscription?.unsubscribe();
+    this.printerStatusSub?.unsubscribe();
   }
 
   /**

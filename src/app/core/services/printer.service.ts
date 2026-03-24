@@ -14,6 +14,18 @@ interface BondedDevicesResult { devices: Array<{ name: string; address: string }
 interface BondedDevicesPlugin { getBondedDevices(): Promise<BondedDevicesResult> }
 const BondedDevices = registerPlugin<BondedDevicesPlugin>('BondedDevices');
 
+// ── USB Printer plugin ───────────────────────────────────────────────────────
+// Backed by UsbPrinterPlugin.java which uses Android's USB Host API to send
+// raw ESC/POS bytes over the bulk-OUT endpoint of a connected USB printer.
+interface UsbDeviceResult { devices: UsbDevice[] }
+interface UsbPermResult  { granted: boolean; deviceName?: string }
+interface UsbPrinterPlugin {
+  getUsbDevices(): Promise<UsbDeviceResult>;
+  requestPermission(opts: { deviceName: string }): Promise<UsbPermResult>;
+  print(opts: { deviceName: string; data: string }): Promise<void>;
+}
+const UsbPrinter = registerPlugin<UsbPrinterPlugin>('UsbPrinter');
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Production-ready Bluetooth thermal printer service.
 //
@@ -28,9 +40,9 @@ const BondedDevices = registerPlugin<BondedDevicesPlugin>('BondedDevices');
 //   • Test-print function
 // ─────────────────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY_PRINTER     = 'nearbite_printer_address';
-const STORAGE_KEY_PRINTER_NAME = 'nearbite_printer_name';
-const STORAGE_KEY_PAPER_WIDTH  = 'nearbite_paper_width';
+const STORAGE_KEY_PAPER_WIDTH   = 'nearbite_paper_width';
+const STORAGE_KEY_KOT_PRINTERS  = 'nearbite_kot_printers';
+const STORAGE_KEY_BILL_PRINTERS = 'nearbite_bill_printers';
 
 /** Timeout for a single BT connect or write call (ms) */
 const PRINT_TIMEOUT_MS = 15_000;
@@ -39,7 +51,18 @@ const WRITE_CHUNK_BYTES = 512;
 
 export interface PrinterDevice {
   name: string;
-  address: string;
+  address: string;   // Bluetooth: MAC address  |  USB: device path (/dev/bus/usb/…)
+  type: 'bluetooth' | 'usb';
+}
+
+/** Raw USB device info returned by getUsbDevices() */
+export interface UsbDevice {
+  deviceName:      string;   // e.g. /dev/bus/usb/001/002
+  productName:     string;
+  manufacturerName: string;
+  vendorId:        number;
+  productId:       number;
+  hasPermission:   boolean;
 }
 
 export type PrintStatus = 'idle' | 'connecting' | 'printing' | 'success' | 'error';
@@ -63,23 +86,45 @@ export class PrinterService {
     this.escpos.setPaperWidth(this.getPaperWidth());
   }
 
-  // ── Saved printer ──────────────────────────────────────────────────────────
+  // ── KOT / Bill printer pools ──────────────────────────────────────────────
 
-  getSavedPrinter(): PrinterDevice | null {
-    const address = localStorage.getItem(STORAGE_KEY_PRINTER);
-    const name    = localStorage.getItem(STORAGE_KEY_PRINTER_NAME);
-    if (!address) return null;
-    return { address, name: name || address };
+  getKotPrinters(): PrinterDevice[] {
+    return this.loadPrinters(STORAGE_KEY_KOT_PRINTERS);
   }
 
-  savePrinter(device: PrinterDevice): void {
-    localStorage.setItem(STORAGE_KEY_PRINTER, device.address);
-    localStorage.setItem(STORAGE_KEY_PRINTER_NAME, device.name);
+  getBillPrinters(): PrinterDevice[] {
+    return this.loadPrinters(STORAGE_KEY_BILL_PRINTERS);
   }
 
-  clearSavedPrinter(): void {
-    localStorage.removeItem(STORAGE_KEY_PRINTER);
-    localStorage.removeItem(STORAGE_KEY_PRINTER_NAME);
+  addKotPrinter(device: PrinterDevice): void {
+    const list = this.getKotPrinters().filter(p => p.address !== device.address);
+    this.storePrinters(STORAGE_KEY_KOT_PRINTERS, [...list, device]);
+  }
+
+  addBillPrinter(device: PrinterDevice): void {
+    const list = this.getBillPrinters().filter(p => p.address !== device.address);
+    this.storePrinters(STORAGE_KEY_BILL_PRINTERS, [...list, device]);
+  }
+
+  removeKotPrinter(address: string): void {
+    this.storePrinters(STORAGE_KEY_KOT_PRINTERS, this.getKotPrinters().filter(p => p.address !== address));
+  }
+
+  removeBillPrinter(address: string): void {
+    this.storePrinters(STORAGE_KEY_BILL_PRINTERS, this.getBillPrinters().filter(p => p.address !== address));
+  }
+
+  hasAnyPrinter(): boolean {
+    return this.getKotPrinters().length > 0 || this.getBillPrinters().length > 0;
+  }
+
+  private loadPrinters(key: string): PrinterDevice[] {
+    try { return JSON.parse(localStorage.getItem(key) || '[]') as PrinterDevice[]; }
+    catch { return []; }
+  }
+
+  private storePrinters(key: string, list: PrinterDevice[]): void {
+    localStorage.setItem(key, JSON.stringify(list));
   }
 
   // ── Paper width ────────────────────────────────────────────────────────────
@@ -116,8 +161,8 @@ export class PrinterService {
   async scanPairedDevices(): Promise<PrinterDevice[]> {
     if (!this.isNativeApp()) {
       const fakes: PrinterDevice[] = [
-        { name: 'XP-58 (Browser Preview)',        address: '00:11:22:33:44:55' },
-        { name: 'Epson TM-T20 (Browser Preview)',  address: 'AA:BB:CC:DD:EE:FF' },
+        { name: 'XP-58 (Browser Preview)',        address: '00:11:22:33:44:55', type: 'bluetooth' },
+        { name: 'Epson TM-T20 (Browser Preview)',  address: 'AA:BB:CC:DD:EE:FF', type: 'bluetooth' },
       ];
       this.pairedDevicesSubject.next(fakes);
       return fakes;
@@ -133,6 +178,7 @@ export class PrinterService {
       const devices: PrinterDevice[] = (result.devices || []).map((d) => ({
         name:    d.name || d.address,
         address: d.address,
+        type:    'bluetooth' as const,
       }));
       this.pairedDevicesSubject.next(devices);
       return devices;
@@ -151,28 +197,59 @@ export class PrinterService {
     }
   }
 
+  // ── USB device scan ────────────────────────────────────────────────────────
+
+  /**
+   * Returns USB devices currently connected to the Android USB host port.
+   * In browser mode returns a mock entry for UI testing.
+   */
+  async scanUsbDevices(): Promise<UsbDevice[]> {
+    if (!this.isNativeApp()) {
+      return [{
+        deviceName:      '/dev/bus/usb/001/002',
+        productName:     'XP-58 (USB Preview)',
+        manufacturerName: 'Xprinter',
+        vendorId:        0x0483,
+        productId:       0x5740,
+        hasPermission:   true,
+      }];
+    }
+    try {
+      const result = await UsbPrinter.getUsbDevices();
+      return result.devices || [];
+    } catch (e) {
+      console.error('PrinterService: getUsbDevices error', e);
+      throw new Error('USB_SCAN_FAILED');
+    }
+  }
+
   // ── Test print ─────────────────────────────────────────────────────────────
 
   /**
-   * Sends a test page to the saved printer to verify connectivity.
-   * Throws 'NO_PRINTER' if no printer has been configured.
+   * Sends a test page to a specific printer device.
    */
-  async testPrint(): Promise<void> {
+  async testPrintOn(device: PrinterDevice): Promise<void> {
+    this.escpos.setPaperWidth(this.getPaperWidth());
     if (!this.isNativeApp()) {
       console.group('%c🖨️  TEST PRINT', 'color: #ff6b35; font-weight: bold;');
       console.log(this.escpos.toDebugString(this.escpos.formatTestPage()));
       console.groupEnd();
-      console.info('ℹ️  Running in browser — actual Bluetooth print only works in the Android app.');
       this.statusSubject.next('success');
       setTimeout(() => this.statusSubject.next('idle'), 3000);
       return;
     }
+    if (device.type === 'usb') {
+      await this.sendBytesUsb(device.address, this.escpos.formatTestPage(), 'Test Page');
+    } else {
+      await this.sendBytes(device.address, this.escpos.formatTestPage(), 'Test Page');
+    }
+  }
 
-    const printer = this.getSavedPrinter();
-    if (!printer) throw new Error('NO_PRINTER');
-
-    this.escpos.setPaperWidth(this.getPaperWidth());
-    await this.sendBytes(printer.address, this.escpos.formatTestPage(), 'Test Page');
+  /** @deprecated Use testPrintOn(device) instead */
+  async testPrint(): Promise<void> {
+    const all = [...this.getKotPrinters(), ...this.getBillPrinters()];
+    if (all.length === 0) throw new Error('NO_PRINTER');
+    await this.testPrintOn(all[0]);
   }
 
   // ── Auto-print KOT + Bill on order accept ─────────────────────────────────
@@ -200,9 +277,11 @@ export class PrinterService {
       return;
     }
 
-    const printer = this.getSavedPrinter();
-    if (!printer) {
-      console.warn('PrinterService: no printer configured — skipping print.');
+    const kotPrinters  = this.getKotPrinters();
+    const billPrinters = this.getBillPrinters();
+
+    if (kotPrinters.length === 0 && billPrinters.length === 0) {
+      console.warn('PrinterService: no printers configured — skipping print.');
       return;
     }
 
@@ -213,8 +292,14 @@ export class PrinterService {
 
     this.printInProgress = true;
     try {
-      await this.sendBytes(printer.address, kot,  'KOT');
-      await this.sendBytes(printer.address, bill, 'Bill');
+      for (const p of kotPrinters) {
+        if (p.type === 'usb') await this.sendBytesUsb(p.address, kot,  'KOT');
+        else                  await this.sendBytes(p.address, kot,  'KOT');
+      }
+      for (const p of billPrinters) {
+        if (p.type === 'usb') await this.sendBytesUsb(p.address, bill, 'Bill');
+        else                  await this.sendBytes(p.address, bill, 'Bill');
+      }
     } finally {
       this.printInProgress = false;
     }
@@ -256,6 +341,35 @@ export class PrinterService {
       console.error(`❌ PrinterService: failed to send [${label}]`, e);
       this.statusSubject.next('error');
       try { await BluetoothSerial.disconnect({ address }); } catch {}
+    } finally {
+      setTimeout(() => this.statusSubject.next('idle'), 4000);
+    }
+  }
+
+  // ── USB low-level send ─────────────────────────────────────────────────────
+
+  /**
+   * Requests USB permission (if not already granted), then sends ESC/POS bytes
+   * to the USB printer via the UsbPrinterPlugin bulk-OUT transfer.
+   */
+  private async sendBytesUsb(deviceName: string, data: Uint8Array, label: string): Promise<void> {
+    this.statusSubject.next('connecting');
+    try {
+      const perm = await UsbPrinter.requestPermission({ deviceName });
+      if (!perm.granted) throw new Error('USB permission denied by user');
+
+      this.statusSubject.next('printing');
+
+      // Build base64 without spread operator — spread crashes on large arrays
+      let bin = '';
+      for (let i = 0; i < data.length; i++) bin += String.fromCharCode(data[i]);
+
+      await UsbPrinter.print({ deviceName, data: btoa(bin) });
+      this.statusSubject.next('success');
+      console.log(`✅ PrinterService: [${label}] sent via USB to ${deviceName}`);
+    } catch (e) {
+      console.error(`❌ PrinterService: USB failed [${label}]`, e);
+      this.statusSubject.next('error');
     } finally {
       setTimeout(() => this.statusSubject.next('idle'), 4000);
     }

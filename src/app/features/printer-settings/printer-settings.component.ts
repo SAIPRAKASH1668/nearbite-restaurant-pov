@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
-import { PrinterService, PrinterDevice, PrintStatus, PaperWidth } from '../../core/services/printer.service';
+import { PrinterService, PrinterDevice, PrintStatus, PaperWidth, UsbDevice } from '../../core/services/printer.service';
 
 type ScanError =
   | 'PERMISSIONS_DENIED'
@@ -18,20 +18,29 @@ type ScanError =
 })
 export class PrinterSettingsComponent implements OnInit, OnDestroy {
 
-  // ── State ──────────────────────────────────────────────────────────────────
-  devices:      PrinterDevice[]  = [];
-  savedPrinter: PrinterDevice | null = null;
-  paperWidth:   PaperWidth       = 80;
-
-  scanning    = false;
-  scanDone    = false;
-  scanError:  ScanError | null  = null;
-
-  testPrinting  = false;
-  testSuccess   = false;
-  testError     = false;
-
+  // ── Paper width & print status ─────────────────────────────────────────────
+  paperWidth:  PaperWidth  = 80;
   printStatus: PrintStatus = 'idle';
+
+  // ── KOT / Bill pools ───────────────────────────────────────────────────────
+  kotPrinters:  PrinterDevice[] = [];
+  billPrinters: PrinterDevice[] = [];
+
+  // ── Bluetooth scan state ───────────────────────────────────────────────────
+  btDevices:  PrinterDevice[] = [];
+  btScanning  = false;
+  btScanDone  = false;
+  btScanError: ScanError | null = null;
+
+  // ── USB scan state ─────────────────────────────────────────────────────────
+  usbDevices:   UsbDevice[] = [];
+  usbScanning   = false;
+  usbScanDone   = false;
+  usbScanError: string | null = null;
+
+  // ── Per-device test state ──────────────────────────────────────────────────
+  testingAddress: string | null = null;
+  testResults = new Map<string, 'success' | 'error'>();
 
   private statusSub?: Subscription;
 
@@ -43,9 +52,8 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.savedPrinter = this.printerService.getSavedPrinter();
-    this.paperWidth   = this.printerService.getPaperWidth();
-
+    this.paperWidth = this.printerService.getPaperWidth();
+    this.refreshPools();
     this.statusSub = this.printerService.status$.subscribe(s => {
       this.printStatus = s;
     });
@@ -53,6 +61,13 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.statusSub?.unsubscribe();
+  }
+
+  // ── Pool sync ──────────────────────────────────────────────────────────────
+
+  refreshPools(): void {
+    this.kotPrinters  = this.printerService.getKotPrinters();
+    this.billPrinters = this.printerService.getBillPrinters();
   }
 
   // ── Paper width ────────────────────────────────────────────────────────────
@@ -64,77 +79,126 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
 
   // ── Bluetooth scan ─────────────────────────────────────────────────────────
 
-  async scan(): Promise<void> {
-    this.scanning  = true;
-    this.scanDone  = false;
-    this.scanError = null;
-    this.devices   = [];
+  async scanBt(): Promise<void> {
+    this.btScanning  = true;
+    this.btScanDone  = false;
+    this.btScanError = null;
+    this.btDevices   = [];
 
     try {
       const devices = await this.printerService.scanPairedDevices();
-      // Use NgZone.run() to ensure Angular change detection fires after the
-      // native Capacitor callback resolves (app pause/resume for permission dialog
-      // can take the resolution outside Angular's zone).
       this.zone.run(() => {
-        this.devices  = devices;
-        this.scanning = false;
-        this.scanDone = true;
+        this.btDevices  = devices;
+        this.btScanning = false;
+        this.btScanDone = true;
         this.cdr.detectChanges();
       });
     } catch (e: any) {
       const code: string = e?.message || '';
       this.zone.run(() => {
-        if      (code === 'PERMISSIONS_DENIED')  this.scanError = 'PERMISSIONS_DENIED';
-        else if (code === 'BLUETOOTH_DISABLED')  this.scanError = 'BLUETOOTH_DISABLED';
-        else if (code === 'SCAN_FAILED')         this.scanError = 'SCAN_FAILED';
-        else                                     this.scanError = 'UNKNOWN';
-        this.devices  = [];
-        this.scanning = false;
-        this.scanDone = true;
+        if      (code === 'PERMISSIONS_DENIED')  this.btScanError = 'PERMISSIONS_DENIED';
+        else if (code === 'BLUETOOTH_DISABLED')  this.btScanError = 'BLUETOOTH_DISABLED';
+        else if (code === 'SCAN_FAILED')         this.btScanError = 'SCAN_FAILED';
+        else                                     this.btScanError = 'UNKNOWN';
+        this.btDevices  = [];
+        this.btScanning = false;
+        this.btScanDone = true;
         this.cdr.detectChanges();
       });
     }
   }
 
-  // ── Printer selection ──────────────────────────────────────────────────────
+  // ── USB scan ───────────────────────────────────────────────────────────────
 
-  selectDevice(device: PrinterDevice): void {
-    this.printerService.savePrinter(device);
-    this.savedPrinter = device;
-  }
-
-  clearPrinter(): void {
-    this.printerService.clearSavedPrinter();
-    this.savedPrinter = null;
-    this.testSuccess  = false;
-    this.testError    = false;
-  }
-
-  isSelected(device: PrinterDevice): boolean {
-    return this.savedPrinter?.address === device.address;
-  }
-
-  // ── Test print ─────────────────────────────────────────────────────────────
-
-  async doTestPrint(): Promise<void> {
-    if (this.testPrinting) return;
-    this.testPrinting = true;
-    this.testSuccess  = false;
-    this.testError    = false;
-
+  async scanUsb(): Promise<void> {
+    this.usbScanning  = true;
+    this.usbScanDone  = false;
+    this.usbScanError = null;
+    this.usbDevices   = [];
     try {
-      await this.printerService.testPrint();
-      this.testSuccess = true;
+      const devices = await this.printerService.scanUsbDevices();
+      this.zone.run(() => {
+        this.usbDevices  = devices;
+        this.usbScanning = false;
+        this.usbScanDone = true;
+        this.cdr.detectChanges();
+      });
     } catch (e: any) {
-      this.testError = true;
-      console.error('Test print failed:', e?.message);
-    } finally {
-      this.testPrinting = false;
-      setTimeout(() => {
-        this.testSuccess = false;
-        this.testError   = false;
-      }, 5000);
+      this.zone.run(() => {
+        this.usbScanError = e?.message === 'USB_SCAN_FAILED'
+          ? 'Failed to read USB devices. Make sure USB Host is supported on this device.'
+          : (e?.message || 'Unknown error');
+        this.usbScanning = false;
+        this.usbScanDone = true;
+        this.cdr.detectChanges();
+      });
     }
+  }
+
+  // ── Add / Remove from pools ────────────────────────────────────────────────
+
+  addToKot(device: PrinterDevice): void {
+    this.printerService.addKotPrinter(device);
+    this.refreshPools();
+  }
+
+  addToBill(device: PrinterDevice): void {
+    this.printerService.addBillPrinter(device);
+    this.refreshPools();
+  }
+
+  addUsbToKot(device: UsbDevice): void {
+    this.printerService.addKotPrinter({ name: device.productName || 'USB Printer', address: device.deviceName, type: 'usb' });
+    this.refreshPools();
+  }
+
+  addUsbToBill(device: UsbDevice): void {
+    this.printerService.addBillPrinter({ name: device.productName || 'USB Printer', address: device.deviceName, type: 'usb' });
+    this.refreshPools();
+  }
+
+  removeKot(address: string): void {
+    this.printerService.removeKotPrinter(address);
+    this.refreshPools();
+  }
+
+  removeBill(address: string): void {
+    this.printerService.removeBillPrinter(address);
+    this.refreshPools();
+  }
+
+  isInKot(address: string): boolean {
+    return this.kotPrinters.some(p => p.address === address);
+  }
+
+  isInBill(address: string): boolean {
+    return this.billPrinters.some(p => p.address === address);
+  }
+
+  // ── Per-device test print ──────────────────────────────────────────────────
+
+  async testOn(device: PrinterDevice): Promise<void> {
+    if (this.testingAddress) return;
+    this.testingAddress = device.address;
+    this.testResults.delete(device.address);
+    try {
+      await this.printerService.testPrintOn(device);
+      this.testResults.set(device.address, 'success');
+    } catch {
+      this.testResults.set(device.address, 'error');
+    } finally {
+      this.testingAddress = null;
+      setTimeout(() => { this.testResults.delete(device.address); this.cdr.detectChanges(); }, 5000);
+      this.cdr.detectChanges();
+    }
+  }
+
+  isTesting(address: string): boolean {
+    return this.testingAddress === address;
+  }
+
+  testResult(address: string): 'success' | 'error' | null {
+    return this.testResults.get(address) ?? null;
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -155,8 +219,8 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
 
   get statusLabel(): string {
     switch (this.printStatus) {
-      case 'connecting': return 'Connecting…';
-      case 'printing':   return 'Printing…';
+      case 'connecting': return 'Connecting...';
+      case 'printing':   return 'Printing...';
       case 'success':    return 'Print OK';
       case 'error':      return 'Print Failed';
       default:           return 'Ready';

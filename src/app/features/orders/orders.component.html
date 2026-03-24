@@ -27,6 +27,33 @@
     </button>
   </div>
 
+  <!-- ── Printer: no-printer nudge ─────────────────────────────────────────── -->
+  <div class="ord-printer-nudge" *ngIf="!hasPrinter">
+    <i class="fas fa-print"></i>
+    <span>No printer configured — orders won't auto-print.</span>
+    <a routerLink="/dashboard/printer-settings" class="ord-printer-nudge-link">
+      Set up printer <i class="fas fa-arrow-right"></i>
+    </a>
+  </div>
+
+  <!-- ── Printer: live print status toast ──────────────────────────────────── -->
+  <div class="ord-print-toast"
+       [class.ord-print-toast--connecting]="printStatus === 'connecting'"
+       [class.ord-print-toast--printing]="printStatus === 'printing'"
+       [class.ord-print-toast--success]="printStatus === 'success'"
+       [class.ord-print-toast--error]="printStatus === 'error'"
+       *ngIf="printStatus !== 'idle'">
+    <i class="fas"
+       [class.fa-circle-notch]="printStatus === 'connecting' || printStatus === 'printing'"
+       [class.fa-spin]="printStatus === 'connecting' || printStatus === 'printing'"
+       [class.fa-check-circle]="printStatus === 'success'"
+       [class.fa-times-circle]="printStatus === 'error'"></i>
+    <span *ngIf="printStatus === 'connecting'">Connecting to printer…</span>
+    <span *ngIf="printStatus === 'printing'">Printing KOT &amp; Bill…</span>
+    <span *ngIf="printStatus === 'success'">Printed successfully ✓</span>
+    <span *ngIf="printStatus === 'error'">Print failed — check printer connection</span>
+  </div>
+
   <!-- ── Loading ───────────────────────────────────────────────────────────── -->
   <div class="ord-loading" *ngIf="loading">
     <div class="ord-spinner"></div>
