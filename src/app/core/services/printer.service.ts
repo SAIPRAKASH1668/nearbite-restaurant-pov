@@ -26,15 +26,6 @@ interface UsbPrinterPlugin {
 }
 const UsbPrinter = registerPlugin<UsbPrinterPlugin>('UsbPrinter');
 
-// ── Network (WiFi) Printer plugin ────────────────────────────────────────────
-// Backed by NetworkPrinterPlugin.java — raw TCP socket to port 9100.
-// Works with Epson TM-T82X, TM-T20, TM-T88, and any ESC/POS network printer.
-interface NetworkPrinterPlugin {
-  print(opts: { host: string; port: number; data: string }): Promise<void>;
-  testConnection(opts: { host: string; port: number }): Promise<void>;
-}
-const NetworkPrinter = registerPlugin<NetworkPrinterPlugin>('NetworkPrinter');
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Production-ready Bluetooth thermal printer service.
 //
@@ -60,7 +51,7 @@ const WRITE_CHUNK_BYTES = 512;
 
 export interface PrinterDevice {
   name: string;
-  address: string;   // Bluetooth: MAC address  |  USB: device path  |  Network: IP address
+  address: string;   // Bluetooth: MAC address  |  USB: device path (/dev/bus/usb/…)  |  Network: IP
   type: 'bluetooth' | 'usb' | 'network';
   port?: number;     // Network only — default 9100
 }
@@ -240,13 +231,12 @@ export class PrinterService {
    */
   async testPrintOn(device: PrinterDevice): Promise<void> {
     this.escpos.setPaperWidth(this.getPaperWidth());
+    if (device.type === 'network') {
+      // Network printers work in both Electron and browser (via ePOS SDK / raw TCP)
+      await this.sendBytesNetwork(device.address, device.port ?? 9100, this.escpos.formatTestPage(), 'Test Page');
+      return;
+    }
     if (!this.isNativeApp()) {
-      if (device.type === 'network') {
-        // In browser: use Epson ePOS SDK (real print via WebSocket to port 8008)
-        await this.sendBytesNetwork(device.address, device.port ?? 9100, this.escpos.formatTestPage(), 'Test Page');
-        return;
-      }
-      // BT / USB: simulate in browser since they need the native app
       console.group('%c🖨️  TEST PRINT', 'color: #ff6b35; font-weight: bold;');
       console.log(this.escpos.toDebugString(this.escpos.formatTestPage()));
       console.groupEnd();
@@ -256,8 +246,6 @@ export class PrinterService {
     }
     if (device.type === 'usb') {
       await this.sendBytesUsb(device.address, this.escpos.formatTestPage(), 'Test Page');
-    } else if (device.type === 'network') {
-      await this.sendBytesNetwork(device.address, device.port ?? 9100, this.escpos.formatTestPage(), 'Test Page');
     } else {
       await this.sendBytes(device.address, this.escpos.formatTestPage(), 'Test Page');
     }
@@ -283,7 +271,6 @@ export class PrinterService {
     const bill = this.escpos.formatBill(order);
 
     if (!this.isNativeApp()) {
-      // Debug log so devs can inspect the formatted output
       console.group(`%c🖨️  KOT — Order #${order.orderId.slice(-8).toUpperCase()}`, 'color: #ff6b35; font-weight: bold;');
       console.log(this.escpos.toDebugString(kot));
       console.groupEnd();
@@ -291,19 +278,19 @@ export class PrinterService {
       console.log(this.escpos.toDebugString(bill));
       console.groupEnd();
 
-      // In browser: only network printers can actually print (via Epson ePOS SDK)
+      // In Electron/browser: only network printers can actually print
       const netKot  = this.getKotPrinters().filter(p => p.type === 'network');
       const netBill = this.getBillPrinters().filter(p => p.type === 'network');
 
       if (netKot.length === 0 && netBill.length === 0) {
-        console.info('ℹ️  PrinterService: No network printers configured — Bluetooth/USB printing requires the Android app.');
+        console.info('ℹ️  PrinterService: No network printers — Bluetooth/USB require Android app.');
         this.statusSubject.next('success');
         setTimeout(() => this.statusSubject.next('idle'), 3000);
         return;
       }
 
       if (this.printInProgress) {
-        console.warn('PrinterService: another print is in progress — skipping.');
+        console.warn('PrinterService: another print in progress — skipping.');
         return;
       }
       this.printInProgress = true;
@@ -332,14 +319,14 @@ export class PrinterService {
     this.printInProgress = true;
     try {
       for (const p of kotPrinters) {
-        if (p.type === 'usb')          await this.sendBytesUsb(p.address, kot,  'KOT');
-        else if (p.type === 'network') await this.sendBytesNetwork(p.address, p.port ?? 9100, kot,  'KOT');
-        else                           await this.sendBytes(p.address, kot,  'KOT');
+        if (p.type === 'usb')     await this.sendBytesUsb(p.address, kot,  'KOT');
+        else if (p.type === 'network') await this.sendBytesNetwork(p.address, p.port ?? 9100, kot, 'KOT');
+        else                      await this.sendBytes(p.address, kot,  'KOT');
       }
       for (const p of billPrinters) {
-        if (p.type === 'usb')          await this.sendBytesUsb(p.address, bill, 'Bill');
+        if (p.type === 'usb')     await this.sendBytesUsb(p.address, bill, 'Bill');
         else if (p.type === 'network') await this.sendBytesNetwork(p.address, p.port ?? 9100, bill, 'Bill');
-        else                           await this.sendBytes(p.address, bill, 'Bill');
+        else                      await this.sendBytes(p.address, bill, 'Bill');
       }
     } finally {
       this.printInProgress = false;
@@ -416,97 +403,77 @@ export class PrinterService {
     }
   }
 
-  // ── Network (TCP) low-level send ──────────────────────────────────────────
+  // ── Network (TCP via Electron IPC) low-level send ────────────────────────────
 
   /**
-   * Tests TCP connectivity to a network printer without sending any data.
-   * Used by the printer-settings UI to verify the IP/port before adding.
+   * Tests TCP connectivity to a network printer.
+   * In Electron routes through window.printerAPI (IPC → Node net module).
    */
   async testNetworkConnection(host: string, port: number): Promise<void> {
-    if (!this.isNativeApp()) {
-      // In browser: test via Epson ePOS SDK WebSocket handshake
-      return this.testEposConnection(host);
+    if (this.isElectronApp()) {
+      const api = (window as any).printerAPI;
+      await api.testConnection(host, port);
+      return;
     }
-    await NetworkPrinter.testConnection({ host, port });
+    // Pure browser fallback: ePOS SDK connect attempt (Epson only)
+    return this.testEposConnection(host);
   }
 
   /**
-   * Sends raw ESC/POS bytes to a network printer via TCP socket.
-   * Works with Epson TM-T82X and any printer accepting raw ESC/POS on port 9100.
-   * In browser mode prints to console (actual TCP requires the native app).
+   * Sends raw ESC/POS bytes to a network printer.
+   * In Electron: routes through window.printerAPI (IPC → Node net).
+   * In pure browser: tries Epson ePOS SDK (TM-T82X / T88 only).
    */
   private async sendBytesNetwork(host: string, port: number, data: Uint8Array, label: string): Promise<void> {
-    if (!this.isNativeApp()) {
-      // In browser: raw TCP is not available — use Epson ePOS SDK over WebSocket
-      return this.sendBytesEpos(host, data, label);
-    }
     this.statusSubject.next('connecting');
     try {
-      // Build base64 without spread — spread crashes on large typed arrays
-      let bin = '';
-      for (let i = 0; i < data.length; i++) bin += String.fromCharCode(data[i]);
-      await NetworkPrinter.print({ host, port, data: btoa(bin) });
-      this.statusSubject.next('success');
-      console.log(`✅ PrinterService: [${label}] sent via TCP to ${host}:${port}`);
+      if (this.isElectronApp()) {
+        // Build base64 without spread — spread crashes on large typed arrays
+        let bin = '';
+        for (let i = 0; i < data.length; i++) bin += String.fromCharCode(data[i]);
+        const api = (window as any).printerAPI;
+        await api.printRaw(host, port, btoa(bin));
+        this.statusSubject.next('success');
+        console.log(`✅ PrinterService: [${label}] sent via Electron TCP to ${host}:${port}`);
+      } else {
+        await this.sendBytesEpos(host, data, label);
+      }
     } catch (e) {
-      console.error(`❌ PrinterService: TCP failed [${label}]`, e);
+      console.error(`❌ PrinterService: network send failed [${label}]`, e);
       this.statusSubject.next('error');
     } finally {
       setTimeout(() => this.statusSubject.next('idle'), 4000);
     }
   }
 
-  // ── Epson ePOS SDK (browser WiFi printing) ────────────────────────────────
+  // ── Epson ePOS SDK (browser WiFi fallback) ──────────────────────────────
 
-  /**
-   * Returns true if the Epson ePOS SDK script was loaded successfully.
-   * Place  src/assets/epos-sdk.js  (downloaded from Epson developer portal)
-   * and it will be available as  window.epson.ePOSDevice.
-   */
   isEposSdkAvailable(): boolean {
     return typeof (window as any).epson !== 'undefined';
   }
 
-  /**
-   * Tests reachability of an Epson network printer's ePOS server (port 8008).
-   * Works entirely from the browser — no TCP socket, no backend proxy.
-   */
   private testEposConnection(host: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.isEposSdkAvailable()) {
-        reject(new Error('Epson ePOS SDK not loaded — place epos-sdk.js in src/assets/ (see index.html)'));
+        reject(new Error('Epson ePOS SDK not loaded — place epos-sdk.js in src/assets/'));
         return;
       }
       const ePosDev = new (window as any).epson.ePOSDevice();
       ePosDev.connect(host, 8008, (result: string) => {
-        if (result === 'OK' || result === 'SSL_CONNECT_OK') {
-          ePosDev.disconnect();
-          resolve();
-        } else {
-          reject(new Error(`Cannot reach printer at ${host}:8008 — ${result}`));
-        }
+        if (result === 'OK' || result === 'SSL_CONNECT_OK') { ePosDev.disconnect(); resolve(); }
+        else reject(new Error(`Cannot reach printer at ${host}:8008 — ${result}`));
       });
     });
   }
 
-  /**
-   * Sends raw ESC/POS bytes to an Epson network printer via the ePOS SDK.
-   * The SDK communicates over WebSocket to the printer's built-in HTTP server
-   * (port 8008). Works from any browser — tested with TM-T82X, TM-T88, TM-T20.
-   *
-   * printer.addCommand(Uint8Array) passes our ESC/POS bytes through unchanged,
-   * so the same  EscPosService  output works for both native TCP and ePOS routes.
-   */
   private sendBytesEpos(host: string, data: Uint8Array, label: string): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.isEposSdkAvailable()) {
         reject(new Error('Epson ePOS SDK not loaded — WiFi printing unavailable in browser'));
         return;
       }
-
       this.statusSubject.next('connecting');
       const ePosDev = new (window as any).epson.ePOSDevice();
-
       ePosDev.connect(host, 8008, (connectResult: string) => {
         if (connectResult !== 'OK' && connectResult !== 'SSL_CONNECT_OK') {
           this.statusSubject.next('error');
@@ -514,12 +481,9 @@ export class PrinterService {
           reject(new Error(`ePOS connect failed for ${host}: ${connectResult}`));
           return;
         }
-
-        ePosDev.createDevice(
-          'local_printer',
-          ePosDev.DEVICE_TYPE_PRINTER,
+        ePosDev.createDevice('local_printer', ePosDev.DEVICE_TYPE_PRINTER,
           { crypto: false, buffer: false },
-          (printer: epson.ePOSPrinter | null, createCode: string) => {
+          (printer: any, createCode: string) => {
             if (createCode !== 'OK' || !printer) {
               this.statusSubject.next('error');
               setTimeout(() => this.statusSubject.next('idle'), 4000);
@@ -527,22 +491,13 @@ export class PrinterService {
               reject(new Error(`ePOS createDevice failed: ${createCode}`));
               return;
             }
-
             this.statusSubject.next('printing');
-
-            printer.onreceive = (res: { success: boolean; code: string; status: number }) => {
+            printer.onreceive = (res: { success: boolean; code: string }) => {
               ePosDev.deleteDevice(printer, () => ePosDev.disconnect());
-              if (res.success) {
-                this.statusSubject.next('success');
-                console.log(`✅ PrinterService: [${label}] sent via ePOS SDK to ${host}`);
-                resolve();
-              } else {
-                this.statusSubject.next('error');
-                reject(new Error(`ePOS print failed [${label}]: ${res.code}`));
-              }
+              if (res.success) { this.statusSubject.next('success'); resolve(); }
+              else { this.statusSubject.next('error'); reject(new Error(`ePOS print failed: ${res.code}`)); }
               setTimeout(() => this.statusSubject.next('idle'), 4000);
             };
-
             printer.addCommand(data);
             printer.send();
           }
@@ -552,6 +507,11 @@ export class PrinterService {
   }
 
   // ── Platform helpers ───────────────────────────────────────────────────────
+
+  /** True when running inside the Electron desktop app (window.printerAPI present). */
+  isElectronApp(): boolean {
+    return typeof (window as any).printerAPI !== 'undefined';
+  }
 
   isNativeApp(): boolean {
     return Capacitor.isNativePlatform();

@@ -423,33 +423,21 @@
         <li><strong>KOT</strong> (Kitchen Order Ticket) prints on all KOT printers immediately when you accept an order.</li>
         <li><strong>Customer Bill</strong> prints on all Bill printers — a full tax invoice with item breakdown and totals.</li>
         <li>Both documents are sent automatically — no manual action needed.</li>
-        <li>Supported: 80 mm &amp; 58 mm ESC/POS printers via <strong>Bluetooth</strong> (Xprinter XP-58/80, Epson TM-T20, TVS RP-3200), <strong>USB cable</strong> (OTG adapter on phones), or <strong>Network/WiFi</strong> (Epson TM-T82X, TM-T88 — works from both the Android app and the browser via Epson ePOS SDK).</li>
+        <li>Supported: 80 mm &amp; 58 mm ESC/POS printers via <strong>Bluetooth</strong> (Xprinter XP-58/80, Epson TM-T20, TVS RP-3200), <strong>USB cable</strong> (OTG adapter on phones), or <strong>Network/WiFi</strong> (Epson TM-T82X, TM-T88, any printer with port 9100 on your LAN).</li>
         <li>You can add the same printer to both pools to receive both KOT and Bill.</li>
       </ul>
     </div>
   </div>
 
   <!-- Browser notice -->
-  <div class="ps-section" *ngIf="!isNativeApp">
-
-    <!-- ePOS SDK loaded → network printing works in browser -->
-    <div class="ps-alert ps-alert--ok" *ngIf="eposSdkAvailable">
-      <i class="fas fa-wifi"></i>
+  <div class="ps-section" *ngIf="!printerService.isNativeApp()">
+    <div class="ps-alert ps-alert--info">
+      <i class="fas fa-desktop"></i>
       <div class="ps-alert-body">
-        <strong>WiFi printing active — browser mode.</strong>
-        <p>Epson ePOS SDK loaded. Network/WiFi printers (TM-T82X, TM-T88, TM-T20) can print directly from this browser tab. Bluetooth and USB require the Android app.</p>
+        <strong>Browser preview mode.</strong>
+        <p>Bluetooth printing works only in the installed Android app. Mock devices are shown for testing.</p>
       </div>
     </div>
-
-    <!-- ePOS SDK missing → network printing won't work -->
-    <div class="ps-alert ps-alert--warn" *ngIf="!eposSdkAvailable">
-      <i class="fas fa-triangle-exclamation"></i>
-      <div class="ps-alert-body">
-        <strong>Browser mode — WiFi printing not available yet.</strong>
-        <p>Place <code>epos-sdk.js</code> (Epson ePOS SDK) in <code>src/assets/</code> to enable printer support from the browser. See <code>src/index.html</code> for download instructions. Bluetooth and USB require the Android app.</p>
-      </div>
-    </div>
-
   </div>
 
 </div>

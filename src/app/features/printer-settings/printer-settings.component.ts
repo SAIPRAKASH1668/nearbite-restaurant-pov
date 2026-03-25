@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angula
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { PrinterService, PrinterDevice, PrintStatus, PaperWidth, UsbDevice } from '../../core/services/printer.service';
+import { Order, OrderStatus } from '../../core/models/order.model';
 
 type ScanError =
   | 'PERMISSIONS_DENIED'
@@ -256,34 +257,64 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
     return this.testResults.get(address) ?? null;
   }
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  // ── Quick Test buttons (Electron printerAPI + service) ────────────────────
 
-  // ── printerAPI test buttons (Electron / native bridge) ──────────────────
-
+  /** Asks Electron main process to focus/open the printer settings window. */
   callOpenSettings(): void {
     (window as any).printerAPI?.openSettings();
   }
 
-  callPrintBill(): void {
-    (window as any).printerAPI?.printBill();
+  /** Prints a mock Bill with sample items on all Bill printers. */
+  async callPrintBill(): Promise<void> {
+    const printers = this.printerService.getBillPrinters();
+    if (printers.length === 0) { alert('No Bill printers configured.'); return; }
+    await this.printerService.printOrderAccepted(this.buildMockOrder()).catch(e => console.error('Test Bill failed', e));
   }
 
-  callPrintKOT(): void {
-    (window as any).printerAPI?.printKOT();
+  /** Prints a mock KOT with sample items on all KOT printers. */
+  async callPrintKOT(): Promise<void> {
+    const printers = this.printerService.getKotPrinters();
+    if (printers.length === 0) { alert('No KOT printers configured.'); return; }
+    await this.printerService.printOrderAccepted(this.buildMockOrder()).catch(e => console.error('Test KOT failed', e));
+  }
+
+  /** Builds a realistic mock order for test printing. */
+  private buildMockOrder(): Order {
+    return {
+      orderId:          'TEST' + Date.now().toString(36).toUpperCase(),
+      customerPhone:    '+91 98765 43210',
+      restaurantId:     'rest-mock-001',
+      restaurantName:   'NearBite Kitchen',
+      restaurantImage:  '',
+      items: [
+        { itemId: 'i1', name: 'Butter Chicken',      quantity: 2, price: 320 },
+        { itemId: 'i2', name: 'Garlic Naan',          quantity: 4, price: 60  },
+        { itemId: 'i3', name: 'Paneer Tikka Masala',  quantity: 1, price: 280 },
+        { itemId: 'i4', name: 'Veg Biryani',          quantity: 1, price: 220 },
+        { itemId: 'i5', name: 'Gulab Jamun (2 pcs)',   quantity: 2, price: 80  },
+      ],
+      foodTotal:        1400,
+      deliveryFee:      40,
+      platformFee:      25,
+      grandTotal:       1465,
+      status:           OrderStatus.ACCEPTED,
+      riderId:          null,
+      createdAt:        new Date().toISOString(),
+      deliveryAddress:  'Flat 302, Sunshine Apartments, MG Road',
+      formattedAddress: 'Flat 302, Sunshine Apartments, MG Road, Bengaluru 560001',
+      addressId:        'addr-mock-001',
+      deliveryOtp:      '4829',
+    };
   }
 
   get printerAPIAvailable(): boolean {
-    return typeof (window as any).printerAPI !== 'undefined';
+    return this.printerService.isElectronApp();
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
   get isNativeApp(): boolean {
     return this.printerService.isNativeApp();
-  }
-
-  get eposSdkAvailable(): boolean {
-    return this.printerService.isEposSdkAvailable();
   }
 
   get statusBadgeClass(): string {
