@@ -44,73 +44,92 @@
     </button>
   </div>
 
-  <!-- ── List: column header ──────────────────────────────────────────────── -->
-  <div class="mn-list-head" *ngIf="!loading && getFilteredItems().length > 0">
-    <span class="mn-col-thumb"></span>
-    <span class="mn-col-item">Item</span>
-    <span class="mn-col-cat">Category</span>
-    <span class="mn-col-menprice">Menu Price</span>
-    <span class="mn-col-hike">Hike %</span>
-    <span class="mn-col-disprice">Cust. Price</span>
-    <span class="mn-col-avail">Available</span>
-    <span class="mn-col-act">Edit</span>
-  </div>
+  <!-- ── Menu table ─────────────────────────────────────────────────────────── -->
+  <div class="mn-table-wrap" *ngIf="!loading && getFilteredItems().length > 0">
+    <table class="mn-table">
+      <thead>
+        <tr>
+          <th class="mn-th mn-th-thumb"></th>
+          <th class="mn-th mn-th-item">Item</th>
+          <th class="mn-th mn-th-cat">Category</th>
+          <th class="mn-th mn-th-menprice">Menu Price</th>
+          <th class="mn-th mn-th-hike">Hike %</th>
+          <th class="mn-th mn-th-disprice">Cust. Price</th>
+          <th class="mn-th mn-th-avail">Available</th>
+          <th class="mn-th mn-th-act">Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="mn-row" *ngFor="let item of getFilteredItems()">
 
-  <!-- ── List: rows ────────────────────────────────────────────────────────── -->
-  <div class="mn-list" *ngIf="!loading && getFilteredItems().length > 0">
-    <div class="mn-row" *ngFor="let item of getFilteredItems()">
+          <!-- Thumbnail -->
+          <td class="mn-td mn-td-thumb">
+            <div class="mn-thumb"
+              [style.background-image]="item.image?.length ? 'url(' + item.image[0] + ')' : 'none'"
+              [class.no-img]="!item.image?.length">
+              <i class="fas fa-utensils" *ngIf="!item.image?.length"></i>
+            </div>
+          </td>
 
-      <!-- Thumbnail -->
-      <div class="mn-thumb"
-        [style.background-image]="item.image?.length ? 'url(' + item.image[0] + ')' : 'none'"
-        [class.no-img]="!item.image?.length">
-        <i class="fas fa-utensils" *ngIf="!item.image?.length"></i>
-      </div>
+          <!-- Name + description -->
+          <td class="mn-td mn-td-info">
+            <div class="mn-info">
+              <div class="mn-name-row">
+                <span class="mn-veg-dot" [class.non-veg]="!item.isVeg" [title]="item.isVeg ? 'Veg' : 'Non-Veg'"></span>
+                <span class="mn-name">{{ item.itemName }}</span>
+              </div>
+              <p class="mn-desc" *ngIf="item.description">{{ item.description }}</p>
+              <p class="mn-price-meta">Menu ₹{{ item.restaurantPrice }} &middot; +{{ item.hikePercentage }}%</p>
+            </div>
+          </td>
 
-      <!-- Name + description -->
-      <div class="mn-info">
-        <div class="mn-name-row">
-          <span class="mn-veg-dot" [class.non-veg]="!item.isVeg" [title]="item.isVeg ? 'Veg' : 'Non-Veg'"></span>
-          <span class="mn-name">{{ item.itemName }}</span>
-        </div>
-        <p class="mn-desc" *ngIf="item.description">{{ item.description }}</p>
-        <!-- Price meta visible on mobile/tablet where extra columns are hidden -->
-        <p class="mn-price-meta">Menu ₹{{ item.restaurantPrice }} &middot; +{{ item.hikePercentage }}%</p>
-      </div>
+          <!-- Category -->
+          <td class="mn-td mn-td-cat">
+            <div class="mn-cat-cell">
+              <span class="mn-cat-tag">{{ item.category }}</span>
+              <span class="mn-subcat-tag" *ngIf="item.subCategory">{{ item.subCategory }}</span>
+            </div>
+          </td>
 
-      <!-- Category -->
-      <div class="mn-cat-cell">
-        <span class="mn-cat-tag">{{ item.category }}</span>
-        <span class="mn-subcat-tag" *ngIf="item.subCategory">{{ item.subCategory }}</span>
-      </div>
+          <!-- Menu Price -->
+          <td class="mn-td mn-td-menprice">
+            <div class="mn-menprice-cell">₹{{ item.restaurantPrice }}</div>
+          </td>
 
-      <!-- Menu Price -->
-      <div class="mn-menprice-cell">₹{{ item.restaurantPrice }}</div>
+          <!-- Hike % -->
+          <td class="mn-td mn-td-hike">
+            <div class="mn-hike-cell">{{ item.hikePercentage }}%</div>
+          </td>
 
-      <!-- Hike % -->
-      <div class="mn-hike-cell">{{ item.hikePercentage }}%</div>
+          <!-- Display / Customer Price -->
+          <td class="mn-td mn-td-price">
+            <div class="mn-price-cell">₹{{ item.price }}</div>
+          </td>
 
-      <!-- Display / Customer Price -->
-      <div class="mn-price-cell">₹{{ item.price }}</div>
+          <!-- Availability Toggle -->
+          <td class="mn-td mn-td-avail">
+            <div class="mn-avail-cell">
+              <label class="mn-toggle" [title]="item.isAvailable ? 'Mark unavailable' : 'Mark available'">
+                <input type="checkbox" [checked]="item.isAvailable" (change)="toggleAvailability(item.itemId)" />
+                <span class="mn-track"></span>
+              </label>
+              <span class="mn-avail-label" [class.on]="item.isAvailable">
+                {{ item.isAvailable ? 'On' : 'Off' }}
+              </span>
+            </div>
+          </td>
 
-      <!-- Availability Toggle -->
-      <div class="mn-avail-cell">
-        <label class="mn-toggle" [title]="item.isAvailable ? 'Mark unavailable' : 'Mark available'">
-          <input type="checkbox" [checked]="item.isAvailable" (change)="toggleAvailability(item.itemId)" />
-          <span class="mn-track"></span>
-        </label>
-        <span class="mn-avail-label" [class.on]="item.isAvailable">
-          {{ item.isAvailable ? 'On' : 'Off' }}
-        </span>
-      </div>
-
-      <!-- Edit -->
-      <div class="mn-act-cell">
-        <button class="mn-btn-edit" (click)="openEditItemForm(item)" title="Edit item">
-          <i class="fas fa-pen"></i>
-        </button>
-      </div>
-    </div>
+          <!-- Edit -->
+          <td class="mn-td mn-td-act">
+            <div class="mn-act-cell">
+              <button class="mn-btn-edit" (click)="openEditItemForm(item)" title="Edit item">
+                <i class="fas fa-pen"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 
   <!-- ── No results in selected category ──────────────────────────────────── -->

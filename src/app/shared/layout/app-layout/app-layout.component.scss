@@ -10,13 +10,16 @@
 .main-wrapper {
   flex: 1;
   margin-left: $sidebar-width;
+  width: calc(100% - #{$sidebar-width});
   display: flex;
   flex-direction: column;
   transition: margin-left $transition-base;
   min-height: 100vh;
+  min-width: 0;  // allow content to shrink within the viewport without forcing horizontal overflow
 
   &.sidebar-collapsed {
     margin-left: $sidebar-collapsed-width;
+    width: calc(100% - #{$sidebar-collapsed-width});
   }
 
   // Mobile: no sidebar → zero margin. Use &, &.sidebar-collapsed so this
@@ -24,6 +27,7 @@
   @include mobile {
     &, &.sidebar-collapsed {
       margin-left: 0;
+      width: 100%;
     }
   }
 
@@ -31,6 +35,7 @@
     // Tablet always has the 70px collapsed sidebar pinned
     &, &.sidebar-collapsed {
       margin-left: $sidebar-collapsed-width;
+      width: calc(100% - #{$sidebar-collapsed-width});
     }
   }
 }
@@ -42,9 +47,10 @@
   margin-top: calc(#{$navbar-height} + env(safe-area-inset-top, 0px));
   background: #FFFFFF;
   min-height: calc(100vh - #{$navbar-height} - #{$footer-height});
-  overflow-x: clip;    // clip (not hidden) so right padding isn't eaten by scroll container
-  width: 100%;         // explicit — prevents flex child from growing beyond wrapper
-  max-width: 100%;     // hard cap so no child element can blow this out
+  overflow-x: auto;    // lets wide data tables expose their native scrollbar
+  overscroll-behavior-inline: contain;
+  width: 100%;
+  max-width: 100%;
   box-sizing: border-box;
 
   @include mobile {

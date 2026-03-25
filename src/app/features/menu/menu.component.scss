@@ -12,7 +12,6 @@
   max-width: 1400px;
   width: 100%;
   min-width: 0;
-  overflow-x: hidden;
   box-sizing: border-box;
   animation: mnFade 0.25s ease both;
 
@@ -163,138 +162,88 @@
   }
 }
 
-// ── List: column header ───────────────────────────────────────────────────────
-// grid: thumbnail | info | category | menu price | hike % | display price | availability | edit
-$mn-cols: 64px 1fr 130px 85px 65px 95px 88px 56px;
+// ── Table scroll wrapper ───────────────────────────────────────────────────────
+.mn-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #D8D5D1 transparent;
 
-.mn-list-head {
-  display: grid;
-  grid-template-columns: $mn-cols;
-  gap: 0;
-  padding: 0.875rem 0.875rem 0.5rem;
+  &::-webkit-scrollbar       { height: 4px; }
+  &::-webkit-scrollbar-thumb { background: #D8D5D1; border-radius: 2px; }
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+.mn-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;  // fixed: column widths driven by th, Item column gets remaining space
+  // Fluid width prevents the action columns from being clipped on smaller shells
+}
+
+// ── Table header cells ────────────────────────────────────────────────────────
+.mn-th {
+  padding: 0.75rem 0.625rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: v.$text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
   border-bottom: 1.5px solid #E8E5E2;
-  margin-top: 0;
-  position: sticky;
-  top: calc(var(--navbar-total-height) + 44px);  // directly below sticky category tabs
-  z-index: 19;
   background: #FFFFFF;
+  text-align: left;
 
-  span {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: v.$text-muted;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .mn-col-price,
-  .mn-col-menprice,
-  .mn-col-hike,
-  .mn-col-disprice,
-  .mn-col-avail,
-  .mn-col-act { text-align: center; }
-
-  @media (max-width: 860px) { display: none; }
+  &.mn-th-thumb    { width: 56px;  padding-right: 0; }
+  &.mn-th-cat      { width: 110px; }
+  &.mn-th-menprice { width: 90px;  text-align: center; }
+  &.mn-th-hike     { width: 72px;  text-align: center; }
+  &.mn-th-disprice { width: 92px;  text-align: center; }
+  &.mn-th-avail    { width: 92px;  text-align: center; }
+  &.mn-th-act      { width: 56px;  text-align: center; }
+  // mn-th-item: no width — takes all remaining flexible space
 }
 
-// ── List rows ─────────────────────────────────────────────────────────────────
-.mn-list {
-  display: flex;
-  flex-direction: column;
-}
-
+// ── Table body rows ───────────────────────────────────────────────────────────
 .mn-row {
-  display: grid;
-  grid-template-columns: $mn-cols;
-  align-items: center;
-  padding: 0.75rem 0.875rem;
   border-bottom: 1px solid #F0EEEC;
   transition: background 0.1s ease;
-  gap: 0;
 
   &:hover { background: #FAFAF9; }
-  &:last-child { border-bottom: none; }
+  &:last-child td { border-bottom: none; }
+}
 
-  // ── Tablet: 3-col compact list ──────────────────────────────────────────
-  @include tablet {
-    grid-template-columns: 60px 1fr 80px;
-    grid-template-rows: auto auto;
-    row-gap: 0.375rem;
-    padding: 0.875rem 0.75rem;
-    border-bottom: 1px solid #F0EEEC;
+.mn-td {
+  padding: 0.625rem 0.625rem;
+  vertical-align: middle;
 
-    .mn-cat-cell      { display: none; }
-    .mn-menprice-cell { display: none; }
-    .mn-hike-cell     { display: none; }
-    .mn-price-cell {
-      grid-column: 3;
-      grid-row: 1;
-      text-align: center;
-      font-size: 1.0625rem;
-    }
-    .mn-avail-cell {
-      grid-column: 3;
-      grid-row: 2;
-      justify-content: center;
-    }
-    .mn-act-cell {
-      grid-column: 2;
-      grid-row: 2;
-      justify-content: flex-end;
-      padding-right: 0.25rem;
-    }
-  }
+  &.mn-td-thumb    { padding-right: 0; }
+  &.mn-td-info     { overflow: hidden; }  // prevent name/desc from breaking fixed layout
+  &.mn-td-menprice,
+  &.mn-td-hike,
+  &.mn-td-price,
+  &.mn-td-avail,
+  &.mn-td-act      { text-align: center; }
+}
 
-  // ── Mobile: card-style layout — premium, spacious ────────────────────────
-  @include mobile {
-    grid-template-columns: 56px 1fr auto;
-    grid-template-rows: auto auto;
-    row-gap: 0.5rem;
-    padding: 0.875rem;
-    margin-bottom: 0.5rem;
-    border: 1px solid #EDEAE7;
-    border-bottom: none;         // overridden per-card below
-    border-radius: 4px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0,0,0,0.03);
+// ── Responsive: hide secondary columns on narrow screens ─────────────────────
+@media (max-width: 899px) {
+  .mn-th-cat,      .mn-td-cat,
+  .mn-th-menprice, .mn-td-menprice,
+  .mn-th-hike,     .mn-td-hike { display: none; }
+}
 
-    &:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-    }
-
-    // Left border accent mirrors the availability state
-    border-left: 3px solid #10B981;
-    &[data-unavailable] { border-left-color: #D1CEC9; }
-
-    .mn-cat-cell      { display: none; }
-    .mn-menprice-cell { display: none; }
-    .mn-hike-cell     { display: none; }
-    .mn-price-cell {
-      grid-column: 3;
-      grid-row: 1;
-      text-align: right;
-      font-size: 1.125rem;
-      font-weight: 700;
-      align-self: center;
-    }
-    .mn-avail-cell {
-      grid-column: 3;
-      grid-row: 2;
-      justify-content: flex-end;
-    }
-    .mn-act-cell {
-      grid-column: 2;
-      grid-row: 2;
-      justify-content: flex-start;
-      padding-left: 0.125rem;
-    }
-  }
+@include mobile {
+  .mn-th-cat,      .mn-td-cat,
+  .mn-th-menprice, .mn-td-menprice,
+  .mn-th-hike,     .mn-td-hike,
+  .mn-th-disprice, .mn-td-price { display: none; }
 }
 
 // ── Thumbnail ─────────────────────────────────────────────────────────────────
 .mn-thumb {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   border-radius: 3px;
   background-color: #F0EEEC;
   background-size: cover;
@@ -394,7 +343,7 @@ $mn-cols: 64px 1fr 130px 85px 65px 95px 88px 56px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
+  max-width: 80px;
 }
 
 .mn-subcat-tag {
@@ -410,7 +359,7 @@ $mn-cols: 64px 1fr 130px 85px 65px 95px 88px 56px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 120px;
+  max-width: 80px;
 }
 
 .mn-cat-cell {
