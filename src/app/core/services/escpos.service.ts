@@ -96,6 +96,13 @@ export class EscPosService {
     append(CMD.SIZE_NORMAL, CMD.BOLD_OFF);
     line();
 
+    // YumDude branding
+    append(CMD.BOLD_ON, CMD.SIZE_DOUBLE);
+    text('YumDude'); line();
+    append(CMD.SIZE_NORMAL);
+    text('X'); line();
+    append(CMD.BOLD_OFF);
+
     // Restaurant
     append(CMD.BOLD_ON);
     text(this.trim(order.restaurantName || 'Restaurant', CHARS)); line();
@@ -105,9 +112,8 @@ export class EscPosService {
 
     // Order meta
     append(CMD.ALIGN_LEFT);
-    text(`Order  : #${order.orderId.slice(-8).toUpperCase()}`); line();
+    text(`Order  : #${order.orderId.toUpperCase()}`); line();
     text(`Time   : ${this.formatTime(order.createdAt)}`);       line();
-    text(`Phone  : ${order.customerPhone}`);                    line();
 
     text('-'.repeat(CHARS)); line();
 
@@ -146,8 +152,15 @@ export class EscPosService {
     const text   = (s: string) => buf.push(...this.encode(s));
     const line   = () => append(CMD.LF);
 
-    // Init
+    // Init — YumDude branding
     append(CMD.INIT, CMD.ALIGN_CENTER, CMD.BOLD_ON, CMD.SIZE_DOUBLE);
+    text('YumDude'); line();
+    append(CMD.SIZE_NORMAL);
+    text('X'); line();
+    append(CMD.BOLD_OFF);
+
+    // Restaurant name
+    append(CMD.BOLD_ON, CMD.SIZE_DOUBLE);
     text(this.trim(order.restaurantName || 'Restaurant', CHARS - 4)); line();
     append(CMD.SIZE_NORMAL);
     text('TAX INVOICE'); line();
@@ -158,13 +171,9 @@ export class EscPosService {
 
     // Order meta
     append(CMD.ALIGN_LEFT);
-    text(`Order  : #${order.orderId.slice(-8).toUpperCase()}`);    line();
+    text(`Order  : #${order.orderId.toUpperCase()}`);              line();
     text(`Date   : ${this.formatDate(order.createdAt)}`);          line();
     text(`Time   : ${this.formatTime(order.createdAt)}`);          line();
-    text(`Phone  : ${order.customerPhone}`);                       line();
-    if (order.formattedAddress) {
-      text(`Addr   : ${this.wrap(order.formattedAddress, CHARS - 9, '         ')}`); line();
-    }
 
     text('-'.repeat(CHARS)); line();
 
@@ -216,7 +225,7 @@ export class EscPosService {
     line();
     append(CMD.ALIGN_CENTER);
     text('Thank you for your order!'); line();
-    text('www.nearbite.com'); line();
+    text('www.yumdude.com'); line();
     line();
 
     append(CMD.FEED_5, CMD.CUT);
