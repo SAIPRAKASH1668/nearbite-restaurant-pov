@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.nearbite.restaurant',
-  appName: 'Nearbite Restaurant',
+  appName: 'YumDude-Restaurant',
   webDir: 'dist/yumdude-restaurant/browser',
   server: {
     androidScheme: 'https'
