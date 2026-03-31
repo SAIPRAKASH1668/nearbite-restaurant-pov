@@ -1,10 +1,10 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of, forkJoin } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
-import { RestaurantContextService } from '../../core/services/restaurant-context.service';
-import { Order, OrderStatus } from '../../core/models/order.model';
+import { Observable, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { Order, OrderStatus } from '../../core/models/order.model';
+import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 
 export interface DashboardStats {
   todayOrders: number;
@@ -42,82 +42,61 @@ export class DashboardService {
     private restaurantContext: RestaurantContextService
   ) {}
 
-  /**
-   * Get dashboard stats from real AWS data
-   */
   getStats(): Observable<DashboardStats> {
     const restaurantId = this.restaurantContext.getRestaurantId();
-    
+
     return this.http.get<OrdersResponse>(`${this.API_BASE_URL}/orders`, {
       params: { restaurantId }
     }).pipe(
-      map(response => {
-        const orders = response.orders;
+      map((response) => {
+        const orders = this.filterRestaurantVisibleOrders(response.orders);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        
-        // Filter today's orders
-        const todayOrders = orders.filter(order => {
+
+        const todayOrders = orders.filter((order) => {
           const orderDate = new Date(order.createdAt);
           orderDate.setHours(0, 0, 0, 0);
           return orderDate.getTime() === today.getTime();
         });
-        
-        // Filter yesterday's orders
-        const yesterdayOrders = orders.filter(order => {
+
+        const yesterdayOrders = orders.filter((order) => {
           const orderDate = new Date(order.createdAt);
           orderDate.setHours(0, 0, 0, 0);
           return orderDate.getTime() === yesterday.getTime();
         });
-        
-        // Calculate today's revenue from successful orders
+
         const todayRevenue = todayOrders
-          .filter(order => order.status !== OrderStatus.CANCELLED)
+          .filter((order) => order.status !== OrderStatus.CANCELLED)
           .reduce((sum, order) => sum + order.grandTotal, 0);
-        
-        // Calculate yesterday's revenue
+
         const yesterdayRevenue = yesterdayOrders
-          .filter(order => order.status !== OrderStatus.CANCELLED)
+          .filter((order) => order.status !== OrderStatus.CANCELLED)
           .reduce((sum, order) => sum + order.grandTotal, 0);
-        
-        // Calculate average order values
-        const avgOrderValue = todayOrders.length > 0 
-          ? todayRevenue / todayOrders.length 
-          : 0;
-        
+
+        const avgOrderValue = todayOrders.length > 0 ? todayRevenue / todayOrders.length : 0;
         const yesterdayAvgOrderValue = yesterdayOrders.length > 0
           ? yesterdayRevenue / yesterdayOrders.length
           : 0;
-        
-        // Count pending orders (PENDING, INITIATED, or CONFIRMED status)
-        const pendingOrders = orders.filter(order => 
-          order.status === OrderStatus.PENDING || 
-          order.status === OrderStatus.INITIATED ||
-          order.status === OrderStatus.CONFIRMED
+
+        const pendingOrders = orders.filter((order) =>
+          order.status === OrderStatus.PENDING || order.status === OrderStatus.CONFIRMED
         ).length;
-        
-        // Calculate percentage changes
-        const ordersChangePercent = this.calculatePercentChange(todayOrders.length, yesterdayOrders.length);
-        const revenueChangePercent = this.calculatePercentChange(todayRevenue, yesterdayRevenue);
-        const avgOrderValueChangePercent = this.calculatePercentChange(avgOrderValue, yesterdayAvgOrderValue);
-        
-        const stats = {
+
+        return {
           todayOrders: todayOrders.length,
           todayRevenue: Math.round(todayRevenue),
           avgOrderValue: Math.round(avgOrderValue),
           pendingOrders,
-          ordersChangePercent,
-          revenueChangePercent,
-          avgOrderValueChangePercent
+          ordersChangePercent: this.calculatePercentChange(todayOrders.length, yesterdayOrders.length),
+          revenueChangePercent: this.calculatePercentChange(todayRevenue, yesterdayRevenue),
+          avgOrderValueChangePercent: this.calculatePercentChange(avgOrderValue, yesterdayAvgOrderValue)
         };
-        return stats;
       }),
-      catchError(error => {
+      catchError((error) => {
         console.error('DashboardService.getStats: Error fetching dashboard stats:', error);
-        // Return default values on error
         return of({
           todayOrders: 0,
           todayRevenue: 0,
@@ -131,22 +110,18 @@ export class DashboardService {
     );
   }
 
-  /**
-   * Get recent orders from real AWS data
-   */
   getRecentOrders(): Observable<RecentOrder[]> {
     const restaurantId = this.restaurantContext.getRestaurantId();
-    
+
     return this.http.get<OrdersResponse>(`${this.API_BASE_URL}/orders`, {
       params: { restaurantId }
     }).pipe(
-      map(response => {
-        // Sort by createdAt descending and take first 5
-        const recentOrders = response.orders
+      map((response) => {
+        const recentOrders = this.filterRestaurantVisibleOrders(response.orders)
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .slice(0, 5);
-        
-        const orders = recentOrders.map(order => ({
+
+        return recentOrders.map((order) => ({
           id: order.orderId,
           orderNumber: order.orderId,
           customerName: this.maskPhoneNumber(order.customerPhone),
@@ -155,19 +130,18 @@ export class DashboardService {
           status: this.mapOrderStatus(order.status),
           time: this.getRelativeTime(order.createdAt)
         }));
-        return orders;
       }),
-      catchError(error => {
+      catchError((error) => {
         console.error('DashboardService.getRecentOrders: Error fetching recent orders:', error);
         return of([]);
       })
     );
   }
 
-  /**
-   * Mask phone number for privacy
-   * e.g., +919876543210 -> +91****3210
-   */
+  private filterRestaurantVisibleOrders(orders: Order[]): Order[] {
+    return orders.filter((order) => order.status !== OrderStatus.INITIATED);
+  }
+
   private maskPhoneNumber(phone: string): string {
     if (!phone || phone.length < 8) return 'Customer';
     const visibleStart = phone.slice(0, 3);
@@ -175,25 +149,18 @@ export class DashboardService {
     return `${visibleStart}****${visibleEnd}`;
   }
 
-  /**
-   * Calculate percentage change between two values
-   * Returns positive for increase, negative for decrease
-   */
   private calculatePercentChange(current: number, previous: number): number {
     if (previous === 0) {
       return current > 0 ? 100 : 0;
     }
+
     const change = ((current - previous) / previous) * 100;
-    return Math.round(change * 10) / 10; // Round to 1 decimal place
+    return Math.round(change * 10) / 10;
   }
 
-  /**
-   * Map AWS order status to dashboard status
-   */
   private mapOrderStatus(status: OrderStatus): 'new' | 'preparing' | 'ready' | 'completed' {
     switch (status) {
       case OrderStatus.PENDING:
-      case OrderStatus.INITIATED:
       case OrderStatus.CONFIRMED:
         return 'new';
       case OrderStatus.ACCEPTED:
@@ -213,9 +180,6 @@ export class DashboardService {
     }
   }
 
-  /**
-   * Get relative time string
-   */
   private getRelativeTime(dateString: string): string {
     const date = new Date(dateString);
     const now = new Date();
@@ -223,7 +187,7 @@ export class DashboardService {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;

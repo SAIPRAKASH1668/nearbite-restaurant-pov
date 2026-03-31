@@ -18,8 +18,8 @@
     </span>
   </div>
 
-  <!-- ── 0. printerAPI test buttons ────────────────────────────────────────── -->
-  <div class="ps-section ps-test-section">
+  <!-- ── 0. printerAPI test buttons (Electron only) ──────────────────────── -->
+  <div class="ps-section ps-test-section" *ngIf="printerAPIAvailable">
     <h3 class="ps-section-title">Quick Test</h3>
     <p class="ps-hint"><i class="fas fa-info-circle"></i> These buttons call <code>window.printerAPI</code> directly — useful for testing the Electron / native bridge.</p>
     <div class="ps-test-bar">
@@ -261,9 +261,31 @@
         </div>
         <div class="ps-avail-info">
           <span class="ps-avail-name">{{ d.name }}</span>
-          <span class="ps-avail-addr">{{ d.address }}</span>
+          <span class="ps-avail-addr">
+            {{ d.address }}
+            <span class="ps-bt-test-badge"
+                  *ngIf="btTestResult(d.address) as r"
+                  [class.ps-bt-test-badge--ok]="r === 'success'"
+                  [class.ps-bt-test-badge--err]="r === 'error'">
+              <i class="fas" [class.fa-check-circle]="r === 'success'" [class.fa-times-circle]="r === 'error'"></i>
+              {{ r === 'success' ? 'Connected' : 'Unreachable' }}
+            </span>
+          </span>
         </div>
         <div class="ps-avail-actions">
+          <button class="ps-icon-btn ps-icon-btn--test"
+                  (click)="testBtConnection(d)"
+                  [disabled]="isBtTesting(d.address)"
+                  title="Test connection">
+            <i class="fas"
+               [class.fa-link]="!isBtTesting(d.address) && !btTestResult(d.address)"
+               [class.fa-spinner]="isBtTesting(d.address)"
+               [class.fa-spin]="isBtTesting(d.address)"
+               [class.fa-check]="btTestResult(d.address) === 'success'"
+               [class.fa-times]="btTestResult(d.address) === 'error'"
+               [class.ps-icon--ok]="btTestResult(d.address) === 'success'"
+               [class.ps-icon--err]="btTestResult(d.address) === 'error'"></i>
+          </button>
           <button class="ps-add-btn"
             [class.ps-add-btn--active]="isInKot(d.address)"
             (click)="isInKot(d.address) ? removeKot(d.address) : addToKot(d)">
@@ -387,8 +409,11 @@
              [class.fa-times-circle]="netTestOk === false"
              [class.ps-icon--ok]="netTestOk === true"
              [class.ps-icon--err]="netTestOk === false"></i>
-          {{ netTesting ? 'Testing...' : netTestOk === true ? 'Reachable' : netTestOk === false ? 'Unreachable' : 'Test Connection' }}
+          {{ netTesting ? 'Testing...' : netTestOk === true ? 'Reachable ✓' : netTestOk === false ? 'Unreachable' : 'Test Connection' }}
         </button>
+        <span *ngIf="netTestOk === true && isNativeApp" class="ps-net-test-hint">
+          <i class="fas fa-info-circle"></i> Printer responds on TCP {{ netPort }}
+        </span>
       </div>
 
       <!-- Validation / error message -->
@@ -430,12 +455,12 @@
   </div>
 
   <!-- Browser notice -->
-  <div class="ps-section" *ngIf="!printerService.isNativeApp()">
+  <div class="ps-section" *ngIf="!printerService.isNativeApp() && !printerAPIAvailable">
     <div class="ps-alert ps-alert--info">
       <i class="fas fa-desktop"></i>
       <div class="ps-alert-body">
         <strong>Browser preview mode.</strong>
-        <p>Bluetooth printing works only in the installed Android app. Mock devices are shown for testing.</p>
+        <p>Bluetooth and USB printing work only in the installed Android app. Mock devices are shown for testing.</p>
       </div>
     </div>
   </div>

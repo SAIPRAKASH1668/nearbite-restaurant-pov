@@ -26,6 +26,15 @@ interface UsbPrinterPlugin {
 }
 const UsbPrinter = registerPlugin<UsbPrinterPlugin>('UsbPrinter');
 
+// ── Network Printer plugin ───────────────────────────────────────────────────
+// Backed by NetworkPrinterPlugin.java which sends raw ESC/POS bytes over TCP
+// to a network printer on port 9100, and provides connectivity checks.
+interface NetworkPrinterPlugin {
+  print(opts: { host: string; port: number; data: string }): Promise<void>;
+  testConnection(opts: { host: string; port: number }): Promise<void>;
+}
+const NetworkPrinter = registerPlugin<NetworkPrinterPlugin>('NetworkPrinter');
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Production-ready Bluetooth thermal printer service.
 //
@@ -407,9 +416,15 @@ export class PrinterService {
 
   /**
    * Tests TCP connectivity to a network printer.
-   * In Electron routes through window.printerAPI (IPC → Node net module).
+   * Capacitor: routes through NetworkPrinterPlugin (raw TCP socket).
+   * Electron:  routes through window.printerAPI (IPC → Node net module).
+   * Browser:   fallback to Epson ePOS SDK connect attempt.
    */
   async testNetworkConnection(host: string, port: number): Promise<void> {
+    if (this.isNativeApp()) {
+      await NetworkPrinter.testConnection({ host, port });
+      return;
+    }
     if (this.isElectronApp()) {
       const api = (window as any).printerAPI;
       await api.testConnection(host, port);
@@ -420,19 +435,57 @@ export class PrinterService {
   }
 
   /**
+   * Tests Bluetooth connectivity by connecting and immediately disconnecting.
+   * Does NOT send any data — purely a reachability check.
+   * Only works on native (Capacitor) platform.
+   */
+  async testBluetoothConnection(address: string): Promise<void> {
+    if (!this.isNativeApp()) {
+      // Browser preview — always succeed for mock devices
+      return;
+    }
+
+    const withTimeout = <T>(p: Promise<T>): Promise<T> =>
+      Promise.race([
+        p,
+        new Promise<T>((_, rej) =>
+          setTimeout(() => rej(new Error('Bluetooth connection timed out')), PRINT_TIMEOUT_MS)),
+      ]);
+
+    // Disconnect any stale connection first
+    try { await BluetoothSerial.disconnect({ address }); } catch {}
+
+    try {
+      await withTimeout(BluetoothSerial.connectInsecure({ address }));
+      await BluetoothSerial.disconnect({ address });
+    } catch (e: any) {
+      try { await BluetoothSerial.disconnect({ address }); } catch {}
+      throw new Error(e?.message || 'Cannot reach Bluetooth printer');
+    }
+  }
+
+  /**
    * Sends raw ESC/POS bytes to a network printer.
-   * In Electron: routes through window.printerAPI (IPC → Node net).
-   * In pure browser: tries Epson ePOS SDK (TM-T82X / T88 only).
+   * Capacitor: routes through NetworkPrinterPlugin (raw TCP socket).
+   * Electron:  routes through window.printerAPI (IPC → Node net).
+   * Browser:   tries Epson ePOS SDK (TM-T82X / T88 only).
    */
   private async sendBytesNetwork(host: string, port: number, data: Uint8Array, label: string): Promise<void> {
     this.statusSubject.next('connecting');
     try {
-      if (this.isElectronApp()) {
-        // Build base64 without spread — spread crashes on large typed arrays
-        let bin = '';
-        for (let i = 0; i < data.length; i++) bin += String.fromCharCode(data[i]);
+      // Build base64 without spread — spread crashes on large typed arrays
+      let bin = '';
+      for (let i = 0; i < data.length; i++) bin += String.fromCharCode(data[i]);
+      const b64 = btoa(bin);
+
+      if (this.isNativeApp()) {
+        this.statusSubject.next('printing');
+        await NetworkPrinter.print({ host, port, data: b64 });
+        this.statusSubject.next('success');
+        console.log(`✅ PrinterService: [${label}] sent via Capacitor TCP to ${host}:${port}`);
+      } else if (this.isElectronApp()) {
         const api = (window as any).printerAPI;
-        await api.printRaw(host, port, btoa(bin));
+        await api.printRaw(host, port, b64);
         this.statusSubject.next('success');
         console.log(`✅ PrinterService: [${label}] sent via Electron TCP to ${host}:${port}`);
       } else {

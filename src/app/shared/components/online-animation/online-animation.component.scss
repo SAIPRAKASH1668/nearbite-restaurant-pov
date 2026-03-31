@@ -219,6 +219,10 @@
 // ─────────────────────────────────────────────
 
 .oa-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  white-space: nowrap;
   font-family: 'Inter', 'Segoe UI', sans-serif;
   font-size: 1.5rem;
   font-weight: 900;

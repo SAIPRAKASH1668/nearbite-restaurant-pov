@@ -1,8 +1,10 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { FileExportService } from '../../core/services/file-export.service';
 import { OrderService } from '../../core/services/order.service';
 import { Order, OrderStatus } from '../../core/models/order.model';
+import { NotificationService } from '../../shared/components/notification/notification.service';
 
 interface OrderReport extends Order {
   formattedDate: string;
@@ -106,6 +108,8 @@ export class ReportsComponent implements OnInit {
 
   constructor(
     private orderService: OrderService,
+    private fileExportService: FileExportService,
+    private notificationService: NotificationService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -545,7 +549,7 @@ export class ReportsComponent implements OnInit {
   /**
    * Export to CSV
    */
-  exportCSV(): void {
+  async exportCSV(): Promise<void> {
     const headers = ['Order ID', 'Date', 'Time', 'Customer Phone', 'Items', 'Amount', 'Status'];
     const rows = this.filteredOrders.map(order => [
       order.orderId,
@@ -559,16 +563,25 @@ export class ReportsComponent implements OnInit {
     
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ...rows.map(row => row.map(cell => this.escapeCsvCell(cell)).join(','))
     ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `order-report-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+
+    try {
+      await this.fileExportService.exportTextFile(csvContent, {
+        fileName: `order-report-${new Date().toISOString().split('T')[0]}.csv`,
+        mimeType: 'text/csv;charset=utf-8',
+        title: 'Order Reports CSV',
+        dialogTitle: 'Share order report CSV'
+      });
+      this.notificationService.success('Order report export is ready.');
+    } catch (error) {
+      console.error('Failed to export order report CSV', error);
+      this.notificationService.error('Could not export order report. Please try again.');
+    }
+  }
+
+  private escapeCsvCell(value: string): string {
+    return `"${value.replace(/"/g, '""')}"`;
   }
 }
 

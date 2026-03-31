@@ -3,7 +3,7 @@
 
 .notification-container {
   position: fixed;
-  bottom: 2rem;
+  bottom: 1.5rem;
   right: 2rem;
   z-index: 9999;
   display: flex;
@@ -27,15 +27,19 @@
   padding: 0;
   pointer-events: all;
   min-width: 350px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    0 2px 8px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+    0 18px 45px rgba(46, 36, 27, 0.18),
+    0 8px 18px rgba(46, 36, 27, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  border: 1px solid rgba(232, 58, 58, 0.08);
 
   @include mobile {
     min-width: unset;
+  }
+
+  &.clickable {
+    cursor: pointer;
   }
 
   // Type-specific styles with premium gradients
@@ -118,11 +122,85 @@
       );
     }
   }
+
+  &.order-toast {
+    min-width: 300px;
+    background: #fffdf9;
+    border: 1px solid rgba($border-secondary, 0.9);
+    border-left: 3px solid $primary-orange;
+    border-radius: 16px;
+    box-shadow:
+      0 18px 36px rgba(46, 36, 27, 0.12),
+      0 8px 16px rgba(46, 36, 27, 0.08);
+
+    .notification-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: rgba($primary-orange, 0.12);
+      color: darken($primary-orange, 8%);
+      box-shadow: none;
+    }
+
+    .notification-progress {
+      background: $primary-orange;
+      opacity: 0.9;
+    }
+
+    .notification-content {
+      gap: 0.875rem;
+      padding: 0.95rem 1rem;
+      align-items: flex-start;
+    }
+
+    .notification-body {
+      gap: 0.22rem;
+    }
+
+    .notification-title {
+      font-size: 0.74rem;
+      font-weight: $font-weight-semibold;
+      color: $text-secondary;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .notification-message {
+      font-size: 0.92rem;
+      font-weight: $font-weight-semibold;
+      color: $text-primary;
+      line-height: 1.25;
+      letter-spacing: 0.01em;
+    }
+
+    .notification-caption {
+      font-size: 0.75rem;
+      color: rgba($text-secondary, 0.82);
+    }
+
+    .notification-badge {
+      background: rgba($primary-orange, 0.12);
+      color: darken($primary-orange, 14%);
+      border: 1px solid rgba($primary-orange, 0.2);
+      padding: 0.22rem 0.55rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      letter-spacing: 0.03em;
+      font-weight: $font-weight-bold;
+    }
+
+    .notification-close {
+      width: 24px;
+      height: 24px;
+      margin-top: 0;
+      color: rgba($text-secondary, 0.72);
+    }
+  }
 }
 
 .notification-content {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: $spacing-md;
   padding: $spacing-lg;
   position: relative;
@@ -142,14 +220,76 @@
   }
 }
 
-.notification-message {
+.notification-body {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.notification-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: $radius-full;
+  font-size: 0.68rem;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $primary-dark;
+  background: rgba($secondary-orange, 0.34);
+  border: 1px solid rgba($primary-orange, 0.16);
+}
+
+.notification-title {
+  color: $text-primary;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  line-height: 1.3;
+}
+
+.notification-message {
   @include text-body;
   font-size: $font-size-sm;
   line-height: 1.5;
   color: $text-primary;
   font-weight: $font-weight-medium;
-  padding-right: $spacing-sm;
+}
+
+.notification-caption {
+  color: $text-secondary;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.notification-action {
+  width: fit-content;
+  margin-top: $spacing-xs;
+  border: none;
+  border-radius: $radius-full;
+  padding: 0.55rem 0.9rem;
+  background: linear-gradient(135deg, rgba($primary-orange, 0.16), rgba($secondary-orange, 0.28));
+  color: $primary-dark;
+  font-size: 0.78rem;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform $transition-fast, box-shadow $transition-fast, background $transition-fast;
+  box-shadow: 0 8px 18px rgba($primary-orange, 0.12);
+
+  &:hover {
+    transform: translateY(-1px);
+    background: linear-gradient(135deg, rgba($primary-orange, 0.22), rgba($secondary-orange, 0.36));
+    box-shadow: 0 12px 22px rgba($primary-orange, 0.16);
+  }
 }
 
 .notification-close {
@@ -164,6 +304,7 @@
   @include flex-center;
   transition: all $transition-fast;
   flex-shrink: 0;
+  margin-top: 0.1rem;
 
   &:hover {
     background: rgba(255, 255, 255, 0.1);
@@ -205,14 +346,21 @@
   transition: all $transition-base;
   
   &:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     box-shadow: 
-      0 12px 40px rgba(0, 0, 0, 0.5),
-      0 4px 12px rgba(0, 0, 0, 0.3),
-      inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      0 24px 48px rgba(46, 36, 27, 0.24),
+      0 12px 24px rgba(46, 36, 27, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
     
     .notification-progress {
       animation-play-state: paused;
     }
+  }
+
+  &.order-toast:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 18px 32px rgba(46, 36, 27, 0.14),
+      0 8px 14px rgba(46, 36, 27, 0.1);
   }
 }

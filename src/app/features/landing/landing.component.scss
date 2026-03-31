@@ -171,6 +171,13 @@ section[id] {
   .logo-dude { color: $dude-red; }
 }
 
+.logo-text {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0;
+  white-space: nowrap;
+}
+
 .nav-logo-img {
   height: 32px;
   width: auto;
@@ -1084,7 +1091,6 @@ section[id] {
 .footer-logo-img {
   height: 28px;
   width: auto;
-  filter: brightness(0) invert(1); // make white on dark bg
 }
 
 .footer-tagline {
@@ -1136,5 +1142,4 @@ section[id] {
     text-align: left;
   }
 }
-
 

@@ -16,6 +16,7 @@ import {
 } from '../../core/models/payment.model';
 import { PaymentService } from '../../core/services/payment.service';
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
+import { NotificationService } from '../../shared/components/notification/notification.service';
 
 @Component({
   selector: 'app-financial-dashboard-modal',
@@ -88,6 +89,7 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   constructor(
     private paymentService: PaymentService,
     private restaurantContextService: RestaurantContextService,
+    private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
     private el: ElementRef<HTMLElement>,
     @Inject(DOCUMENT) private document: Document
@@ -528,31 +530,39 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   /**
    * Export current view to CSV
    */
-  exportCSV(): void {
+  async exportCSV(): Promise<void> {
     this.isExporting = true;
     this.cdr.markForCheck();
-    
-    this.paymentService.exportToCSV(this.filteredPayments);
-    
-    setTimeout(() => {
+
+    try {
+      await this.paymentService.exportToCSVFile(this.filteredPayments);
+      this.notificationService.success('Financial dashboard CSV is ready.');
+    } catch (error) {
+      console.error('Failed to export financial dashboard CSV', error);
+      this.notificationService.error('Could not export financial dashboard CSV.');
+    } finally {
       this.isExporting = false;
       this.cdr.markForCheck();
-    }, 500);
+    }
   }
 
   /**
    * Export current view to PDF
    */
-  exportPDF(): void {
+  async exportPDF(): Promise<void> {
     this.isExporting = true;
     this.cdr.markForCheck();
-    
-    this.paymentService.exportToPDF(this.filteredPayments);
-    
-    setTimeout(() => {
+
+    try {
+      await this.paymentService.exportToPDFFile(this.filteredPayments);
+      this.notificationService.success('Financial dashboard PDF is ready.');
+    } catch (error) {
+      console.error('Failed to export financial dashboard PDF', error);
+      this.notificationService.error('Could not export financial dashboard PDF.');
+    } finally {
       this.isExporting = false;
       this.cdr.markForCheck();
-    }, 500);
+    }
   }
 
   /**

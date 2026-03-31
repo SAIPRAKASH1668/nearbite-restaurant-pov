@@ -3,7 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 import { OrderNotificationService, IncomingOrder } from '../../../core/services/order-notification.service';
-import { Subscription } from 'rxjs';
+import { OrderService } from '../../../core/services/order.service';
+import { PrinterService } from '../../../core/services/printer.service';
+import { SoundService } from '../../../core/services/sound.service';
+import { OrderStatus } from '../../../core/models/order.model';
+import { Subscription, take } from 'rxjs';
 
 /**
  * Global Order Notification Modal
@@ -47,6 +51,9 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
 
   constructor(
     private notificationService: OrderNotificationService,
+    private orderService: OrderService,
+    private printerService: PrinterService,
+    private soundService: SoundService,
     private router: Router,
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef
@@ -93,16 +100,36 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Accept the order
+   * Accept the order — update status, print KOT + Bill, then dismiss
    */
   acceptOrder(): void {
     if (!this.currentOrder || this.isProcessing) return;
     
     this.isProcessing = true;
-    console.log('✅ Order accepted:', this.currentOrder.orderId);
+    const orderId = this.currentOrder.orderId;
+    console.log('✅ Order accepted:', orderId);
     
-    // Notify service
-    this.notificationService.notifyOrderAccepted(this.currentOrder.orderId);
+    this.soundService.stopAlarm();
+
+    // Find the full Order from the order service for printing
+    this.orderService.orders$.pipe(take(1)).subscribe(orders => {
+      const fullOrder = orders.find(o => o.orderId === orderId);
+      if (fullOrder) {
+        this.printerService.printOrderAccepted(fullOrder);
+      }
+    });
+
+    // Update order status to PREPARING
+    this.orderService.updateOrderStatus(orderId, OrderStatus.PREPARING).subscribe({
+      next: () => {
+        this.notificationService.notifyOrderAccepted(orderId);
+        this.orderService.fetchOrders();
+      },
+      error: () => {
+        alert('Failed to accept order. Please try again.');
+        this.isProcessing = false;
+      }
+    });
     
     // Remove from queue and show next
     this.orderQueue.shift();

@@ -24,13 +24,13 @@
       </app-restaurant-status-toggle>
 
       <!-- User Menu — avatar only; name/restaurant shown inside dropdown -->
-      <div class="user-menu" (click)="toggleUserMenu()">
-        <div class="user-avatar">
+      <div class="user-menu">
+        <div class="user-avatar" (click)="toggleUserMenu($event)">
           <i class="fas fa-user"></i>
         </div>
 
         <!-- Dropdown Menu -->
-        <div class="dropdown-menu" *ngIf="showUserMenu">
+        <div class="dropdown-menu" *ngIf="showUserMenu" (click)="$event.stopPropagation()">
           <!-- Profile header — shown on mobile/tablet where user-info is hidden -->
           <div class="dropdown-profile">
             <div class="dropdown-profile-avatar">

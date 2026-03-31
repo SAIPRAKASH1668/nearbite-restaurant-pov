@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy, Output, EventEmitter, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink, NavigationEnd } from '@angular/router';
@@ -37,7 +37,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private restaurantContext: RestaurantContextService,
     private onlineService: RestaurantOnlineService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private elementRef: ElementRef<HTMLElement>
   ) {}
 
   ngOnInit(): void {
@@ -84,14 +85,31 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
   }
 
-  toggleUserMenu(): void {
+  toggleUserMenu(event?: Event): void {
+    event?.stopPropagation();
     this.showUserMenu = !this.showUserMenu;
+    this.cdr.markForCheck();
   }
 
   logout(): void {
     this.showUserMenu = false;
     this.onlineService.setOnline(false);
     this.authService.logout();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.showUserMenu) {
+      return;
+    }
+
+    const target = event.target as Node | null;
+    if (target && this.elementRef.nativeElement.contains(target)) {
+      return;
+    }
+
+    this.showUserMenu = false;
+    this.cdr.markForCheck();
   }
 
   private getPageTitle(url: string): string {

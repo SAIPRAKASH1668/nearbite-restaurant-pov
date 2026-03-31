@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
+import { jsPDF } from 'jspdf';
 import { environment } from '../../../environments/environment';
 import { 
   Payment, 
@@ -17,6 +18,7 @@ import {
   SettleEarningsRequest,
   SettleEarningsResponse
 } from '../models/payment.model';
+import { FileExportService } from './file-export.service';
 
 @Injectable({
   providedIn: 'root'
@@ -27,7 +29,10 @@ export class PaymentService {
   private mockRestaurantId = 'REST_001';
   private cachedMockPayments: Payment[] | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private fileExportService: FileExportService
+  ) {}
 
   /**
    * Get available payment methods
@@ -434,6 +439,132 @@ export class PaymentService {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+  }
+
+  async exportToCSVFile(payments: Payment[]): Promise<void> {
+    const headers = [
+      'Date',
+      'Order ID',
+      'Payment Method',
+      'Gross Amount',
+      'Commission',
+      'Tax',
+      'Net Payout',
+      'Payment Status',
+      'Settlement Status',
+      'Transaction ID'
+    ];
+
+    const rows = payments.map((payment) => [
+      new Date(payment.createdAt).toLocaleDateString('en-IN'),
+      payment.orderId,
+      payment.paymentMethod,
+      payment.grossAmount.toFixed(2),
+      payment.commissionAmount.toFixed(2),
+      payment.taxAmount.toFixed(2),
+      payment.netPayoutAmount.toFixed(2),
+      payment.paymentStatus,
+      payment.settlementStatus,
+      payment.transactionId
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => this.escapeCsvCell(cell)).join(','))
+    ].join('\n');
+
+    await this.fileExportService.exportTextFile(csvContent, {
+      fileName: this.buildExportFileName('financial-dashboard', 'csv'),
+      mimeType: 'text/csv;charset=utf-8',
+      title: 'Financial Dashboard CSV',
+      dialogTitle: 'Share financial dashboard CSV'
+    });
+  }
+
+  async exportToPDFFile(payments: Payment[]): Promise<void> {
+    const totalGross = payments.reduce((sum, payment) => sum + payment.grossAmount, 0);
+    const totalCommission = payments.reduce((sum, payment) => sum + payment.commissionAmount, 0);
+    const totalNet = payments.reduce((sum, payment) => sum + payment.netPayoutAmount, 0);
+
+    const pdf = new jsPDF({
+      unit: 'pt',
+      format: 'a4'
+    });
+    const margin = 40;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    let y = margin;
+
+    const addLine = (text: string, fontSize = 10, weight: 'normal' | 'bold' = 'normal') => {
+      if (y > pageHeight - margin) {
+        pdf.addPage();
+        y = margin;
+      }
+
+      pdf.setFont('helvetica', weight);
+      pdf.setFontSize(fontSize);
+      pdf.text(text, margin, y);
+      y += fontSize + 8;
+    };
+
+    const addWrappedLine = (text: string, fontSize = 10) => {
+      const lines = pdf.splitTextToSize(text, pageWidth - margin * 2);
+      lines.forEach((line: string) => addLine(line, fontSize));
+    };
+
+    addLine('Financial Dashboard Report', 18, 'bold');
+    addLine(`Generated: ${new Date().toLocaleString('en-IN')}`, 10);
+    addLine(`Total Transactions: ${payments.length}`, 10);
+    addLine(`Total Gross Revenue: Rs.${totalGross.toFixed(2)}`, 10);
+    addLine(`Total Platform Commission: Rs.${totalCommission.toFixed(2)}`, 10);
+    addLine(`Total Net Payout: Rs.${totalNet.toFixed(2)}`, 10);
+    y += 6;
+
+    payments.forEach((payment, index) => {
+      if (y > pageHeight - 120) {
+        pdf.addPage();
+        y = margin;
+      }
+
+      pdf.setDrawColor(220, 220, 220);
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 14;
+
+      addLine(`${index + 1}. Order ${payment.orderId}`, 11, 'bold');
+      addWrappedLine(
+        `Date: ${new Date(payment.createdAt).toLocaleDateString('en-IN')} | Method: ${payment.paymentMethod} | Transaction: ${payment.transactionId}`,
+        9
+      );
+      addWrappedLine(
+        `Gross: Rs.${payment.grossAmount.toFixed(2)} | Commission: Rs.${payment.commissionAmount.toFixed(2)} | Tax: Rs.${payment.taxAmount.toFixed(2)} | Net: Rs.${payment.netPayoutAmount.toFixed(2)}`,
+        9
+      );
+      addWrappedLine(
+        `Payment Status: ${payment.paymentStatus} | Settlement Status: ${payment.settlementStatus}`,
+        9
+      );
+      y += 4;
+    });
+
+    const blob = new Blob([pdf.output('arraybuffer')], {
+      type: 'application/pdf'
+    });
+
+    await this.fileExportService.exportBlob(blob, {
+      fileName: this.buildExportFileName('financial-dashboard', 'pdf'),
+      mimeType: 'application/pdf',
+      title: 'Financial Dashboard PDF',
+      dialogTitle: 'Share financial dashboard PDF'
+    });
+  }
+
+  private buildExportFileName(prefix: string, extension: string): string {
+    const dateStamp = new Date().toISOString().split('T')[0];
+    return `${prefix}-${dateStamp}.${extension}`;
+  }
+
+  private escapeCsvCell(value: string): string {
+    return `"${value.replace(/"/g, '""')}"`;
   }
 
   // ============================================

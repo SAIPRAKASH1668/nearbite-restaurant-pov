@@ -50,7 +50,9 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
   // ── Per-device test state ──────────────────────────────────────────────────
   testingAddress: string | null = null;
   testResults = new Map<string, 'success' | 'error'>();
-
+  // ── Bluetooth connection test state (scanned device check) ───────────
+  btTestingAddress: string | null = null;
+  btTestResults = new Map<string, 'success' | 'error'>();
   private statusSub?: Subscription;
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
@@ -92,8 +94,8 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
     this.btScanning  = true;
     this.btScanDone  = false;
     this.btScanError = null;
-    this.btDevices   = [];
-
+    this.btDevices   = [];    this.btTestResults.clear();
+    this.btTestingAddress = null;
     try {
       const devices = await this.printerService.scanPairedDevices();
       this.zone.run(() => {
@@ -203,10 +205,13 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
     this.netError   = null;
     try {
       await this.printerService.testNetworkConnection(this.netHost.trim(), this.netPort);
-      this.netTestOk = true;
+      this.zone.run(() => { this.netTestOk = true; this.cdr.detectChanges(); });
     } catch (e: any) {
-      this.netTestOk = false;
-      this.netError  = e?.message || 'Could not reach printer.';
+      this.zone.run(() => {
+        this.netTestOk = false;
+        this.netError  = e?.message || 'Could not reach printer.';
+        this.cdr.detectChanges();
+      });
     } finally {
       this.netTesting = false;
       this.cdr.detectChanges();
@@ -239,14 +244,47 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
     this.testResults.delete(device.address);
     try {
       await this.printerService.testPrintOn(device);
-      this.testResults.set(device.address, 'success');
+      this.zone.run(() => { this.testResults.set(device.address, 'success'); this.cdr.detectChanges(); });
     } catch {
-      this.testResults.set(device.address, 'error');
+      this.zone.run(() => { this.testResults.set(device.address, 'error'); this.cdr.detectChanges(); });
     } finally {
       this.testingAddress = null;
       setTimeout(() => { this.testResults.delete(device.address); this.cdr.detectChanges(); }, 5000);
       this.cdr.detectChanges();
     }
+  }
+
+  // ── Bluetooth connection test (scanned devices, no data sent) ──────────
+
+  async testBtConnection(device: PrinterDevice): Promise<void> {
+    if (this.btTestingAddress) return;
+    this.btTestingAddress = device.address;
+    this.btTestResults.delete(device.address);
+    this.cdr.detectChanges();
+    try {
+      await this.printerService.testBluetoothConnection(device.address);
+      this.zone.run(() => {
+        this.btTestResults.set(device.address, 'success');
+        this.btTestingAddress = null;
+        this.cdr.detectChanges();
+      });
+    } catch {
+      this.zone.run(() => {
+        this.btTestResults.set(device.address, 'error');
+        this.btTestingAddress = null;
+        this.cdr.detectChanges();
+      });
+    } finally {
+      setTimeout(() => { this.btTestResults.delete(device.address); this.cdr.detectChanges(); }, 5000);
+    }
+  }
+
+  isBtTesting(address: string): boolean {
+    return this.btTestingAddress === address;
+  }
+
+  btTestResult(address: string): 'success' | 'error' | null {
+    return this.btTestResults.get(address) ?? null;
   }
 
   isTesting(address: string): boolean {

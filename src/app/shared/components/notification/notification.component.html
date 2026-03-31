@@ -1,23 +1,45 @@
 <div class="notification-container">
-  <div 
+  <div
     *ngFor="let notification of notifications"
     class="notification"
+    [class.clickable]="!!notification.action?.onClick"
+    [class.order-toast]="notification.variant === 'order'"
     [class.success]="notification.type === NotificationType.SUCCESS"
     [class.error]="notification.type === NotificationType.ERROR"
     [class.warning]="notification.type === NotificationType.WARNING"
     [class.info]="notification.type === NotificationType.INFO"
-    [@slideIn]
+    [@toastMotion]
+    (click)="onNotificationClick(notification)"
   >
     <div class="notification-content">
       <div class="notification-icon">
-        <i class="fas" [class]="getIcon(notification.type)"></i>
+        <i class="fas" [class]="getNotificationIcon(notification)"></i>
       </div>
-      <div class="notification-message">
-        {{ notification.message }}
+      <div class="notification-body">
+        <div class="notification-header" *ngIf="notification.badge || notification.title">
+          <span class="notification-badge" *ngIf="notification.badge">{{ notification.badge }}</span>
+          <div class="notification-title" *ngIf="notification.title">{{ notification.title }}</div>
+        </div>
+        <div class="notification-message">
+          {{ notification.message }}
+        </div>
+        <div class="notification-caption" *ngIf="notification.caption">
+          {{ notification.caption }}
+        </div>
+        <button
+          *ngIf="notification.action?.label"
+          type="button"
+          class="notification-action"
+          (click)="onNotificationClick(notification); $event.stopPropagation()"
+          [attr.aria-label]="notification.action?.ariaLabel || notification.action?.label"
+        >
+          {{ notification.action?.label }}
+        </button>
       </div>
-      <button 
-        class="notification-close" 
-        (click)="removeNotification(notification.id)"
+      <button
+        type="button"
+        class="notification-close"
+        (click)="removeNotification(notification.id); $event.stopPropagation()"
         aria-label="Close notification"
       >
         <i class="fas fa-times"></i>

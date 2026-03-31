@@ -1006,3 +1006,40 @@ $net-color: #1976d2;  // Material Blue — distinct from orange (BT) and teal (U
   height: 32px;
 }
 
+// ── Bluetooth test connection badge ────────────────────────────────────────────
+
+.ps-bt-test-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 7px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 4px;
+
+  &--ok {
+    background: rgba(#43a047, 0.12);
+    color: #2e7d32;
+    i { color: #43a047; }
+  }
+
+  &--err {
+    background: rgba(#e53935, 0.12);
+    color: #c62828;
+    i { color: #e53935; }
+  }
+}
+
+// ── Network test hint ─────────────────────────────────────────────────────────
+
+.ps-net-test-hint {
+  font-size: 11px;
+  color: #43a047;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  i { font-size: 10px; }
+}
+

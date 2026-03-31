@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, map, of } from 'rxjs';
 import { RestaurantContextService } from '../services/restaurant-context.service';
+import { PushNotificationService } from '../services/push-notification.service';
 import { environment } from '../../../environments/environment';
 
 export interface User {
@@ -32,7 +33,8 @@ export class AuthService {
   constructor(
     private router: Router,
     private http: HttpClient,
-    private restaurantContext: RestaurantContextService
+    private restaurantContext: RestaurantContextService,
+    private pushNotificationService: PushNotificationService
   ) {
     const storedUser = localStorage.getItem(this.STORAGE_KEY);
     this.currentUserSubject = new BehaviorSubject<User | null>(
@@ -65,6 +67,7 @@ export class AuthService {
         localStorage.setItem(this.TOKEN_STORAGE_KEY, response.token);
         this.restaurantContext.setRestaurantId(response.restaurantId);
         this.currentUserSubject.next(user);
+        void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId);
 
         return { success: true };
       }),
@@ -82,6 +85,8 @@ export class AuthService {
   }
 
   logout(): void {
+    const restaurantId = this.currentUserSubject.value?.restaurantId;
+    this.pushNotificationService.clearTokenForRestaurant(restaurantId);
     localStorage.removeItem(this.STORAGE_KEY);
     localStorage.removeItem(this.TOKEN_STORAGE_KEY);
     this.restaurantContext.clearContext();

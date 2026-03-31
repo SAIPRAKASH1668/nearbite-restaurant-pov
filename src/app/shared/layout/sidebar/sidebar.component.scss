@@ -162,6 +162,10 @@ $dude-red:            hsl(0,  79%,  55%);
     min-width: 0;
 
     .brand-name {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0;
+      white-space: nowrap;
       font-size: $font-size-xl;
       font-weight: $font-weight-bold;
       margin: 0 0 $spacing-xs;

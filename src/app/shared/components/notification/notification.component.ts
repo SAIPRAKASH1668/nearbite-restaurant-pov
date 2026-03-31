@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { NotificationService } from './notification.service';
 import { Notification, NotificationType } from './notification.model';
-import { trigger, transition, style, animate, state } from '@angular/animations';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-notification',
@@ -13,15 +13,19 @@ import { trigger, transition, style, animate, state } from '@angular/animations'
   styleUrl: './notification.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
-    trigger('slideIn', [
+    trigger('toastMotion', [
       transition(':enter', [
-        style({ transform: 'translateX(400px)', opacity: 0 }),
-        animate('300ms cubic-bezier(0.68, -0.55, 0.265, 1.55)', 
-          style({ transform: 'translateX(0)', opacity: 1 }))
+        style({ transform: 'translateY(28px) scale(0.94)', opacity: 0 }),
+        animate(
+          '360ms cubic-bezier(0.22, 1, 0.36, 1)',
+          style({ transform: 'translateY(0) scale(1)', opacity: 1 })
+        )
       ]),
       transition(':leave', [
-        animate('200ms ease-out', 
-          style({ transform: 'translateX(400px)', opacity: 0 }))
+        animate(
+          '220ms ease-out',
+          style({ transform: 'translateY(18px) scale(0.97)', opacity: 0 })
+        )
       ])
     ])
   ]
@@ -54,6 +58,15 @@ export class NotificationComponent implements OnInit, OnDestroy {
     this.notificationService.remove(id);
   }
 
+  onNotificationClick(notification: Notification): void {
+    if (!notification.action?.onClick) {
+      return;
+    }
+
+    notification.action.onClick();
+    this.notificationService.remove(notification.id);
+  }
+
   getIcon(type: NotificationType): string {
     switch (type) {
       case NotificationType.SUCCESS:
@@ -67,5 +80,9 @@ export class NotificationComponent implements OnInit, OnDestroy {
       default:
         return 'fa-bell';
     }
+  }
+
+  getNotificationIcon(notification: Notification): string {
+    return notification.iconClass || this.getIcon(notification.type);
   }
 }
