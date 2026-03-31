@@ -5,7 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "start:device": "node_modules\\.bin\\ng serve --host 0.0.0.0 --port 4200",
-    "build": "ng build",
+    "build": "ng build --configuration production",
     "build:prod": "ng build --configuration production",
     "cap:sync": "npm run build:prod && npx cap sync",
     "cap:run": "npm run build:prod && npx cap sync && npx cap run android",

@@ -2,7 +2,7 @@ import { Injectable, NgZone } from '@angular/core';
 import { Client, IMessage } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import { Subject, Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { RuntimeEnvironmentService } from './runtime-environment.service';
 
 /**
  * WebSocket Service for real-time order updates
@@ -17,7 +17,10 @@ export class WebSocketService {
   public messages$ = this.orderSubject.asObservable(); // Public observable for messages
   private connected = false;
 
-  constructor(private ngZone: NgZone) {}
+  constructor(
+    private ngZone: NgZone,
+    private runtimeEnvironmentService: RuntimeEnvironmentService
+  ) {}
 
   /**
    * Connect to WebSocket server
@@ -30,8 +33,10 @@ export class WebSocketService {
 
     // Create STOMP client with SockJS
     this.stompClient = new Client({
-      webSocketFactory: () => new SockJS(environment.wsUrl),
-      debug: environment.production ? () => {} : (str) => { console.log('STOMP:', str); },
+      webSocketFactory: () => new SockJS(this.runtimeEnvironmentService.getWsUrl()),
+      debug: this.runtimeEnvironmentService.isDevelopmentEnvironment()
+        ? (str) => { console.log('STOMP:', str); }
+        : () => {},
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,

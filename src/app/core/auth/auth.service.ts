@@ -4,7 +4,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, map, of } from 'rxjs';
 import { RestaurantContextService } from '../services/restaurant-context.service';
 import { PushNotificationService } from '../services/push-notification.service';
-import { environment } from '../../../environments/environment';
+import { RuntimeEnvironmentService } from '../services/runtime-environment.service';
 
 export interface User {
   token: string;
@@ -28,13 +28,13 @@ export class AuthService {
   public currentUser: Observable<User | null>;
   private readonly STORAGE_KEY = 'nearbite_user';
   private readonly TOKEN_STORAGE_KEY = 'nearbite_auth_token';
-  private readonly API_BASE_URL = environment.apiUrl;
 
   constructor(
     private router: Router,
     private http: HttpClient,
     private restaurantContext: RestaurantContextService,
-    private pushNotificationService: PushNotificationService
+    private pushNotificationService: PushNotificationService,
+    private runtimeEnvironmentService: RuntimeEnvironmentService
   ) {
     const storedUser = localStorage.getItem(this.STORAGE_KEY);
     this.currentUserSubject = new BehaviorSubject<User | null>(
@@ -56,7 +56,10 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<{ success: boolean; message?: string }> {
-    return this.http.post<RestaurantLoginResponse>(`${this.API_BASE_URL}/restaurants/login`, {
+    const targetEnvironment = this.runtimeEnvironmentService.resolveEnvironmentForUsername(username);
+    this.runtimeEnvironmentService.setActiveEnvironment(targetEnvironment);
+
+    return this.http.post<RestaurantLoginResponse>(`${this.runtimeEnvironmentService.getApiBaseUrl()}/restaurants/login`, {
       username,
       password
     }).pipe(
@@ -89,6 +92,7 @@ export class AuthService {
     this.pushNotificationService.clearTokenForRestaurant(restaurantId);
     localStorage.removeItem(this.STORAGE_KEY);
     localStorage.removeItem(this.TOKEN_STORAGE_KEY);
+    this.runtimeEnvironmentService.resetToDefault();
     this.restaurantContext.clearContext();
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);

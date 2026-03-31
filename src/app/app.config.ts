@@ -5,6 +5,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { runtimeApiInterceptor } from './core/interceptors/runtime-api.interceptor';
 import { trailingSlashInterceptor } from './core/interceptors/trailing-slash.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -18,6 +19,6 @@ export const appConfig: ApplicationConfig = {
       })
     ),
     provideAnimations(),
-    provideHttpClient(withInterceptors([trailingSlashInterceptor, authInterceptor]))
+    provideHttpClient(withInterceptors([runtimeApiInterceptor, trailingSlashInterceptor, authInterceptor]))
   ]
 };
