@@ -14,12 +14,17 @@ import { SettingsComponent } from './features/settings/settings.component';
 import { SupportComponent } from './features/support/support.component';
 import { GoOnlineComponent } from './features/go-online/go-online.component';
 import { PrinterSettingsComponent } from './features/printer-settings/printer-settings.component';
+import { TermsComponent } from './features/terms/terms.component';
 
 export const routes: Routes = [
   {
     path: '',
     component: LandingComponent,
     canActivate: [loginGuard]
+  },
+  {
+    path: 'terms',
+    component: TermsComponent
   },
   {
     path: 'login',

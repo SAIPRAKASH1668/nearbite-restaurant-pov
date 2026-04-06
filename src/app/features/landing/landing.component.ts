@@ -85,9 +85,24 @@ export class LandingComponent {
   readonly stars = [1, 2, 3, 4, 5];
 
   readonly footerCols = [
-    { title: 'Company',      links: ['About Us', 'Careers', 'Blog', 'Press'] },
-    { title: 'For Partners', links: ['Register Restaurant', 'Partner Dashboard', 'Commission Rates', 'Support'] },
-    { title: 'Support',      links: ['Help Center', 'Contact Us', 'Privacy Policy', 'Terms of Service'] }
+    { title: 'Company',      links: [
+      { label: 'About Us', route: null },
+      { label: 'Careers', route: null },
+      { label: 'Blog', route: null },
+      { label: 'Press', route: null }
+    ]},
+    { title: 'For Partners', links: [
+      { label: 'Register Restaurant', route: null },
+      { label: 'Partner Dashboard', route: null },
+      { label: 'Commission Rates', route: null },
+      { label: 'Support', route: null }
+    ]},
+    { title: 'Support',      links: [
+      { label: 'Help Center', route: null },
+      { label: 'Contact Us', route: null },
+      { label: 'Privacy Policy', route: null },
+      { label: 'Terms of Service', route: '/terms' }
+    ]}
   ];
 
   constructor(private router: Router) {}

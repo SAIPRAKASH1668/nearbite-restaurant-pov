@@ -50,7 +50,7 @@
       Disrupting Food Delivery
     </div>
     <h1 class="hero-h1">
-      Fair Food.&#32;<span class="h1-yum">Fair</span><br />Commission.&#32;<span class="h1-dude">Fair</span>&#32;Prices.
+      Yum Food.&#32;<span class="h1-yum">Fair</span><br />Commission.&#32;<span class="h1-dude">Fair</span>&#32;Prices.
     </h1>
     <p class="hero-sub">
       YumDude delivers happiness without overcharging restaurants or customers.<br />
@@ -304,7 +304,8 @@
         <h4 class="footer-col-title">{{ col.title }}</h4>
         <ul class="footer-link-list">
           <li *ngFor="let link of col.links">
-            <a href="#" class="footer-link">{{ link }}</a>
+            <a *ngIf="link.route" [href]="link.route" class="footer-link">{{ link.label }}</a>
+            <a *ngIf="!link.route" href="#" class="footer-link">{{ link.label }}</a>
           </li>
         </ul>
       </div>
