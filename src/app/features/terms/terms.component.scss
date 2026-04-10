@@ -143,6 +143,12 @@ $shadow-card: 0 8px 30px -8px hsla(20, 10%, 15%, 0.1);
   @media (min-width: 640px) { padding: 1.5rem; }
 }
 
+.enrolment-party-full {
+  @media (min-width: 640px) {
+    grid-column: 1 / -1;
+  }
+}
+
 .party-heading {
   font-size: 1rem;
   font-weight: 700;
@@ -150,6 +156,10 @@ $shadow-card: 0 8px 30px -8px hsla(20, 10%, 15%, 0.1);
   margin: 0 0 1rem;
   padding-bottom: 0.5rem;
   border-bottom: 2px solid $dude-red;
+}
+
+.party-heading-bank {
+  border-bottom-color: $yum-yellow;
 }
 
 .enrolment-table {
@@ -179,6 +189,43 @@ $shadow-card: 0 8px 30px -8px hsla(20, 10%, 15%, 0.1);
   border-bottom: 1px dashed darken($border, 10%);
 }
 
+.enrolment-input {
+  width: 100%;
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: $foreground;
+  padding: 6px 8px;
+  border: 1px solid $border;
+  border-radius: 6px;
+  background: white;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+
+  &::placeholder { color: darken($border, 8%); }
+  &:focus {
+    border-color: $yum-yellow;
+    box-shadow: 0 0 0 3px hsla(43, 100%, 55%, 0.15);
+  }
+}
+
+input[type="date"].enrolment-input,
+select.enrolment-input {
+  cursor: pointer;
+}
+
+.sig-section {
+  margin-top: 1rem;
+}
+
+.sig-label {
+  display: block;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: $foreground;
+  margin-bottom: 6px;
+}
+
 .enrolment-note {
   font-size: 0.875rem;
   font-weight: 500;
@@ -186,6 +233,53 @@ $shadow-card: 0 8px 30px -8px hsla(20, 10%, 15%, 0.1);
   margin: 1.75rem 0 0;
   font-style: italic;
   text-align: center;
+}
+
+.enrolment-actions {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.btn-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: $foreground;
+  background: $yum-yellow;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 28px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s, transform 0.1s;
+  box-shadow: 0 4px 14px -4px hsla(43, 100%, 40%, 0.4);
+
+  &:hover:not(:disabled) {
+    background: darken($yum-yellow, 6%);
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+}
+
+.btn-icon {
+  font-size: 1.15rem;
+}
+
+.enrolment-hint {
+  font-size: 0.8rem;
+  color: $muted-fg;
+  margin-top: 0.75rem;
 }
 
 .terms-body {

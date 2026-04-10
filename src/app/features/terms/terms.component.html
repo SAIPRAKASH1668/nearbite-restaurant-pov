@@ -45,64 +45,177 @@
                 </tr>
                 <tr>
                   <td class="enrolment-label">Date</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
-                </tr>
-                <tr>
-                  <td class="enrolment-label">Signature</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
+                  <td class="enrolment-value">
+                    <input type="date" class="enrolment-input" [(ngModel)]="platformDate" />
+                  </td>
                 </tr>
               </table>
+              <div class="sig-section">
+                <span class="sig-label">Signature</span>
+                <app-signature-pad
+                  #platformSig
+                  [canvasHeight]="100"
+                  (signatureChange)="platformSignature = $event"
+                ></app-signature-pad>
+              </div>
             </div>
 
-            <!-- Restaurant Partner Details (Blanks) -->
+            <!-- Restaurant Partner Details -->
             <div class="enrolment-party">
               <h3 class="party-heading">Restaurant Partner Details</h3>
               <table class="enrolment-table">
                 <tr>
                   <td class="enrolment-label">Restaurant Name</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="Enter restaurant name" [(ngModel)]="restaurant.name" />
+                  </td>
                 </tr>
                 <tr>
                   <td class="enrolment-label">Owner / Authorised Signatory</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="Enter owner name" [(ngModel)]="restaurant.owner" />
+                  </td>
                 </tr>
                 <tr>
                   <td class="enrolment-label">GSTIN</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. 29ABCDE1234F1Z5" [(ngModel)]="restaurant.gstin" />
+                  </td>
                 </tr>
                 <tr>
                   <td class="enrolment-label">FSSAI License Number</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. 12345678901234" [(ngModel)]="restaurant.fssai" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">FSSAI Valid Till</td>
+                  <td class="enrolment-value">
+                    <input type="date" class="enrolment-input" [(ngModel)]="restaurant.fssaiValidDate" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">PAN Number</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. ABCDE1234F" [(ngModel)]="restaurant.pan" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Type of Entity</td>
+                  <td class="enrolment-value">
+                    <select class="enrolment-input" [(ngModel)]="restaurant.entityType">
+                      <option value="" disabled>Select entity type</option>
+                      <option value="Proprietorship">Proprietorship</option>
+                      <option value="Partnership">Partnership</option>
+                      <option value="LLP">LLP</option>
+                      <option value="Private Limited">Private Limited</option>
+                      <option value="Public Limited">Public Limited</option>
+                      <option value="HUF">HUF</option>
+                      <option value="Trust">Trust</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </td>
                 </tr>
                 <tr>
                   <td class="enrolment-label">Restaurant Address</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="Enter full address" [(ngModel)]="restaurant.address" />
+                  </td>
                 </tr>
                 <tr>
                   <td class="enrolment-label">Contact Number</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
+                  <td class="enrolment-value">
+                    <input type="tel" class="enrolment-input" placeholder="e.g. 9876543210" [(ngModel)]="restaurant.phone" />
+                  </td>
                 </tr>
                 <tr>
                   <td class="enrolment-label">Email Address</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
+                  <td class="enrolment-value">
+                    <input type="email" class="enrolment-input" placeholder="e.g. owner@restaurant.com" [(ngModel)]="restaurant.email" />
+                  </td>
                 </tr>
                 <tr>
                   <td class="enrolment-label">Agreed Commission (%)</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. 15%" [(ngModel)]="restaurant.commission" />
+                  </td>
                 </tr>
                 <tr>
                   <td class="enrolment-label">Date</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
+                  <td class="enrolment-value">
+                    <input type="date" class="enrolment-input" [(ngModel)]="restaurant.date" />
+                  </td>
+                </tr>
+              </table>
+              <div class="sig-section">
+                <span class="sig-label">Signature</span>
+                <app-signature-pad
+                  #restaurantSig
+                  [canvasHeight]="100"
+                  (signatureChange)="restaurantSignature = $event"
+                ></app-signature-pad>
+              </div>
+            </div>
+
+            <!-- Bank Details -->
+            <div class="enrolment-party enrolment-party-full">
+              <h3 class="party-heading party-heading-bank">Bank Details (for Payment Settlement)</h3>
+              <table class="enrolment-table">
+                <tr>
+                  <td class="enrolment-label">Account Holder Name</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="As per bank records" [(ngModel)]="bank.holderName" />
+                  </td>
                 </tr>
                 <tr>
-                  <td class="enrolment-label">Signature</td>
-                  <td class="enrolment-value enrolment-blank">&nbsp;</td>
+                  <td class="enrolment-label">Bank Name</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. State Bank of India" [(ngModel)]="bank.bankName" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Account Number</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="Enter account number" [(ngModel)]="bank.accountNumber" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">IFSC Code</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. SBIN0001234" [(ngModel)]="bank.ifsc" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Branch Name</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. Nandyal Main Branch" [(ngModel)]="bank.branchName" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">UPI ID</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. restaurant@upi" [(ngModel)]="bank.upiId" />
+                  </td>
                 </tr>
               </table>
             </div>
           </div>
 
           <p class="enrolment-note">By signing this Enrolment Form, both parties agree to be bound by the Terms and Conditions set out below.</p>
+
+          <div class="enrolment-actions">
+            <button
+              class="btn-download"
+              [disabled]="!canDownload()"
+              (click)="downloadSignedPdf()"
+            >
+              <span class="btn-icon">&#128196;</span>
+              Download Signed Agreement (PDF)
+            </button>
+            <p class="enrolment-hint" *ngIf="!canDownload()">
+              Fill in all restaurant details and provide both signatures to enable download.
+            </p>
+          </div>
         </div>
 
         <div class="terms-body">
