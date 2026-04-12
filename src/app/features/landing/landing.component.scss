@@ -776,6 +776,77 @@ section[id] {
   flex-shrink: 0;
 }
 
+.app-store-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+  margin-top: 2rem;
+}
+
+.store-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.875rem;
+  text-decoration: none;
+  transition: all 0.25s ease;
+  border: 2px solid transparent;
+  min-width: 10rem;
+
+  .store-btn-icon {
+    font-size: 1.75rem;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .store-btn-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  .store-btn-sub {
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    opacity: 0.8;
+    text-transform: uppercase;
+  }
+
+  .store-btn-title {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  &.store-btn-dark {
+    background: $foreground;
+    color: $background;
+    box-shadow: $shadow-card;
+
+    &:hover {
+      background: darken(#1a1a2e, 5%);
+      transform: translateY(-2px);
+      box-shadow: $shadow-elevated;
+    }
+  }
+
+  &.store-btn-white {
+    background: white;
+    color: $dude-red;
+    box-shadow: $shadow-elevated;
+
+    .store-btn-sub { color: rgba($foreground, 0.6); }
+    .store-btn-title { color: $foreground; }
+
+    &:hover {
+      background: $yum-yellow-light;
+      transform: translateY(-2px);
+    }
+  }
+}
+
 .app-visual {
   position: relative;
   display: flex;

@@ -200,6 +200,22 @@
           <span>{{ h.text }}</span>
         </li>
       </ul>
+      <div class="app-store-btns">
+        <a href="https://apps.apple.com/in/app/yumdude/id6760124278" target="_blank" rel="noopener noreferrer" class="store-btn store-btn-dark">
+          <i class="fab fa-apple store-btn-icon"></i>
+          <div class="store-btn-text">
+            <span class="store-btn-sub">Download on the</span>
+            <span class="store-btn-title">App Store</span>
+          </div>
+        </a>
+        <a href="https://play.google.com/store/apps/details?id=app.rork.honesteats" target="_blank" rel="noopener noreferrer" class="store-btn store-btn-dark">
+          <i class="fab fa-google-play store-btn-icon"></i>
+          <div class="store-btn-text">
+            <span class="store-btn-sub">Get it on</span>
+            <span class="store-btn-title">Google Play</span>
+          </div>
+        </a>
+      </div>
     </div>
     <div class="app-visual">
       <div class="phone-glow"></div>
@@ -277,10 +293,20 @@
       YumDude has your back.
     </p>
     <div class="cta-btns">
-      <button class="btn-cta-white" (click)="scrollToSection('app-preview', $event)">
-        <i class="fas fa-download btn-icon"></i>
-        Download App
-      </button>
+      <a href="https://apps.apple.com/in/app/yumdude/id6760124278" target="_blank" rel="noopener noreferrer" class="store-btn store-btn-white">
+        <i class="fab fa-apple store-btn-icon"></i>
+        <div class="store-btn-text">
+          <span class="store-btn-sub">Download on the</span>
+          <span class="store-btn-title">App Store</span>
+        </div>
+      </a>
+      <a href="https://play.google.com/store/apps/details?id=app.rork.honesteats" target="_blank" rel="noopener noreferrer" class="store-btn store-btn-white">
+        <i class="fab fa-google-play store-btn-icon"></i>
+        <div class="store-btn-text">
+          <span class="store-btn-sub">Get it on</span>
+          <span class="store-btn-title">Google Play</span>
+        </div>
+      </a>
       <button class="btn-cta-ghost" (click)="navigateToLogin($event)">
         Become a Partner
         <i class="fas fa-arrow-right btn-icon"></i>
