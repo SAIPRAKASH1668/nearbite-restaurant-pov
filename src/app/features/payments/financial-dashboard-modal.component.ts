@@ -9,9 +9,7 @@ import {
   PaymentFilters,
   SortConfig,
   PaginationConfig,
-  PaymentStatus,
   SettlementStatus,
-  PaymentMethod,
   RestaurantEarning
 } from '../../core/models/payment.model';
 import { PaymentService } from '../../core/services/payment.service';
@@ -45,14 +43,10 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   startDate: string = '';
   endDate: string = '';
   
-  selectedPaymentStatuses: PaymentStatus[] = [];
   selectedSettlementStatuses: SettlementStatus[] = [];
-  selectedPaymentMethods: PaymentMethod[] = [];
 
   // Filter visibility toggles
-  showPaymentStatusFilter = false;
   showSettlementStatusFilter = false;
-  showPaymentMethodFilter = false;
 
   // Search
   searchOrderId: string = '';
@@ -73,9 +67,7 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   isExporting = false;
 
   // Filter options (loaded from service - production-ready)
-  paymentStatuses: PaymentStatus[] = [];
   settlementStatuses: SettlementStatus[] = [];
-  paymentMethods: PaymentMethod[] = [];
 
   // Expose Math for template
   Math = Math;
@@ -105,18 +97,8 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
     this.endDate = this.formatDateForInput(today);
     
     // Load filter options from service (production-ready)
-    this.paymentService.getPaymentStatuses().subscribe(statuses => {
-      this.paymentStatuses = statuses;
-      this.cdr.markForCheck();
-    });
-    
     this.paymentService.getSettlementStatuses().subscribe(statuses => {
       this.settlementStatuses = statuses;
-      this.cdr.markForCheck();
-    });
-    
-    this.paymentService.getPaymentMethods().subscribe(methods => {
-      this.paymentMethods = methods;
       this.cdr.markForCheck();
     });
     
@@ -179,21 +161,17 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   private loadRealDataFromAWS(): void {
     const restaurantId = this.restaurantContextService.getRestaurantId();
     
-    this.paymentService.getRestaurantEarnings(
+    this.paymentService.getRestaurantFinancialData(
       restaurantId,
       this.startDate,
       this.endDate
     ).subscribe({
-      next: (response) => {
-        this.realEarnings = response.history;
-        
-        // Convert AWS earnings to Payment format for table display
-        this.allPayments = this.paymentService.convertEarningsToPayments(response.history);
-        
-        // Calculate summary metrics from real data
-        this.earnings = this.paymentService.calculateEarningsSummaryFromAWS(response.history);
-        this.commission = this.paymentService.calculateCommissionFromAWS(response.history);
-        this.statusCounts = this.paymentService.calculateStatusCountsFromAWS(response.history);
+      next: (data) => {
+        this.realEarnings = data.history;
+        this.allPayments = data.payments;
+        this.earnings = data.earningsSummary;
+        this.commission = data.commissionBreakdown;
+        this.statusCounts = data.statusCounts;
         
         // Apply search and update UI
         this.applySearch();
@@ -246,9 +224,7 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
     this.filters = {
       startDate: this.startDate || undefined,
       endDate: this.endDate || undefined,
-      paymentStatus: this.selectedPaymentStatuses.length > 0 ? this.selectedPaymentStatuses : undefined,
-      settlementStatus: this.selectedSettlementStatuses.length > 0 ? this.selectedSettlementStatuses : undefined,
-      paymentMethod: this.selectedPaymentMethods.length > 0 ? this.selectedPaymentMethods : undefined
+      settlementStatus: this.selectedSettlementStatuses.length > 0 ? this.selectedSettlementStatuses : undefined
     };
   }
 
@@ -269,9 +245,7 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
     
     this.startDate = this.formatDateForInput(thirtyDaysAgo);
     this.endDate = this.formatDateForInput(today);
-    this.selectedPaymentStatuses = [];
     this.selectedSettlementStatuses = [];
-    this.selectedPaymentMethods = [];
     this.searchOrderId = '';
     
     this.loadData();
@@ -299,13 +273,6 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
     // Start with all payments
     let payments = [...this.allPayments];
     
-    // Apply payment status filter
-    if (this.selectedPaymentStatuses.length > 0) {
-      payments = payments.filter(p => 
-        this.selectedPaymentStatuses.includes(p.paymentStatus)
-      );
-    }
-    
     // Apply settlement status filter
     if (this.selectedSettlementStatuses.length > 0) {
       payments = payments.filter(p => 
@@ -313,12 +280,6 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
       );
     }
     
-    // Apply payment method filter
-    if (this.selectedPaymentMethods.length > 0) {
-      payments = payments.filter(p => 
-        this.selectedPaymentMethods.includes(p.paymentMethod)
-      );
-    }
     
     // Apply order ID search
     if (this.searchOrderId.trim()) {
@@ -335,20 +296,6 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   /**
    * Toggle filter selection (multi-select)
    */
-  togglePaymentStatus(status: PaymentStatus): void {
-    const index = this.selectedPaymentStatuses.indexOf(status);
-    if (index > -1) {
-      this.selectedPaymentStatuses.splice(index, 1);
-    } else {
-      this.selectedPaymentStatuses.push(status);
-    }
-    // Re-apply filters without reloading from AWS
-    this.applySearch();
-    this.pagination.currentPage = 1;
-    this.updatePagination();
-    this.cdr.markForCheck();
-  }
-
   toggleSettlementStatus(status: SettlementStatus): void {
     const index = this.selectedSettlementStatuses.indexOf(status);
     if (index > -1) {
@@ -363,33 +310,11 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  togglePaymentMethod(method: PaymentMethod): void {
-    const index = this.selectedPaymentMethods.indexOf(method);
-    if (index > -1) {
-      this.selectedPaymentMethods.splice(index, 1);
-    } else {
-      this.selectedPaymentMethods.push(method);
-    }
-    // Re-apply filters without reloading from AWS
-    this.applySearch();
-    this.pagination.currentPage = 1;
-    this.updatePagination();
-    this.cdr.markForCheck();
-  }
-
   /**
    * Check if filter is selected
    */
-  isPaymentStatusSelected(status: PaymentStatus): boolean {
-    return this.selectedPaymentStatuses.includes(status);
-  }
-
   isSettlementStatusSelected(status: SettlementStatus): boolean {
     return this.selectedSettlementStatuses.includes(status);
-  }
-
-  isPaymentMethodSelected(method: PaymentMethod): boolean {
-    return this.selectedPaymentMethods.includes(method);
   }
 
   /**
@@ -591,19 +516,6 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
    */
   formatCurrency(amount: number): string {
     return `₹${amount.toFixed(2)}`;
-  }
-
-  /**
-   * Get CSS class for payment status
-   */
-  getPaymentStatusClass(status: PaymentStatus): string {
-    const map: Record<PaymentStatus, string> = {
-      'INITIATED': 'status-pending',
-      'SUCCESS': 'status-success',
-      'FAILED': 'status-failed',
-      'REFUNDED': 'status-refunded'
-    };
-    return map[status] || '';
   }
 
   /**

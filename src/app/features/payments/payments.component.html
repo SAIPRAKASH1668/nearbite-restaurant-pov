@@ -1,0 +1,145 @@
+<div class="settlement-container">
+
+  <!-- ── Page Header ─────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Settlements</h1>
+      <p class="subtitle">Select a date range to preview and confirm your restaurant payout</p>
+    </div>
+    <div *ngIf="settled" class="settled-badge">
+      <i class="fas fa-check-circle"></i>
+      Settled · {{ settlementId }}
+    </div>
+  </div>
+
+  <!-- ── Date Range Picker ────────────────────────────────────────────────── -->
+  <div class="filter-card">
+    <div class="filter-row">
+      <div class="field-group">
+        <label>From</label>
+        <input type="date" [(ngModel)]="startDate" [max]="endDate" />
+      </div>
+      <div class="field-group">
+        <label>To</label>
+        <input type="date" [(ngModel)]="endDate" [min]="startDate" />
+      </div>
+      <button
+        class="btn-preview"
+        (click)="previewSettlement()"
+        [disabled]="previewing || !startDate || !endDate"
+      >
+        <i class="fas" [ngClass]="previewing ? 'fa-spinner fa-spin' : 'fa-search'"></i>
+        {{ previewing ? 'Loading…' : 'Preview' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- ── No Orders State ──────────────────────────────────────────────────── -->
+  <div *ngIf="preview && preview.totalOrders === 0" class="empty-state">
+    <i class="fas fa-receipt"></i>
+    <h3>No Unsettled Orders</h3>
+    <p>All orders in this date range have already been settled.</p>
+  </div>
+
+  <!-- ── Preview Results ──────────────────────────────────────────────────── -->
+  <ng-container *ngIf="preview && preview.totalOrders > 0">
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="card-label">Total Orders</div>
+        <div class="card-value">{{ preview.totalOrders }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="card-label">Total Menu Value</div>
+        <div class="card-value">{{ formatCurrency(preview.totalGMV) }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="card-label">Platform Commission</div>
+        <div class="card-value deduction">{{ formatCurrency(preview.totalCommission) }}</div>
+      </div>
+      <div class="summary-card highlight">
+        <div class="card-label">Net Payable to You</div>
+        <div class="card-value net">{{ formatCurrency(preview.netPayable) }}</div>
+      </div>
+    </div>
+
+    <!-- Order Breakdown Table -->
+    <div class="table-card">
+      <div class="table-header">
+        <h2>Order Breakdown</h2>
+        <span class="row-count">{{ preview.orders.length }} orders</span>
+      </div>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Order ID</th>
+              <th>Date &amp; Time</th>
+              <th class="num">Menu Order Value</th>
+              <th class="num">Commission</th>
+              <th class="num">Coupon Adj</th>
+              <th class="num net-col">Net Payout</th>
+              <th>Payment</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of preview.orders; let i = index">
+              <td class="idx">{{ i + 1 }}</td>
+              <td class="order-id">{{ row.orderId }}</td>
+              <td class="date">{{ formatDate(row.createdAt) }}</td>
+              <td class="num">{{ formatCurrency(row.foodTotal) }}</td>
+              <td class="num deduction">
+                <span *ngIf="row.foodCommission > 0">-{{ formatCurrency(row.foodCommission) }}</span>
+                <span *ngIf="row.foodCommission === 0">—</span>
+              </td>
+              <td class="num deduction">
+                <span *ngIf="row.couponDeduction > 0">-{{ formatCurrency(row.couponDeduction) }}</span>
+                <span *ngIf="row.couponDeduction === 0">—</span>
+              </td>
+              <td class="num net-col">{{ formatCurrency(row.netPayout) }}</td>
+              <td><span class="payment-badge">{{ row.paymentMethod }}</span></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr class="totals-row">
+              <td colspan="3">Total</td>
+              <td class="num">{{ formatCurrency(preview.totalGMV) }}</td>
+              <td class="num deduction">-{{ formatCurrency(preview.totalCommission) }}</td>
+              <td class="num deduction">-{{ formatCurrency(preview.totalCouponDeduction) }}</td>
+              <td class="num net-col">{{ formatCurrency(preview.netPayable) }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="actions-row">
+      <div class="action-note" *ngIf="!settled">
+        <i class="fas fa-info-circle"></i>
+        Clicking <strong>Confirm &amp; Download</strong> will mark these
+        {{ preview.totalOrders }} orders as settled and generate your XLSX report.
+      </div>
+      <div class="action-note success" *ngIf="settled">
+        <i class="fas fa-check-circle"></i>
+        Settlement <strong>{{ settlementId }}</strong> confirmed.
+        Your report has been downloaded.
+      </div>
+
+      <button
+        class="btn-confirm"
+        (click)="confirmAndDownload()"
+        [disabled]="confirming || settled"
+      >
+        <i class="fas" [ngClass]="confirming ? 'fa-spinner fa-spin' : (settled ? 'fa-check' : 'fa-file-excel')"></i>
+        {{ confirming ? 'Processing…' : settled ? 'Settled' : 'Confirm & Download Report' }}
+      </button>
+    </div>
+
+  </ng-container>
+
+</div>

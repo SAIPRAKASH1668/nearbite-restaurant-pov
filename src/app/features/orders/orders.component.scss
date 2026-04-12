@@ -1223,6 +1223,40 @@
   }
 }
 
+// Desktop/laptop only: when printer is missing, keep hierarchy clean:
+// navbar -> printer banner -> tabs
+.ord-root--no-printer {
+  @include laptop-up {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ord-printer-nudge {
+    @include laptop-up {
+      order: 1;
+      position: static;
+      margin: 0 1rem 0.5rem;
+    }
+  }
+
+  .ord-tabs {
+    @include laptop-up {
+      order: 2;
+      position: static;
+      top: auto;
+      z-index: auto;
+      margin-bottom: 1rem;
+    }
+  }
+
+  .ord-loading,
+  .ord-grid {
+    @include laptop-up {
+      order: 3;
+    }
+  }
+}
+
 // ── Printer: print status toast ──────────────────────────────────────────
 .ord-print-toast {
   display: flex;

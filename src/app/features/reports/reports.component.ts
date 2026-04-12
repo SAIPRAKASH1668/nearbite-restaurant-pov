@@ -243,7 +243,7 @@ export class ReportsComponent implements OnInit {
     const orders = this.filteredOrders;
     
     this.stats.totalOrders = orders.length;
-    this.stats.totalRevenue = orders.reduce((sum, o) => sum + (o.grandTotal || 0), 0);
+    this.stats.totalRevenue = orders.reduce((sum, o) => sum + (o.foodTotal || 0), 0);
     this.stats.avgOrderValue = this.stats.totalOrders > 0 
       ? this.stats.totalRevenue / this.stats.totalOrders 
       : 0;
@@ -550,14 +550,14 @@ export class ReportsComponent implements OnInit {
    * Export to CSV
    */
   async exportCSV(): Promise<void> {
-    const headers = ['Order ID', 'Date', 'Time', 'Customer Phone', 'Items', 'Amount', 'Status'];
+    const headers = ['Order ID', 'Date', 'Time', 'Customer Phone', 'Items', 'Menu Order Value', 'Status'];
     const rows = this.filteredOrders.map(order => [
       order.orderId,
       order.formattedDate,
       order.formattedTime,
       order.customerPhone,
       order.itemsCount.toString(),
-      order.grandTotal?.toFixed(2) || '0.00',
+      order.foodTotal?.toFixed(2) || '0.00',
       this.getStatusLabel(order.status)
     ]);
     

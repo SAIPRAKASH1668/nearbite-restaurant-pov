@@ -332,6 +332,93 @@
 
   </div>
 
+  <!-- __ Rider Assignment Timing __________________________________________ -->
+  <div class="st-card st-hours-card">
+
+    <div class="st-card-head">
+      <div class="st-card-head-info">
+        <div class="st-card-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 3h18v13H3z"/><path d="M8 21h8"/><path d="M12 16v5"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="st-card-title">Order Preparation Time</h2>
+          <p class="st-card-desc">Set average prep time to improve rider assignment timing</p>
+        </div>
+      </div>
+      <span class="st-unsaved-pill" *ngIf="prepTimeUnsaved && prepTimeLoaded">Unsaved changes</span>
+    </div>
+
+    <div class="st-hours-skeleton" *ngIf="!prepTimeLoaded">
+      <div class="st-spinner-sm"></div>
+      <span>Loading preparation time...</span>
+    </div>
+
+    <ng-container *ngIf="prepTimeLoaded">
+      <div class="st-prep-wrap">
+        <label class="st-hours-label" for="prepTimeInput">
+          <span class="st-hours-dot st-hours-dot--open"></span>
+          Average order prep time (minutes)
+        </label>
+
+        <div class="st-prep-input-row">
+          <button
+            class="st-prep-step"
+            (click)="onPrepTimeInputChange(avgPreparationTime - 1)"
+            [disabled]="savingPrepTime || avgPreparationTime <= minPrepTime"
+            aria-label="Decrease preparation time">
+            -
+          </button>
+
+          <input
+            id="prepTimeInput"
+            class="st-prep-input"
+            type="number"
+            inputmode="numeric"
+            [min]="minPrepTime"
+            [max]="maxPrepTime"
+            [ngModel]="avgPreparationTime"
+            (ngModelChange)="onPrepTimeInputChange($event)"
+            [disabled]="savingPrepTime" />
+
+          <button
+            class="st-prep-step"
+            (click)="onPrepTimeInputChange(avgPreparationTime + 1)"
+            [disabled]="savingPrepTime || avgPreparationTime >= maxPrepTime"
+            aria-label="Increase preparation time">
+            +
+          </button>
+        </div>
+
+        <p class="st-hours-hint">Allowed range: {{ minPrepTime }} to {{ maxPrepTime }} minutes</p>
+      </div>
+
+      <div class="st-hours-actions">
+        <button
+          class="st-btn-save-hours"
+          [class.saving]="savingPrepTime"
+          [disabled]="savingPrepTime"
+          (click)="saveAvgPreparationTime()">
+          <span class="st-spinner" *ngIf="savingPrepTime"></span>
+          <svg *ngIf="!savingPrepTime" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+            <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+          </svg>
+          {{ savingPrepTime ? 'Saving...' : 'Save Prep Time' }}
+        </button>
+
+        <button
+          class="st-btn-discard-hours"
+          *ngIf="prepTimeUnsaved"
+          [disabled]="savingPrepTime"
+          (click)="resetAvgPreparationTime()">
+          Discard
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
 </div>
 
 <!-- â”€â”€ Lightbox â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->

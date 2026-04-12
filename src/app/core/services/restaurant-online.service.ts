@@ -134,4 +134,32 @@ export class RestaurantOnlineService {
     if (!restaurantId) return of(null);
     return this.http.put(`${API_BASE}/restaurants/${restaurantId}`, { opensAt, closesAt });
   }
+
+  /**
+   * Fetch average order preparation time (in minutes).
+   */
+  fetchAvgPreparationTime(): Observable<number | null> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    if (!restaurantId) {
+      return of(null);
+    }
+    return this.http.get<any>(`${API_BASE}/restaurants/${restaurantId}`).pipe(
+      map((res: any) => {
+        const value = res?.avgPreparationTime;
+        if (value === undefined || value === null || value === '') return null;
+        const num = Number(value);
+        return Number.isFinite(num) ? Math.round(num) : null;
+      }),
+      catchError(() => of(null))
+    );
+  }
+
+  /**
+   * Persist average order preparation time (in minutes).
+   */
+  updateAvgPreparationTime(avgPreparationTime: number): Observable<any> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    if (!restaurantId) return of(null);
+    return this.http.put(`${API_BASE}/restaurants/${restaurantId}`, { avgPreparationTime });
+  }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, forkJoin } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { jsPDF } from 'jspdf';
 import { environment } from '../../../environments/environment';
@@ -19,6 +19,33 @@ import {
   SettleEarningsResponse
 } from '../models/payment.model';
 import { FileExportService } from './file-export.service';
+
+interface BackendOrderRevenue {
+  customerPaidFoodValue?: number;
+  platformRevenue?: {
+    foodCommission?: number;
+  };
+}
+
+interface BackendOrder {
+  orderId: string;
+  createdAt: string;
+  foodTotal?: number;
+  revenue?: BackendOrderRevenue;
+}
+
+interface BackendOrdersResponse {
+  orders: BackendOrder[];
+  total: number;
+}
+
+interface RestaurantFinancialData {
+  history: RestaurantEarning[];
+  payments: Payment[];
+  earningsSummary: EarningsSummary;
+  commissionBreakdown: CommissionBreakdown;
+  statusCounts: PaymentStatusCounts;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -363,12 +390,9 @@ export class PaymentService {
     const headers = [
       'Date',
       'Order ID',
-      'Payment Method',
-      'Gross Amount',
+      'Menu Order Value',
       'Commission',
-      'Tax',
       'Net Payout',
-      'Payment Status',
       'Settlement Status',
       'Transaction ID'
     ];
@@ -376,12 +400,9 @@ export class PaymentService {
     const rows = payments.map(p => [
       new Date(p.createdAt).toLocaleDateString('en-IN'),
       p.orderId,
-      p.paymentMethod,
       p.grossAmount.toFixed(2),
       p.commissionAmount.toFixed(2),
-      p.taxAmount.toFixed(2),
       p.netPayoutAmount.toFixed(2),
-      p.paymentStatus,
       p.settlementStatus,
       p.transactionId
     ]);
@@ -417,9 +438,9 @@ export class PaymentService {
     
     payments.forEach(p => {
       content += `Date: ${new Date(p.createdAt).toLocaleDateString('en-IN')}\n`;
-      content += `Order: ${p.orderId} | Method: ${p.paymentMethod}\n`;
+      content += `Order: ${p.orderId}\n`;
       content += `Gross: ₹${p.grossAmount} | Commission: ₹${p.commissionAmount} | Net: ₹${p.netPayoutAmount}\n`;
-      content += `Status: ${p.paymentStatus} | Settlement: ${p.settlementStatus}\n`;
+      content += `Settlement: ${p.settlementStatus}\n`;
       content += '-'.repeat(80) + '\n';
     });
 
@@ -445,12 +466,9 @@ export class PaymentService {
     const headers = [
       'Date',
       'Order ID',
-      'Payment Method',
-      'Gross Amount',
+      'Menu Order Value',
       'Commission',
-      'Tax',
       'Net Payout',
-      'Payment Status',
       'Settlement Status',
       'Transaction ID'
     ];
@@ -458,12 +476,9 @@ export class PaymentService {
     const rows = payments.map((payment) => [
       new Date(payment.createdAt).toLocaleDateString('en-IN'),
       payment.orderId,
-      payment.paymentMethod,
       payment.grossAmount.toFixed(2),
       payment.commissionAmount.toFixed(2),
-      payment.taxAmount.toFixed(2),
       payment.netPayoutAmount.toFixed(2),
-      payment.paymentStatus,
       payment.settlementStatus,
       payment.transactionId
     ]);
@@ -532,15 +547,15 @@ export class PaymentService {
 
       addLine(`${index + 1}. Order ${payment.orderId}`, 11, 'bold');
       addWrappedLine(
-        `Date: ${new Date(payment.createdAt).toLocaleDateString('en-IN')} | Method: ${payment.paymentMethod} | Transaction: ${payment.transactionId}`,
+        `Date: ${new Date(payment.createdAt).toLocaleDateString('en-IN')} | Transaction: ${payment.transactionId}`,
         9
       );
       addWrappedLine(
-        `Gross: Rs.${payment.grossAmount.toFixed(2)} | Commission: Rs.${payment.commissionAmount.toFixed(2)} | Tax: Rs.${payment.taxAmount.toFixed(2)} | Net: Rs.${payment.netPayoutAmount.toFixed(2)}`,
+        `Menu Value: Rs.${payment.grossAmount.toFixed(2)} | Commission: Rs.${payment.commissionAmount.toFixed(2)} | Net: Rs.${payment.netPayoutAmount.toFixed(2)}`,
         9
       );
       addWrappedLine(
-        `Payment Status: ${payment.paymentStatus} | Settlement Status: ${payment.settlementStatus}`,
+        `Settlement Status: ${payment.settlementStatus}`,
         9
       );
       y += 4;
@@ -602,6 +617,64 @@ export class PaymentService {
     );
   }
 
+  getRestaurantFinancialData(
+    restaurantId: string,
+    startDate: string,
+    endDate: string
+  ): Observable<RestaurantFinancialData> {
+    return forkJoin({
+      earningsResponse: this.getRestaurantEarnings(restaurantId, startDate, endDate),
+      orders: this.getRestaurantOrders(restaurantId)
+    }).pipe(
+      map(({ earningsResponse, orders }) => {
+        const financialByOrderId = this.buildFinancialByOrderId(orders);
+        const payments = this.convertEarningsToPayments(earningsResponse.history, financialByOrderId);
+
+        return {
+          history: earningsResponse.history,
+          payments,
+          earningsSummary: this.calculateEarningsSummaryFromAWS(earningsResponse.history),
+          commissionBreakdown: this.calculateCommissionFromAWS(payments),
+          statusCounts: this.calculateStatusCountsFromAWS(earningsResponse.history)
+        };
+      })
+    );
+  }
+
+  private getRestaurantOrders(restaurantId: string): Observable<BackendOrder[]> {
+    return this.http.get<BackendOrdersResponse>(
+      `${this.API_BASE_URL}/orders`,
+      { params: { restaurantId } }
+    ).pipe(
+      map((response) => response.orders || []),
+      catchError((error) => {
+        console.error('Error fetching restaurant orders for financial mapping:', error);
+        return of([]);
+      })
+    );
+  }
+
+  private buildFinancialByOrderId(orders: BackendOrder[]): Map<string, { menuOrderValue: number; commissionAmount: number }> {
+    const financialByOrderId = new Map<string, { menuOrderValue: number; commissionAmount: number }>();
+
+    orders.forEach((order) => {
+      if (!order.orderId) {
+        return;
+      }
+
+      const revenue = order.revenue || {};
+      const menuOrderValue = Number(revenue.customerPaidFoodValue ?? order.foodTotal ?? 0) || 0;
+      const commissionAmount = Number(revenue.platformRevenue?.foodCommission ?? 0) || 0;
+
+      financialByOrderId.set(order.orderId, {
+        menuOrderValue,
+        commissionAmount
+      });
+    });
+
+    return financialByOrderId;
+  }
+
   /**
    * Settle restaurant earnings for specific orders
    */
@@ -623,16 +696,16 @@ export class PaymentService {
   /**
    * Convert AWS restaurant earnings to Payment format for display
    */
-  convertEarningsToPayments(earnings: RestaurantEarning[]): Payment[] {
+  convertEarningsToPayments(
+    earnings: RestaurantEarning[],
+    financialByOrderId: Map<string, { menuOrderValue: number; commissionAmount: number }> = new Map()
+  ): Payment[] {
     return earnings.map(e => {
-      // Extract date from "YYYY-MM-DD#ORDER_ID" format
-      const datePart = e.date.split('#')[0];
-      
-      // Calculate approximate commission (18%) and tax (18% of commission)
-      const grossAmount = e.totalEarnings;
-      const commissionAmount = Math.round(grossAmount * 0.18);
-      const taxAmount = Math.round(commissionAmount * 0.18);
-      const netPayoutAmount = grossAmount - commissionAmount - taxAmount;
+      const financial = financialByOrderId.get(e.orderId);
+      const grossAmount = financial?.menuOrderValue ?? 0;
+      const commissionAmount = financial?.commissionAmount ?? 0;
+      const taxAmount = 0;
+      const netPayoutAmount = e.totalEarnings;
 
       // Determine settlement status with IN_PROGRESS support
       let settlementStatus: SettlementStatus;
@@ -725,11 +798,11 @@ export class PaymentService {
   /**
    * Calculate commission breakdown from AWS data
    */
-  calculateCommissionFromAWS(earnings: RestaurantEarning[]): CommissionBreakdown {
-    const grossRevenue = earnings.reduce((sum, e) => sum + e.totalEarnings, 0);
-    const platformCommission = Math.round(grossRevenue * 0.18); // 18%
-    const taxCharges = Math.round(platformCommission * 0.18); // 18% GST on commission
-    const netPayout = grossRevenue - platformCommission - taxCharges;
+  calculateCommissionFromAWS(payments: Payment[]): CommissionBreakdown {
+    const grossRevenue = payments.reduce((sum, payment) => sum + (payment.grossAmount || 0), 0);
+    const platformCommission = payments.reduce((sum, payment) => sum + (payment.commissionAmount || 0), 0);
+    const taxCharges = 0;
+    const netPayout = payments.reduce((sum, payment) => sum + (payment.netPayoutAmount || 0), 0);
     const commissionPercentage = grossRevenue > 0 ? (platformCommission / grossRevenue) * 100 : 0;
 
     return {

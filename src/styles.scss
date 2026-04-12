@@ -148,6 +148,16 @@ select {
   }
 }
 
+// Prevent iOS Safari/WKWebView from auto-zooming when focusing form controls.
+// iOS zooms when computed font-size is below 16px.
+@supports (-webkit-touch-callout: none) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 // Custom Scrollbar - Disabled globally (scrollbars hidden)
 // body {
 //   @include custom-scrollbar;

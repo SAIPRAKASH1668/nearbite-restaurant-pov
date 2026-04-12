@@ -15,11 +15,11 @@
         <div class="stat-value">{{ stats.totalOrders }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Total Revenue</div>
+        <div class="stat-label">Total Menu Value</div>
         <div class="stat-value">{{ formatCurrency(stats.totalRevenue) }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Avg Order Value</div>
+        <div class="stat-label">Avg Menu Value</div>
         <div class="stat-value">{{ formatCurrency(stats.avgOrderValue) }}</div>
       </div>
       <div class="stat-card">
@@ -144,8 +144,8 @@
           <th (click)="sortBy('itemsCount')" class="sortable text-center">
             Items {{ getSortIcon('itemsCount') }}
           </th>
-          <th (click)="sortBy('grandTotal')" class="sortable text-right">
-            Amount {{ getSortIcon('grandTotal') }}
+          <th (click)="sortBy('foodTotal')" class="sortable text-right">
+            Menu Value {{ getSortIcon('foodTotal') }}
           </th>
           <th (click)="sortBy('status')" class="sortable">
             Status {{ getSortIcon('status') }}
@@ -171,7 +171,7 @@
             </div>
           </td>
           <td class="text-center">{{ order.itemsCount }}</td>
-          <td class="text-right amount-col">{{ formatCurrency(order.grandTotal || 0) }}</td>
+          <td class="text-right amount-col">{{ formatCurrency(order.foodTotal || 0) }}</td>
           <td>
             <span class="status-badge" [ngClass]="getStatusColorClass(order.status)">
               {{ getStatusLabel(order.status) }}
@@ -284,20 +284,12 @@
           <!-- Order Summary -->
           <div class="order-totals">
             <div class="total-row">
-              <span>Food Total:</span>
+              <span>Menu Order Value:</span>
               <span>{{ formatCurrency(selectedOrder.foodTotal) }}</span>
             </div>
-            <div class="total-row">
-              <span>Delivery Fee:</span>
-              <span>{{ formatCurrency(selectedOrder.deliveryFee) }}</span>
-            </div>
-            <div class="total-row">
-              <span>Platform Fee:</span>
-              <span>{{ formatCurrency(selectedOrder.platformFee) }}</span>
-            </div>
             <div class="total-row grand-total">
-              <span>Grand Total:</span>
-              <span>{{ formatCurrency(selectedOrder.grandTotal) }}</span>
+              <span>Restaurant Relevant Total:</span>
+              <span>{{ formatCurrency(selectedOrder.foodTotal) }}</span>
             </div>
           </div>
         </div>

@@ -70,11 +70,11 @@ export class DashboardService {
 
         const todayRevenue = todayOrders
           .filter((order) => order.status !== OrderStatus.CANCELLED)
-          .reduce((sum, order) => sum + order.grandTotal, 0);
+          .reduce((sum, order) => sum + order.foodTotal, 0);
 
         const yesterdayRevenue = yesterdayOrders
           .filter((order) => order.status !== OrderStatus.CANCELLED)
-          .reduce((sum, order) => sum + order.grandTotal, 0);
+          .reduce((sum, order) => sum + order.foodTotal, 0);
 
         const avgOrderValue = todayOrders.length > 0 ? todayRevenue / todayOrders.length : 0;
         const yesterdayAvgOrderValue = yesterdayOrders.length > 0
@@ -126,7 +126,7 @@ export class DashboardService {
           orderNumber: order.orderId,
           customerName: this.maskPhoneNumber(order.customerPhone),
           items: order.items.length,
-          amount: order.grandTotal,
+          amount: order.foodTotal,
           status: this.mapOrderStatus(order.status),
           time: this.getRelativeTime(order.createdAt)
         }));

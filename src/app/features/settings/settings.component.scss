@@ -340,6 +340,77 @@
   @include mobile { gap: 0.5rem; }
 }
 
+// Average preparation time controls
+.st-prep-wrap {
+  margin-bottom: 1rem;
+}
+
+.st-prep-input-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  margin-bottom: 0.5rem;
+
+  @include mobile {
+    width: 100%;
+  }
+}
+
+.st-prep-step {
+  width: 38px;
+  height: 38px;
+  border-radius: v.$radius-md;
+  border: 1.5px solid v.$border-primary;
+  background: v.$bg-secondary;
+  color: v.$text-primary;
+  font-size: 1.15rem;
+  font-weight: v.$font-weight-bold;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    border-color: rgba(v.$primary-orange, 0.5);
+    color: v.$primary-orange;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.st-prep-input {
+  height: 38px;
+  width: 120px;
+  border-radius: v.$radius-md;
+  border: 1.5px solid v.$border-primary;
+  background: v.$bg-primary;
+  text-align: center;
+  font-family: v.$font-family;
+  font-size: 0.95rem;
+  font-weight: v.$font-weight-semibold;
+  color: v.$text-primary;
+  padding: 0 0.5rem;
+
+  &:focus {
+    outline: none;
+    border-color: v.$primary-orange;
+    box-shadow: 0 0 0 3px rgba(v.$primary-orange, 0.12);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  @include mobile {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+}
+
 // Save button
 .st-btn-save-hours {
   display: inline-flex;

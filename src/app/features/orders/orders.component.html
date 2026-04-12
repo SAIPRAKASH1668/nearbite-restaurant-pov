@@ -1,4 +1,4 @@
-﻿<div class="ord-root">
+﻿<div class="ord-root" [class.ord-root--no-printer]="!hasPrinter">
 
   <!-- ── Tab Bar ──────────────────────────────────────────────────────────── -->
   <div class="ord-tabs">
@@ -129,10 +129,9 @@
       <div class="ord-footer">
         <div class="ord-amount">
           <div class="ord-amount-sub">
-            <span>Food: ₹{{ order.foodTotal }}</span>
-            <span>Del: ₹{{ order.deliveryFee }}</span>
+            <span>Menu Value: ₹{{ order.foodTotal }}</span>
           </div>
-          <div class="ord-total">₹{{ order.grandTotal }}</div>
+          <div class="ord-total">₹{{ order.foodTotal }}</div>
         </div>
 
         <div class="ord-actions">
@@ -294,21 +293,13 @@
           </div>
           <div class="ord-bill-rows">
             <div class="ord-bill-line">
-              <span>Food Total</span>
+              <span>Menu Order Value</span>
               <span>₹{{ expandedOrder.foodTotal }}</span>
-            </div>
-            <div class="ord-bill-line">
-              <span>Delivery Fee</span>
-              <span>₹{{ expandedOrder.deliveryFee }}</span>
-            </div>
-            <div class="ord-bill-line" *ngIf="expandedOrder.platformFee">
-              <span>Platform Fee</span>
-              <span>₹{{ expandedOrder.platformFee }}</span>
             </div>
           </div>
           <div class="ord-bill-total">
-            <span class="ord-bill-total-lbl">Grand Total</span>
-            <span class="ord-bill-total-amt">₹{{ expandedOrder.grandTotal }}</span>
+            <span class="ord-bill-total-lbl">Restaurant Relevant Total</span>
+            <span class="ord-bill-total-amt">₹{{ expandedOrder.foodTotal }}</span>
           </div>
         </div>
 

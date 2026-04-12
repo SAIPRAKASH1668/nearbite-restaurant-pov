@@ -48,16 +48,12 @@
         <h3 class="section-title">Commission Breakdown</h3>
         <div class="commission-grid">
           <div class="commission-row">
-            <span class="label">Gross Revenue</span>
+            <span class="label">Menu Order Value</span>
             <span class="value">{{ formatCurrency(commission.grossRevenue) }}</span>
           </div>
           <div class="commission-row negative">
             <span class="label">Platform Commission ({{ commission.commissionPercentage.toFixed(1) }}%)</span>
             <span class="value">- {{ formatCurrency(commission.platformCommission) }}</span>
-          </div>
-          <div class="commission-row negative">
-            <span class="label">Tax & Charges</span>
-            <span class="value">- {{ formatCurrency(commission.taxCharges) }}</span>
           </div>
           <div class="commission-row total">
             <span class="label">Net Payout to Restaurant (Filtered Period)</span>
@@ -66,27 +62,10 @@
         </div>
       </section>
 
-      <!-- Section 3: Payment & Settlement Status Indicators -->
+      <!-- Section 3: Settlement Status Indicators -->
       <section class="section-status" *ngIf="statusCounts">
-        <h3 class="section-title">Status Overview</h3>
+        <h3 class="section-title">Settlement Overview</h3>
         <div class="status-grid">
-          <div class="status-group">
-            <div class="group-label">Payment Status</div>
-            <div class="status-chips">
-              <div class="chip success">
-                <span class="chip-label">Successful</span>
-                <span class="chip-count">{{ statusCounts.successful }}</span>
-              </div>
-              <div class="chip pending">
-                <span class="chip-label">Pending</span>
-                <span class="chip-count">{{ statusCounts.pending }}</span>
-              </div>
-              <div class="chip failed">
-                <span class="chip-label">Failed</span>
-                <span class="chip-count">{{ statusCounts.failed }}</span>
-              </div>
-            </div>
-          </div>
           <div class="status-group">
             <div class="group-label">Settlement Status</div>
             <div class="status-chips">
@@ -131,31 +110,6 @@
             </div>
           </div>
 
-          <!-- Payment Status Filter -->
-          <div class="filter-group">
-            <label class="filter-label">Payment Status</label>
-            <div class="filter-dropdown">
-              <button class="filter-toggle" (click)="showPaymentStatusFilter = !showPaymentStatusFilter">
-                {{ selectedPaymentStatuses.length > 0 ? selectedPaymentStatuses.length + ' selected' : 'All' }}
-                <span class="arrow">▼</span>
-              </button>
-              <div class="dropdown-menu" *ngIf="showPaymentStatusFilter">
-                <div 
-                  *ngFor="let status of paymentStatuses" 
-                  class="dropdown-item"
-                  (click)="togglePaymentStatus(status)"
-                >
-                  <input 
-                    type="checkbox" 
-                    [checked]="isPaymentStatusSelected(status)"
-                    readonly
-                  />
-                  <span>{{ formatStatusLabel(status) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- Settlement Status Filter -->
           <div class="filter-group">
             <label class="filter-label">Settlement Status</label>
@@ -176,31 +130,6 @@
                     readonly
                   />
                   <span>{{ formatStatusLabel(status) }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Payment Method Filter -->
-          <div class="filter-group">
-            <label class="filter-label">Payment Method</label>
-            <div class="filter-dropdown">
-              <button class="filter-toggle" (click)="showPaymentMethodFilter = !showPaymentMethodFilter">
-                {{ selectedPaymentMethods.length > 0 ? selectedPaymentMethods.length + ' selected' : 'All' }}
-                <span class="arrow">▼</span>
-              </button>
-              <div class="dropdown-menu" *ngIf="showPaymentMethodFilter">
-                <div 
-                  *ngFor="let method of paymentMethods" 
-                  class="dropdown-item"
-                  (click)="togglePaymentMethod(method)"
-                >
-                  <input 
-                    type="checkbox" 
-                    [checked]="isPaymentMethodSelected(method)"
-                    readonly
-                  />
-                  <span>{{ method }}</span>
                 </div>
               </div>
             </div>
@@ -275,9 +204,8 @@
                 <th (click)="sortBy('orderId')" class="sortable">
                   Order ID {{ getSortIcon('orderId') }}
                 </th>
-                <th>Payment Method</th>
                 <th (click)="sortBy('grossAmount')" class="sortable amount">
-                  Gross {{ getSortIcon('grossAmount') }}
+                  Menu Value {{ getSortIcon('grossAmount') }}
                 </th>
                 <th (click)="sortBy('commissionAmount')" class="sortable amount">
                   Commission {{ getSortIcon('commissionAmount') }}
@@ -285,7 +213,6 @@
                 <th (click)="sortBy('netPayoutAmount')" class="sortable amount">
                   Net Payout {{ getSortIcon('netPayoutAmount') }}
                 </th>
-                <th>Payment Status</th>
                 <th>Settlement</th>
               </tr>
             </thead>
@@ -293,17 +220,9 @@
               <tr *ngFor="let payment of displayedPayments">
                 <td class="date">{{ formatDate(payment.createdAt) }}</td>
                 <td class="order-id">{{ payment.orderId }}</td>
-                <td class="method">
-                  <span class="method-badge">{{ payment.paymentMethod }}</span>
-                </td>
                 <td class="amount">{{ formatCurrency(payment.grossAmount) }}</td>
                 <td class="amount negative">{{ formatCurrency(payment.commissionAmount) }}</td>
                 <td class="amount strong">{{ formatCurrency(payment.netPayoutAmount) }}</td>
-                <td>
-                  <span class="status-badge" [ngClass]="getPaymentStatusClass(payment.paymentStatus)">
-                    {{ formatStatusLabel(payment.paymentStatus) }}
-                  </span>
-                </td>
                 <td>
                   <span class="status-badge" [ngClass]="getSettlementStatusClass(payment.settlementStatus)">
                     {{ formatStatusLabel(payment.settlementStatus) }}

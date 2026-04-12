@@ -49,6 +49,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
   savingHours = false;
   hoursLoaded = false;
 
+  // ── Average Preparation Time ─────────────────────────────────────────────
+  avgPreparationTime: number = 25;
+  _savedAvgPreparationTime: number = 25;
+  savingPrepTime = false;
+  prepTimeLoaded = false;
+  readonly minPrepTime = 5;
+  readonly maxPrepTime = 120;
+
   // ── In-flight subscription tracking ────────────────────────────────────────
   private galleryLoadSub?: Subscription;
 
@@ -69,6 +77,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadGallery();
     this.loadOperatingHours();
+    this.loadAvgPreparationTime();
   }
 
   ngOnDestroy(): void {
@@ -80,6 +89,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   get hoursUnsaved(): boolean {
     return this.opensAt !== this._savedOpensAt || this.closesAt !== this._savedClosesAt;
+  }
+
+  get prepTimeUnsaved(): boolean {
+    return this.avgPreparationTime !== this._savedAvgPreparationTime;
   }
 
   loadOperatingHours(): void {
@@ -116,6 +129,55 @@ export class SettingsComponent implements OnInit, OnDestroy {
   resetHours(): void {
     this.opensAt  = this._savedOpensAt;
     this.closesAt = this._savedClosesAt;
+  }
+
+  loadAvgPreparationTime(): void {
+    this.prepTimeLoaded = false;
+    this.restaurantOnlineService.fetchAvgPreparationTime().subscribe({
+      next: (minutes) => {
+        const normalized = this.normalizePrepTime(minutes ?? 25);
+        this.avgPreparationTime = normalized;
+        this._savedAvgPreparationTime = normalized;
+        this.prepTimeLoaded = true;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.prepTimeLoaded = true;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onPrepTimeInputChange(rawValue: string | number): void {
+    const parsed = Number(rawValue);
+    if (!Number.isFinite(parsed)) return;
+    this.avgPreparationTime = this.normalizePrepTime(parsed);
+  }
+
+  saveAvgPreparationTime(): void {
+    if (this.savingPrepTime) return;
+    this.avgPreparationTime = this.normalizePrepTime(this.avgPreparationTime);
+    this.savingPrepTime = true;
+
+    this.restaurantOnlineService
+      .updateAvgPreparationTime(this.avgPreparationTime)
+      .pipe(finalize(() => { this.savingPrepTime = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: () => {
+          this._savedAvgPreparationTime = this.avgPreparationTime;
+          this.notificationService.success('Average preparation time saved');
+        },
+        error: () => this.notificationService.error('Failed to save average preparation time')
+      });
+  }
+
+  resetAvgPreparationTime(): void {
+    this.avgPreparationTime = this._savedAvgPreparationTime;
+  }
+
+  private normalizePrepTime(value: number): number {
+    const rounded = Math.round(value);
+    return Math.max(this.minPrepTime, Math.min(this.maxPrepTime, rounded));
   }
 
   formatDisplayTime(time: string): string {
