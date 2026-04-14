@@ -6,12 +6,20 @@
       <h1 class="mn-title">Menu Management</h1>
       <p class="mn-subtitle">Manage your restaurant menu items</p>
     </div>
-    <button class="mn-btn-add" (click)="openAddItemForm()">
-      <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-        <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-      Add Item
-    </button>
+    <div class="mn-header-actions">
+      <button class="mn-btn-hike" (click)="openPriceHikeModal()" title="Increase all menu prices by a percentage">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <path d="M1 10L5 6l3 3 4-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Price Hike
+      </button>
+      <button class="mn-btn-add" (click)="openAddItemForm()">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+          <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Add Item
+      </button>
+    </div>
   </div>
 
   <!-- ── Category Tabs ─────────────────────────────────────────────────────── -->
@@ -137,6 +145,60 @@
     <p>No items in this category</p>
   </div>
 
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     Price Hike Modal
+════════════════════════════════════════════════════════════════════════ -->
+<div class="mn-modal-bg" *ngIf="showPriceHikeModal" (click)="closePriceHikeModal()">
+  <div class="mn-modal mn-modal--sm" (click)="$event.stopPropagation()">
+    <div class="mn-modal-accent"></div>
+    <div class="mn-modal-head">
+      <div class="mn-modal-head-left">
+        <span class="mn-modal-icon">
+          <svg width="16" height="16" viewBox="0 0 13 13" fill="none">
+            <path d="M1 10L5 6l3 3 4-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div>
+          <h2 class="mn-modal-title">Bulk Price Hike</h2>
+          <p class="mn-modal-subtitle">Increase all menu item prices by a fixed percentage</p>
+        </div>
+      </div>
+      <button class="mn-modal-close" (click)="closePriceHikeModal()" aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="mn-form">
+      <div class="mn-form-section">
+        <div class="mn-fg mn-full">
+          <label>Hike Percentage <span class="mn-req">*</span></label>
+          <div class="mn-pct-input-wrap">
+            <input
+              type="number"
+              [(ngModel)]="priceHikePercentage"
+              name="hikePercentage"
+              placeholder="e.g. 10"
+              min="0.1"
+              max="500"
+              step="0.5"
+              [disabled]="applyingPriceHike" />
+            <span class="mn-pct-suffix">%</span>
+          </div>
+          <p class="mn-field-hint">All restaurant prices will be increased by this percentage and the existing hike remains applied on top.</p>
+        </div>
+      </div>
+
+      <div class="mn-form-footer">
+        <button type="button" class="mn-btn-cancel" (click)="closePriceHikeModal()" [disabled]="applyingPriceHike">Cancel</button>
+        <button type="button" class="mn-btn-save" (click)="applyPriceHike()" [disabled]="applyingPriceHike">
+          <span *ngIf="!applyingPriceHike">Apply Hike</span>
+          <span *ngIf="applyingPriceHike"><i class="fas fa-spinner fa-spin"></i> Applying…</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════════

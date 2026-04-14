@@ -17,6 +17,7 @@ export class LoginComponent implements OnInit {
   errorMessage = '';
   showPassword = false;
   returnUrl = '/dashboard/welcome';
+  readonly desktopAppUrl = 'https://yumdude-assets.s3.ap-south-1.amazonaws.com/downloads/YumDude-Restaurant-Setup.exe';
 
   constructor(
     private formBuilder: FormBuilder,

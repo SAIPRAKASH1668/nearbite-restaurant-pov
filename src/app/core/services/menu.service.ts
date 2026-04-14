@@ -151,6 +151,25 @@ export class MenuService {
   }
 
   /**
+   * Apply a bulk price hike (%) to all menu items of this restaurant.
+   */
+  bulkPriceHike(percentage: number): Observable<{ restaurantId: string; percentage: number; updatedCount: number; items: any[] }> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    return this.http.post<any>(
+      `${this.API_BASE_URL}/restaurants/${restaurantId}/menu/price-hike`,
+      { percentage }
+    ).pipe(
+      tap(() => {
+        this.fetchMenuItems();
+      }),
+      catchError(error => {
+        console.error('❌ Error applying price hike:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
    * Update existing menu item
    */
   updateMenuItem(itemId: string, itemData: Partial<MenuItem>): Observable<MenuItem> {

@@ -471,6 +471,56 @@ $dude-red:   hsl(0,  79%,  55%);
 }
 .trust-dot { width: 3px; height: 3px; background: $border-secondary; border-radius: 50%; }
 
+// ─── Download Desktop App Banner ──────────────────────────────────────────────
+.download-app-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(0, 120, 212, 0.04);
+  border: 1.5px solid rgba(0, 120, 212, 0.18);
+  border-left: 3px solid #0078d4;
+  border-radius: $radius-lg;
+  padding: 0.85rem 1rem;
+  margin-top: 1.25rem;
+}
+
+.download-app-icon {
+  width: 36px; height: 36px;
+  border-radius: $radius-md;
+  background: rgba(0, 120, 212, 0.1);
+  border: 1px solid rgba(0, 120, 212, 0.2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  i { color: #0078d4; font-size: 1.05rem; }
+}
+
+.download-app-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  strong { font-size: 0.8rem; font-weight: $font-weight-semibold; color: $text-primary; }
+  span { font-size: 0.72rem; color: $text-muted; }
+}
+
+.download-app-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #0078d4;
+  color: #fff;
+  border-radius: $radius-md;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.775rem;
+  font-weight: $font-weight-semibold;
+  font-family: $font-family;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background $transition-fast;
+  i { font-size: 0.75rem; }
+  &:hover { background: #006cbd; }
+}
+
 // ─── Right Panel Stats ────────────────────────────────────────────────────────
 .rp-stats {
   width: 100%;

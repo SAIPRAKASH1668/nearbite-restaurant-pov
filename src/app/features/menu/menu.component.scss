@@ -63,6 +63,46 @@
   margin: 0;
 }
 
+// ── Header action buttons group ───────────────────────────────────────────────
+.mn-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+
+  @include mobile {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.mn-btn-hike {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: transparent;
+  color: v.$primary-orange;
+  border: 1.5px solid v.$primary-orange;
+  border-radius: 3px;
+  padding: 0.5rem 1.0625rem;
+  font-family: v.$font-family;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+
+  &:hover { background: v.$primary-orange; color: #FFFFFF; }
+  &:active { transform: translateY(1px); }
+
+  @include mobile { min-height: 48px; width: 100%; font-size: 0.875rem; }
+  @include tablet { min-height: 44px; }
+}
+
 .mn-btn-add {
   display: inline-flex;
   align-items: center;
@@ -669,6 +709,47 @@
 
   // On mobile the sheet has 16px border-radius, match the top corners
   @include mobile { border-radius: 16px 16px 0 0; }
+}
+
+// Small / compact modal variant (e.g. price hike)
+.mn-modal--sm {
+  max-width: 420px;
+}
+
+// Percentage input with suffix label
+.mn-pct-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+
+  input {
+    flex: 1;
+    border-right: none;
+    border-radius: 3px 0 0 3px !important;
+  }
+
+  .mn-pct-suffix {
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    background: #F5F3F0;
+    border: 1.5px solid #D8D5D1;
+    border-left: none;
+    border-radius: 0 3px 3px 0;
+    font-family: v.$font-family;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: v.$text-secondary;
+    user-select: none;
+  }
+}
+
+// Helper hint text below a field
+.mn-field-hint {
+  font-size: 0.75rem;
+  color: v.$text-muted;
+  margin: 0.375rem 0 0;
+  line-height: 1.4;
 }
 
 // Modal header

@@ -26,6 +26,11 @@ export class MenuComponent implements OnInit, OnDestroy {
   /** Max allowed hike % for the current restaurant price — updates reactively on new items */
   maxHikePercentage = 0;
 
+  // ── Price Hike state ──────────────────────────────────────────────────────
+  showPriceHikeModal = false;
+  priceHikePercentage: number | null = null;
+  applyingPriceHike = false;
+
   // ── Item image upload state ────────────────────────────────────────────────
   pendingImageFiles: File[] = [];
   pendingImagePreviews: string[] = [];
@@ -170,6 +175,43 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.editingItemId = null;
     this.showAddItemForm = true;
     this.resetForm();
+  }
+
+  openPriceHikeModal(): void {
+    this.priceHikePercentage = null;
+    this.showPriceHikeModal = true;
+  }
+
+  closePriceHikeModal(): void {
+    this.showPriceHikeModal = false;
+    this.priceHikePercentage = null;
+  }
+
+  applyPriceHike(): void {
+    const pct = this.priceHikePercentage;
+    if (pct === null || pct === undefined || isNaN(pct) || pct <= 0) {
+      this.notificationService.warning('Enter a valid percentage greater than 0');
+      return;
+    }
+    if (pct > 500) {
+      this.notificationService.warning('Percentage cannot exceed 500%');
+      return;
+    }
+    this.applyingPriceHike = true;
+    this.menuService.bulkPriceHike(pct).subscribe({
+      next: (res) => {
+        this.notificationService.success(`Prices hiked by ${pct}% — ${res.updatedCount} item(s) updated`);
+        this.closePriceHikeModal();
+        this.applyingPriceHike = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('❌ Price hike failed:', err);
+        this.notificationService.error('Failed to apply price hike. Please try again.');
+        this.applyingPriceHike = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   openEditItemForm(item: MenuItem): void {
