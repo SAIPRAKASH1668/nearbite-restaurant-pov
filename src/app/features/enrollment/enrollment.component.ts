@@ -1,7 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   Document as DocxDocument,
   Packer,
@@ -24,7 +24,7 @@ import { SignaturePadComponent } from '../../shared/components/signature-pad/sig
 @Component({
   selector: 'app-enrollment',
   standalone: true,
-  imports: [CommonModule, FormsModule, SignaturePadComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SignaturePadComponent],
   templateUrl: './enrollment.component.html',
   styleUrl: './enrollment.component.scss',
 })
@@ -156,12 +156,54 @@ export class EnrollmentComponent {
     });
   }
 
-  async downloadDocx(): Promise<void> {
+  private async fetchLogoBuffer(): Promise<Uint8Array | null> {
+    try {
+      const resp = await fetch('favicon.svg');
+      const svgText = await resp.text();
+      const canvas = document.createElement('canvas');
+      canvas.width = 120;
+      canvas.height = 112;
+      const ctx = canvas.getContext('2d')!;
+      const img = new Image();
+      const blob = new Blob([svgText], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = reject;
+        img.src = url;
+      });
+      ctx.drawImage(img, 0, 0, 120, 112);
+      URL.revokeObjectURL(url);
+      const dataUrl = canvas.toDataURL('image/png');
+      return this.dataUrlToBuffer(dataUrl);
+    } catch {
+      return null;
+    }
+  }
 
+  async downloadDocx(): Promise<void> {
     const r = this.restaurant;
     const l = this.legal;
     const b = this.bank;
     const d = this.declaration;
+
+    const logoBuffer = await this.fetchLogoBuffer();
+
+    const logoChildren: (ImageRun | TextRun)[] = [];
+    if (logoBuffer) {
+      logoChildren.push(
+        new ImageRun({
+          data: logoBuffer,
+          transformation: { width: 30, height: 28 },
+          type: 'png',
+        }),
+        new TextRun({ text: '  ', size: 36 }),
+      );
+    }
+    logoChildren.push(
+      new TextRun({ text: 'Yum', bold: true, size: 36, font: 'Calibri', color: 'D4A017' }),
+      new TextRun({ text: 'Dude', bold: true, size: 36, font: 'Calibri', color: 'D32F2F' }),
+    );
 
     const doc = new DocxDocument({
       sections: [
@@ -177,11 +219,11 @@ export class EnrollmentComponent {
             },
           },
           children: [
-            // Title
+            // Logo + Brand Name
             new Paragraph({
               alignment: AlignmentType.CENTER,
               spacing: { after: 80 },
-              children: [new TextRun({ text: 'YumDude', bold: true, size: 36, font: 'Calibri', color: 'D32F2F' })],
+              children: logoChildren,
             }),
             new Paragraph({
               alignment: AlignmentType.CENTER,
@@ -302,7 +344,14 @@ export class EnrollmentComponent {
             new Paragraph({
               alignment: AlignmentType.CENTER,
               spacing: { after: 40 },
-              children: [new TextRun({ text: 'YumDude', bold: true, size: 28, font: 'Calibri', color: 'D32F2F' })],
+              children: [
+                ...(logoBuffer ? [
+                  new ImageRun({ data: logoBuffer, transformation: { width: 24, height: 22 }, type: 'png' as const }),
+                  new TextRun({ text: '  ', size: 28 }),
+                ] : []),
+                new TextRun({ text: 'Yum', bold: true, size: 28, font: 'Calibri', color: 'D4A017' }),
+                new TextRun({ text: 'Dude', bold: true, size: 28, font: 'Calibri', color: 'D32F2F' }),
+              ],
             }),
             new Paragraph({
               alignment: AlignmentType.CENTER,
@@ -543,19 +592,23 @@ export class EnrollmentComponent {
       this.tcHeading('8.  Ratings & Quality'),
       this.tcPara('Customers can rate their experience. Restaurants with a consistent rating below 3.0 for more than 30 days may be reviewed. Continued low ratings may result in removal from the platform.'),
 
-      this.tcHeading('9.  Termination of Partnership'),
+      this.tcHeading('9.  Offers & Coupons'),
+      this.tcPara('YumDude may run offers, discounts, and promotional campaigns on any restaurant listed on the platform at its sole discretion, without prior notice to or approval from the Restaurant Partner. The cost of such app-initiated offers shall be borne entirely by YumDude and shall have no impact on the Restaurant Partner\'s revenue or settlement amounts.'),
+      this.tcPara('The Restaurant Partner may also request YumDude to run restaurant-specific offers or promotions by reaching out to the YumDude team. The cost of such restaurant-initiated offers shall be borne entirely by the Restaurant Partner and will be adjusted from the Restaurant Partner\'s settlement.'),
+
+      this.tcHeading('10.  Termination of Partnership'),
       this.tcPara('Either party may end this partnership with 14 days\' written notice. YumDude may immediately suspend a restaurant without notice if:'),
       this.tcBullet('There is a serious food safety violation'),
       this.tcBullet('The FSSAI license has expired or been revoked'),
       this.tcBullet('There is fraud, order manipulation, or misuse of the platform'),
 
-      this.tcHeading('10.  Confidentiality'),
+      this.tcHeading('11.  Confidentiality'),
       this.tcPara('Both parties agree to keep the agreed commission rate and any shared business data confidential and not disclose it to third parties.'),
 
-      this.tcHeading('11.  Governing Law'),
+      this.tcHeading('12.  Governing Law'),
       this.tcPara('This agreement is governed by the laws of India. Any disputes will first be resolved amicably. If unresolved, jurisdiction shall be Nandyal, Andhra Pradesh.'),
 
-      this.tcHeading('12.  Changes to These Terms'),
+      this.tcHeading('13.  Changes to These Terms'),
       this.tcPara('YumDude may update these terms from time to time with at least 7 days\' advance notice to restaurant partners. Continued use of the platform implies acceptance of the updated terms.'),
     ];
   }
