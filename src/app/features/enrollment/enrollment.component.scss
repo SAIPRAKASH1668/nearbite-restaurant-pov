@@ -186,6 +186,25 @@ select.enrolment-input {
   cursor: pointer;
 }
 
+// Signature boxes
+.enrolment-signatures {
+  display: grid;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+
+  @media (min-width: 640px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.party-heading-platform {
+  border-bottom-color: $yum-yellow;
+}
+
+.sig-section {
+  margin-top: 1rem;
+}
+
 // Commission section
 .commission-block {
   padding: 0.25rem 0;

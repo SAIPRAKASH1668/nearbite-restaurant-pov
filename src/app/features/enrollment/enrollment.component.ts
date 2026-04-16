@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -15,18 +15,27 @@ import {
   HeadingLevel,
   BorderStyle,
   ShadingType,
+  ImageRun,
   convertInchesToTwip,
 } from 'docx';
 import { saveAs } from 'file-saver';
+import { SignaturePadComponent } from '../../shared/components/signature-pad/signature-pad.component';
 
 @Component({
   selector: 'app-enrollment',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SignaturePadComponent],
   templateUrl: './enrollment.component.html',
   styleUrl: './enrollment.component.scss',
 })
 export class EnrollmentComponent {
+  @ViewChild('restaurantSig') restaurantSig!: SignaturePadComponent;
+  @ViewChild('platformSig') platformSig!: SignaturePadComponent;
+
+  restaurantSignature: string | null = null;
+  platformSignature: string | null = null;
+  platformDate = '';
+
   restaurant = {
     name: '',
     owner: '',
@@ -84,7 +93,10 @@ export class EnrollmentComponent {
       l.fssai && l.fssaiValid && l.gstin && l.pan && l.entityType &&
       b.holderName && b.bankName && b.accountNumber && b.ifsc &&
       this.commission &&
-      d.signatoryName && d.designation && d.date
+      d.signatoryName && d.designation && d.date &&
+      this.platformDate &&
+      this.restaurantSignature &&
+      this.platformSignature
     );
   }
 
@@ -145,7 +157,6 @@ export class EnrollmentComponent {
   }
 
   async downloadDocx(): Promise<void> {
-    if (!this.canDownload()) return;
 
     const r = this.restaurant;
     const l = this.legal;
@@ -276,42 +287,8 @@ export class EnrollmentComponent {
 
             new Paragraph({ spacing: { before: 300, after: 0 }, children: [] }),
 
-            // Signature boxes
-            new Table({
-              width: { size: 100, type: WidthType.PERCENTAGE },
-              rows: [
-                new TableRow({
-                  children: [
-                    new TableCell({
-                      width: { size: 50, type: WidthType.PERCENTAGE },
-                      borders: {
-                        top: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-                        left: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-                        right: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-                        bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-                      },
-                      children: [
-                        new Paragraph({ spacing: { before: 60 }, children: [new TextRun({ text: 'Restaurant Partner Signature & Stamp', bold: true, size: 18, font: 'Calibri' })] }),
-                        new Paragraph({ spacing: { before: 600, after: 60 }, children: [] }),
-                      ],
-                    }),
-                    new TableCell({
-                      width: { size: 50, type: WidthType.PERCENTAGE },
-                      borders: {
-                        top: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-                        left: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-                        right: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-                        bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-                      },
-                      children: [
-                        new Paragraph({ spacing: { before: 60 }, children: [new TextRun({ text: 'YumDude Authorised Signature', bold: true, size: 18, font: 'Calibri' })] }),
-                        new Paragraph({ spacing: { before: 600, after: 60 }, children: [] }),
-                      ],
-                    }),
-                  ],
-                }),
-              ],
-            }),
+            // Signature boxes with embedded signature images
+            ...this.buildSignatureTable(),
 
             new Paragraph({
               spacing: { before: 120, after: 0 },
@@ -394,6 +371,107 @@ export class EnrollmentComponent {
       }),
       new Paragraph({ spacing: { before: 200, after: 0 }, children: [] }),
     ] as any[];
+  }
+
+  private dataUrlToBuffer(dataUrl: string): Uint8Array {
+    const base64 = dataUrl.split(',')[1];
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  private buildSignatureTable(): (Table | Paragraph)[] {
+    const sigBorder = {
+      top: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' as const },
+      left: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' as const },
+      right: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' as const },
+      bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' as const },
+    };
+
+    const restChildren: Paragraph[] = [
+      new Paragraph({
+        spacing: { before: 60 },
+        children: [new TextRun({ text: 'Restaurant Partner Signature & Stamp', bold: true, size: 18, font: 'Calibri' })],
+      }),
+    ];
+    if (this.restaurantSignature) {
+      restChildren.push(
+        new Paragraph({
+          spacing: { before: 80, after: 60 },
+          children: [
+            new ImageRun({
+              data: this.dataUrlToBuffer(this.restaurantSignature),
+              transformation: { width: 200, height: 80 },
+              type: 'png',
+            }),
+          ],
+        }),
+        new Paragraph({
+          spacing: { after: 40 },
+          children: [new TextRun({ text: this.declaration.signatoryName, size: 18, font: 'Calibri' })],
+        }),
+        new Paragraph({
+          children: [new TextRun({ text: `Date: ${this.formatDate(this.declaration.date)}`, size: 16, font: 'Calibri', color: '666666' })],
+        }),
+      );
+    } else {
+      restChildren.push(new Paragraph({ spacing: { before: 600, after: 60 }, children: [] }));
+    }
+
+    const platChildren: Paragraph[] = [
+      new Paragraph({
+        spacing: { before: 60 },
+        children: [new TextRun({ text: 'YumDude Authorised Signature', bold: true, size: 18, font: 'Calibri' })],
+      }),
+    ];
+    if (this.platformSignature) {
+      platChildren.push(
+        new Paragraph({
+          spacing: { before: 80, after: 60 },
+          children: [
+            new ImageRun({
+              data: this.dataUrlToBuffer(this.platformSignature),
+              transformation: { width: 200, height: 80 },
+              type: 'png',
+            }),
+          ],
+        }),
+        new Paragraph({
+          spacing: { after: 40 },
+          children: [new TextRun({ text: 'Thanikanti Subbarayudu', size: 18, font: 'Calibri' })],
+        }),
+        new Paragraph({
+          children: [new TextRun({ text: `Date: ${this.formatDate(this.platformDate)}`, size: 16, font: 'Calibri', color: '666666' })],
+        }),
+      );
+    } else {
+      platChildren.push(new Paragraph({ spacing: { before: 600, after: 60 }, children: [] }));
+    }
+
+    return [
+      new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 50, type: WidthType.PERCENTAGE },
+                borders: sigBorder,
+                children: restChildren,
+              }),
+              new TableCell({
+                width: { size: 50, type: WidthType.PERCENTAGE },
+                borders: sigBorder,
+                children: platChildren,
+              }),
+            ],
+          }),
+        ],
+      }),
+    ];
   }
 
   private tcHeading(text: string): Paragraph {

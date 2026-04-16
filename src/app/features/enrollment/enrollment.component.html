@@ -215,21 +215,50 @@
                 </tr>
               </table>
             </div>
+
+            <!-- Signature Boxes -->
+            <div class="enrolment-signatures">
+              <div class="enrolment-party">
+                <h3 class="party-heading">Restaurant Partner Signature &amp; Stamp</h3>
+                <div class="sig-section">
+                  <app-signature-pad
+                    #restaurantSig
+                    [canvasHeight]="120"
+                    (signatureChange)="restaurantSignature = $event"
+                  ></app-signature-pad>
+                </div>
+              </div>
+
+              <div class="enrolment-party">
+                <h3 class="party-heading party-heading-platform">YumDude Authorised Signature</h3>
+                <table class="enrolment-table">
+                  <tr>
+                    <td class="enrolment-label">Date *</td>
+                    <td class="enrolment-value">
+                      <input type="date" class="enrolment-input" [(ngModel)]="platformDate" />
+                    </td>
+                  </tr>
+                </table>
+                <div class="sig-section">
+                  <app-signature-pad
+                    #platformSig
+                    [canvasHeight]="120"
+                    (signatureChange)="platformSignature = $event"
+                  ></app-signature-pad>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Download Button -->
           <div class="enrolment-actions">
             <button
               class="btn-download"
-              [disabled]="!canDownload()"
               (click)="downloadDocx()"
             >
               <span class="btn-icon">&#128196;</span>
               Download Enrollment Form (DOCX)
             </button>
-            <p class="enrolment-hint" *ngIf="!canDownload()">
-              Fill in all mandatory fields (*) to enable download.
-            </p>
           </div>
         </div>
 
@@ -287,7 +316,11 @@
           <h2>8.  Ratings &amp; Quality</h2>
           <p>Customers can rate their experience. Restaurants with a consistent rating below 3.0 for more than 30 days may be reviewed. Continued low ratings may result in removal from the platform.</p>
 
-          <h2>9.  Termination of Partnership</h2>
+          <h2>9.  Offers &amp; Coupons</h2>
+          <p>YumDude may run offers, discounts, and promotional campaigns on any restaurant listed on the platform at its sole discretion, without prior notice to or approval from the Restaurant Partner. The cost of such app-initiated offers shall be borne entirely by YumDude and shall have no impact on the Restaurant Partner&rsquo;s revenue or settlement amounts.</p>
+          <p>The Restaurant Partner may also request YumDude to run restaurant-specific offers or promotions by reaching out to the YumDude team. The cost of such restaurant-initiated offers shall be borne entirely by the Restaurant Partner and will be adjusted from the Restaurant Partner&rsquo;s settlement.</p>
+
+          <h2>10.  Termination of Partnership</h2>
           <p>Either party may end this partnership with 14 days&rsquo; written notice. YumDude may immediately suspend a restaurant without notice if:</p>
           <ul>
             <li>There is a serious food safety violation</li>
@@ -295,13 +328,13 @@
             <li>There is fraud, order manipulation, or misuse of the platform</li>
           </ul>
 
-          <h2>10.  Confidentiality</h2>
+          <h2>11.  Confidentiality</h2>
           <p>Both parties agree to keep the agreed commission rate and any shared business data confidential and not disclose it to third parties.</p>
 
-          <h2>11.  Governing Law</h2>
+          <h2>12.  Governing Law</h2>
           <p>This agreement is governed by the laws of India. Any disputes will first be resolved amicably. If unresolved, jurisdiction shall be Nandyal, Andhra Pradesh.</p>
 
-          <h2>12.  Changes to These Terms</h2>
+          <h2>13.  Changes to These Terms</h2>
           <p>YumDude may update these terms from time to time with at least 7 days&rsquo; advance notice to restaurant partners. Continued use of the platform implies acceptance of the updated terms.</p>
         </div>
       </div>
