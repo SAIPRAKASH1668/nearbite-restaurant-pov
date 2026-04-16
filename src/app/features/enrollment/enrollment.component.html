@@ -1,0 +1,318 @@
+<div class="terms-page">
+  <!-- Header -->
+  <header class="terms-header">
+    <div class="terms-container">
+      <a href="javascript:void(0)" class="terms-logo" (click)="navigateHome()">
+        <img src="favicon.svg" alt="YumDude" class="terms-logo-img" />
+        <span class="logo-text"><span class="logo-yum">Yum</span><span class="logo-dude">Dude</span></span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="terms-content">
+    <div class="terms-container">
+      <div class="terms-card">
+        <h1 class="terms-title">Restaurant Partner Enrollment</h1>
+        <p class="terms-subtitle">Fill in all details below. Download as a DOCX document when complete.</p>
+        <p class="terms-updated">Fields marked with * are mandatory</p>
+
+        <!-- SECTION 1: Restaurant Details -->
+        <div class="enrolment-form">
+          <div class="enrolment-parties">
+            <div class="enrolment-party enrolment-party-full">
+              <h3 class="party-heading">Section 1 — Restaurant Details</h3>
+              <table class="enrolment-table">
+                <tr>
+                  <td class="enrolment-label">Restaurant Name *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="Full legal / trade name" [(ngModel)]="restaurant.name" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Owner / Proprietor Name *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="Enter owner name" [(ngModel)]="restaurant.owner" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Contact Number *</td>
+                  <td class="enrolment-value">
+                    <input type="tel" class="enrolment-input" placeholder="Primary mobile" [(ngModel)]="restaurant.phone" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Alternate Contact Number</td>
+                  <td class="enrolment-value">
+                    <input type="tel" class="enrolment-input" placeholder="Optional" [(ngModel)]="restaurant.altPhone" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Email Address *</td>
+                  <td class="enrolment-value">
+                    <input type="email" class="enrolment-input" placeholder="owner@restaurant.com" [(ngModel)]="restaurant.email" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Restaurant Address *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="Door no., Street, Area" [(ngModel)]="restaurant.address" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">City</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" [(ngModel)]="restaurant.city" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Pincode *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" [(ngModel)]="restaurant.pincode" />
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- SECTION 2: Legal & Compliance -->
+            <div class="enrolment-party enrolment-party-full">
+              <h3 class="party-heading">Section 2 — Legal &amp; Compliance</h3>
+              <table class="enrolment-table">
+                <tr>
+                  <td class="enrolment-label">FSSAI License Number *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="14-digit number" [(ngModel)]="legal.fssai" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">FSSAI License Valid Until *</td>
+                  <td class="enrolment-value">
+                    <input type="date" class="enrolment-input" [(ngModel)]="legal.fssaiValid" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">GST Number *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="If registered" [(ngModel)]="legal.gstin" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">PAN/TAN Number *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. ABCDE1234F" [(ngModel)]="legal.pan" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Type of Entity *</td>
+                  <td class="enrolment-value">
+                    <select class="enrolment-input" [(ngModel)]="legal.entityType">
+                      <option value="" disabled>Select entity type</option>
+                      <option value="Individual">Individual</option>
+                      <option value="Proprietorship">Proprietorship</option>
+                      <option value="Partnership">Partnership</option>
+                      <option value="LLP">LLP</option>
+                      <option value="Private Limited">Private Limited</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- SECTION 3: Bank Details -->
+            <div class="enrolment-party enrolment-party-full">
+              <h3 class="party-heading party-heading-bank">Section 3 — Bank Details (for Settlement)</h3>
+              <table class="enrolment-table">
+                <tr>
+                  <td class="enrolment-label">Account Holder Name *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="As per bank records" [(ngModel)]="bank.holderName" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Bank Name *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. State Bank of India" [(ngModel)]="bank.bankName" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Account Number *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="Enter account number" [(ngModel)]="bank.accountNumber" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">IFSC Code *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. SBIN0001234" [(ngModel)]="bank.ifsc" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Branch Name</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="e.g. Nandyal Main Branch" [(ngModel)]="bank.branch" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">UPI ID</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="Optional — for faster settlements" [(ngModel)]="bank.upiId" />
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- SECTION 4: Commission Agreement -->
+            <div class="enrolment-party enrolment-party-full">
+              <h3 class="party-heading">Section 4 — Commission Agreement</h3>
+              <div class="commission-block">
+                <label class="commission-label">
+                  Agreed Commission Rate *
+                  <div class="commission-input-wrap">
+                    <input type="number" class="enrolment-input commission-input" placeholder="e.g. 25" [(ngModel)]="commission" min="0" max="100" />
+                    <span class="commission-suffix">% per order</span>
+                  </div>
+                </label>
+                <p class="commission-note">(inclusive of 18% GST and 2% payment gateway charges)</p>
+                <p class="commission-disclaimer">This rate has been mutually agreed between YumDude and the Restaurant Partner. No additional charges apply beyond this rate.</p>
+              </div>
+            </div>
+
+            <!-- SECTION 5: Declaration -->
+            <div class="enrolment-party enrolment-party-full">
+              <h3 class="party-heading">Section 5 — Declaration &amp; Acceptance</h3>
+              <p class="declaration-text">I / We confirm that the information provided above is accurate and complete. I / We agree to abide by the YumDude Restaurant Partner Terms &amp; Conditions attached to this form.</p>
+              <table class="enrolment-table">
+                <tr>
+                  <td class="enrolment-label">Authorised Signatory Name *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" placeholder="Enter name" [(ngModel)]="declaration.signatoryName" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Designation *</td>
+                  <td class="enrolment-value">
+                    <select class="enrolment-input" [(ngModel)]="declaration.designation">
+                      <option value="" disabled>Select designation</option>
+                      <option value="Owner">Owner</option>
+                      <option value="Manager">Manager</option>
+                      <option value="Partner">Partner</option>
+                      <option value="Director">Director</option>
+                    </select>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Date *</td>
+                  <td class="enrolment-value">
+                    <input type="date" class="enrolment-input" [(ngModel)]="declaration.date" />
+                  </td>
+                </tr>
+                <tr>
+                  <td class="enrolment-label">Place *</td>
+                  <td class="enrolment-value">
+                    <input type="text" class="enrolment-input" [(ngModel)]="declaration.place" />
+                  </td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- Download Button -->
+          <div class="enrolment-actions">
+            <button
+              class="btn-download"
+              [disabled]="!canDownload()"
+              (click)="downloadDocx()"
+            >
+              <span class="btn-icon">&#128196;</span>
+              Download Enrollment Form (DOCX)
+            </button>
+            <p class="enrolment-hint" *ngIf="!canDownload()">
+              Fill in all mandatory fields (*) to enable download.
+            </p>
+          </div>
+        </div>
+
+        <!-- Terms & Conditions Preview -->
+        <div class="terms-body">
+          <h2>Terms &amp; Conditions</h2>
+          <p class="tc-note">The following terms will be included in the downloaded document.</p>
+
+          <h2>1.  About YumDude</h2>
+          <p>YumDude is a food delivery platform built exclusively for Nandyal. We connect local restaurants with customers and handle delivery. By enrolling, you agree to these terms.</p>
+
+          <h2>2.  Commission &amp; Pricing</h2>
+          <p>The commission agreed at enrollment is all-inclusive and covers:</p>
+          <ul>
+            <li>18% GST on the platform service</li>
+            <li>2% payment gateway / transaction charges</li>
+          </ul>
+          <p>No extra charges will be levied. The restaurant must not charge customers more than the prices listed on YumDude.</p>
+
+          <h2>3.  Settlement of Payments</h2>
+          <p>YumDude will settle payments as follows:</p>
+          <ul>
+            <li>First 2 weeks after enrollment: Daily settlements (next business day)</li>
+            <li>After the first 2 weeks: Every Monday, for all orders completed the previous week (Monday to Sunday)</li>
+          </ul>
+          <p>Settlements are made via bank transfer or UPI to the details provided at enrollment. Discrepancies must be reported within 3 days of receiving the settlement statement.</p>
+
+          <h2>4.  What the Restaurant is Responsible For</h2>
+          <p>The restaurant is solely responsible for:</p>
+          <ul>
+            <li>Missing items &mdash; any ordered item not present in unzipped package (zip tie/cello tape seal is mandatory)</li>
+            <li>Incorrect items &mdash; wrong dish, variant, or quantity</li>
+            <li>Food quality &mdash; stale, undercooked, overcooked, or spoiled food</li>
+            <li>Food safety &amp; hygiene &mdash; maintaining a valid FSSAI license and clean kitchen standards</li>
+            <li>Packaging &mdash; ensuring food is packed well to minimise spillage risk</li>
+            <li>Preparation time &mdash; keeping prep time within reasonable limits and updating in the app</li>
+          </ul>
+          <p>If a customer complaint is found to be the restaurant&rsquo;s fault, the refund cost will be adjusted from the next settlement.</p>
+
+          <h2>5.  What YumDude is Responsible For</h2>
+          <p>YumDude takes responsibility for:</p>
+          <ul>
+            <li>Food spillage during delivery caused by our delivery partner&rsquo;s mishandling</li>
+            <li>Significant delivery delays caused by our delivery network (not by late food preparation)</li>
+            <li>Orders not reaching the customer due to delivery partner error</li>
+          </ul>
+          <p>In such cases, YumDude will handle the customer resolution at its own cost. YumDude is not responsible for food quality, taste, or packaging.</p>
+
+          <h2>6.  Menu &amp; Availability</h2>
+          <p>The restaurant must keep its menu on the platform accurate and updated at all times. Unavailable items must be marked out of stock immediately to avoid complaints. YumDude may temporarily hide restaurants that consistently fail to fulfil orders.</p>
+
+          <h2>7.  Order Acceptance</h2>
+          <p>Once an order is accepted, the restaurant must fulfill it. Repeated post-acceptance cancellations may lead to suspension. If the restaurant is closed or unable to take orders, it must mark itself as closed on the app in advance.</p>
+
+          <h2>8.  Ratings &amp; Quality</h2>
+          <p>Customers can rate their experience. Restaurants with a consistent rating below 3.0 for more than 30 days may be reviewed. Continued low ratings may result in removal from the platform.</p>
+
+          <h2>9.  Termination of Partnership</h2>
+          <p>Either party may end this partnership with 14 days&rsquo; written notice. YumDude may immediately suspend a restaurant without notice if:</p>
+          <ul>
+            <li>There is a serious food safety violation</li>
+            <li>The FSSAI license has expired or been revoked</li>
+            <li>There is fraud, order manipulation, or misuse of the platform</li>
+          </ul>
+
+          <h2>10.  Confidentiality</h2>
+          <p>Both parties agree to keep the agreed commission rate and any shared business data confidential and not disclose it to third parties.</p>
+
+          <h2>11.  Governing Law</h2>
+          <p>This agreement is governed by the laws of India. Any disputes will first be resolved amicably. If unresolved, jurisdiction shall be Nandyal, Andhra Pradesh.</p>
+
+          <h2>12.  Changes to These Terms</h2>
+          <p>YumDude may update these terms from time to time with at least 7 days&rsquo; advance notice to restaurant partners. Continued use of the platform implies acceptance of the updated terms.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="terms-footer">
+    <div class="terms-container">
+      <span>&copy; {{ getCurrentYear() }} YumDude. All rights reserved.</span>
+      <span>Crafted with &#10084;&#65039; in Nandyal</span>
+    </div>
+  </footer>
+</div>
