@@ -1,0 +1,394 @@
+<div class="policy-page">
+
+  <!-- Header -->
+  <header class="policy-header">
+    <div class="policy-container">
+      <a href="javascript:void(0)" class="policy-logo" (click)="navigateHome()">
+        <img src="favicon.svg" alt="YumDude" class="policy-logo-img" />
+        <span class="logo-text">
+          <span class="logo-yum">Yum</span><span class="logo-dude">Dude</span>
+        </span>
+      </a>
+      <span class="policy-label">Rider Privacy Policy</span>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="policy-content">
+    <div class="policy-container">
+      <div class="policy-card">
+
+        <!-- Title block -->
+        <div class="policy-title-block">
+          <h1 class="policy-title">YumDude Rider — Privacy Policy</h1>
+          <p class="policy-meta">
+            <span class="meta-item"><strong>App:</strong> YumDude Rider</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item"><strong>Package:</strong> app.rork.honesteats.rider</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item"><strong>Version:</strong> 1.0.4</span>
+            <span class="meta-sep">·</span>
+            <span class="meta-item"><strong>Effective:</strong> April 17, 2026</span>
+          </p>
+          <div class="policy-intro-box">
+            This Privacy Policy describes how <strong>YumDude / NearBite</strong> ("we", "us", or "our")
+            collects, uses, and protects information from delivery riders who use the
+            <strong>YumDude Rider</strong> Android / iOS application ("the App"). By using the App you
+            agree to the practices described in this policy.
+          </div>
+        </div>
+
+        <!-- 1. About the App -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">1</span> About the App</h2>
+          <p>YumDude Rider is a dedicated delivery-partner application that enables registered riders to:</p>
+          <ul>
+            <li>Receive, accept, and complete food-delivery orders in real time</li>
+            <li>Share their live GPS location to facilitate order matching and customer tracking</li>
+            <li>View earnings, settlement history, and delivery records</li>
+            <li>Manage their profile and KYC documents required for onboarding</li>
+            <li>Communicate with restaurants and customers via the platform</li>
+          </ul>
+          <p>The App is intended solely for <strong>adult delivery partners (18 years and older)</strong> who have entered into a partner agreement with YumDude / NearBite.</p>
+        </section>
+
+        <!-- 2. Information We Collect -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">2</span> Information We Collect</h2>
+
+          <h3 class="subsection-title">2.1 Information You Provide Directly</h3>
+          <ul>
+            <li><strong>Identity:</strong> First name, last name, date of birth</li>
+            <li><strong>Contact:</strong> Mobile phone number (primary identifier), email address, residential address</li>
+            <li><strong>Government-issued ID (KYC):</strong> Aadhaar card number and photo, PAN card number and photo — required under Indian law for gig-worker verification</li>
+            <li><strong>Payment details:</strong> UPI ID for earnings disbursement</li>
+            <li><strong>Profile updates:</strong> Any edits made on the Edit Profile screen</li>
+          </ul>
+
+          <h3 class="subsection-title">2.2 Information Collected Automatically</h3>
+          <ul>
+            <li><strong>Precise GPS location (foreground &amp; background):</strong> Latitude, longitude, speed, and heading — continuously while the rider is "Online"</li>
+            <li><strong>Device token:</strong> Firebase Cloud Messaging (FCM) token used to deliver push notifications</li>
+            <li><strong>Session data:</strong> Login state, rider ID, JWT authentication token stored on-device</li>
+            <li><strong>Usage and delivery data:</strong> Orders accepted, rejected, or completed; timestamps; delivery routes (inferred from location stream)</li>
+            <li><strong>Earnings data:</strong> Per-delivery payout, settled and unsettled amounts</li>
+            <li><strong>App integrity:</strong> Firebase App Check attestation token (prevents backend API abuse)</li>
+          </ul>
+
+          <h3 class="subsection-title">2.3 Information From Third-Party Services</h3>
+          <ul>
+            <li><strong>Firebase Authentication:</strong> Phone-number OTP verification result</li>
+            <li><strong>Firebase Messaging:</strong> Delivery of order-assignment push notifications</li>
+            <li><strong>Google Maps (deep-linked):</strong> When a rider taps "Navigate", Google Maps opens; data shared with Google is governed by
+              <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.
+            </li>
+          </ul>
+        </section>
+
+        <!-- 3. Permissions -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">3</span> Android &amp; iOS Permissions</h2>
+          <p>
+            The following permissions are declared in the App. We request each permission only when actively needed,
+            in compliance with
+            <a href="https://developer.android.com/guide/topics/permissions/overview" target="_blank" rel="noopener">Android's permission principles</a>
+            and
+            <a href="https://support.google.com/googleplay/android-developer/answer/9799150" target="_blank" rel="noopener">Google Play's sensitive-permissions policy</a>.
+          </p>
+
+          <div class="perm-table-wrap">
+            <table class="perm-table">
+              <thead>
+                <tr>
+                  <th>Permission</th>
+                  <th>Why it is required</th>
+                  <th>When prompted</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <span class="perm-badge red">Location</span>
+                    <code class="perm-code">ACCESS_FINE_LOCATION<br/>ACCESS_COARSE_LOCATION</code>
+                  </td>
+                  <td>
+                    Provides precise real-time GPS coordinates (lat/lng, speed, heading) sent to the backend every few seconds, powering: (a) smart order assignment to the nearest available rider, (b) live rider-tracking shown to the customer, and (c) accurate earnings calculation.
+                    <br/><a href="https://developer.android.com/training/location/permissions" target="_blank" rel="noopener" class="ref-link">Android location permissions guide →</a>
+                  </td>
+                  <td>First login / first time rider taps "Go Online"</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="perm-badge red">Background Location</span>
+                    <code class="perm-code">ACCESS_BACKGROUND_LOCATION</code>
+                  </td>
+                  <td>
+                    Runs an Android Foreground Service that continues sending location updates when the rider locks their phone during an active delivery. Without this, tracking stops the moment the app is backgrounded.
+                    <br/><a href="https://developer.android.com/training/location/permissions#background" target="_blank" rel="noopener" class="ref-link">Android background location guide →</a>
+                    <br/><a href="https://support.google.com/googleplay/android-developer/answer/9799150#bg-location" target="_blank" rel="noopener" class="ref-link">Google Play exempted use-case →</a>
+                  </td>
+                  <td>After foreground location is granted; user directed to System Settings → "Allow all the time" (Android 11+)</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="perm-badge yellow">Notifications</span>
+                    <code class="perm-code">POST_NOTIFICATIONS</code>
+                  </td>
+                  <td>
+                    Sends push notifications for new order assignments (with Accept / Reject action buttons), order status changes, and platform alerts. Riders depend on these as the primary signal for incoming work.
+                    <br/><a href="https://developer.android.com/develop/ui/views/notifications/notification-permission" target="_blank" rel="noopener" class="ref-link">Android notification permission docs →</a>
+                  </td>
+                  <td>On first launch (Android 13+)</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="perm-badge yellow">Camera</span>
+                    <code class="perm-code">CAMERA</code>
+                  </td>
+                  <td>
+                    Used exclusively during the KYC signup flow to capture photos of Aadhaar and PAN cards. The camera is never activated outside the document-capture step. Photos are uploaded over HTTPS.
+                  </td>
+                  <td>When rider taps "Take Photo" during KYC signup</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="perm-badge yellow">Storage / Photos</span>
+                    <code class="perm-code">READ_EXTERNAL_STORAGE<br/>WRITE_EXTERNAL_STORAGE</code>
+                  </td>
+                  <td>
+                    Allows the rider to pick an existing photo of KYC documents from the device gallery as an alternative to live capture. On Android 13+ replaced by scoped media permissions; only images are accessed.
+                  </td>
+                  <td>When rider taps "Upload from Gallery" during signup</td>
+                </tr>
+                <tr>
+                  <td>
+                    <span class="perm-badge grey">Vibrate</span>
+                    <code class="perm-code">VIBRATE</code>
+                  </td>
+                  <td>
+                    Triggers haptic vibration alongside the custom ringtone when a new order notification arrives. No user data is involved.
+                  </td>
+                  <td>Granted automatically; no runtime prompt</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 class="subsection-title">iOS-specific permissions</h3>
+          <ul>
+            <li><strong>NSLocationWhenInUseUsageDescription / NSLocationAlwaysUsageDescription</strong> — same purposes as Android location permissions above</li>
+            <li><strong>NSCameraUsageDescription</strong> — same as Android CAMERA permission</li>
+            <li><strong>NSPhotoLibraryUsageDescription</strong> — same as Android storage permission</li>
+            <li><strong>UIBackgroundModes: location</strong> — displays the iOS blue status-bar indicator while background tracking is active</li>
+          </ul>
+        </section>
+
+        <!-- 4. How We Use -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">4</span> How We Use Your Information</h2>
+          <ul>
+            <li><strong>Account &amp; authentication:</strong> Phone OTP via Firebase Auth; session maintained with a JWT token</li>
+            <li><strong>KYC &amp; compliance:</strong> Aadhaar/PAN details verified as required under Indian law for platform workers</li>
+            <li><strong>Order operations:</strong> Matching orders to the nearest online rider; relaying addresses; computing ETA</li>
+            <li><strong>Live tracking:</strong> Sharing the rider's real-time location with the customer and restaurant during an active delivery only</li>
+            <li><strong>Earnings &amp; payments:</strong> Calculating delivery fees, maintaining ledger, initiating UPI settlements</li>
+            <li><strong>Push notifications:</strong> Alerting riders to new assignments, order updates, and platform communications</li>
+            <li><strong>Support &amp; disputes:</strong> Reviewing delivery history and location logs when a dispute is raised</li>
+            <li><strong>Service improvement:</strong> Aggregate, anonymised analytics to improve routing and matching algorithms</li>
+          </ul>
+        </section>
+
+        <!-- 5. Location Data -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">5</span> Location Data — Detailed Explanation</h2>
+          <div class="info-box">
+            <strong>We collect your precise GPS location (including in the background) while you are signed in and have set your status to "Online".</strong>
+            Location tracking stops as soon as you go "Offline" or log out. A persistent notification is always shown while the background service is running.
+          </div>
+          <ul>
+            <li><strong>Data points sent:</strong> Latitude, longitude, speed (km/h), heading (degrees) — approximately every 5–30 seconds depending on movement</li>
+            <li><strong>Transmission:</strong> HTTPS-encrypted PUT request to <code>https://api.yumdude.com/api/v1/riders/&#123;id&#125;/location</code></li>
+            <li><strong>Retention:</strong> Last known location stored for operational purposes. Historical logs retained for up to 90 days for dispute resolution, then automatically purged.</li>
+            <li><strong>Customer visibility:</strong> Customers see your live position only while they have an active order assigned to you. This stops immediately when the order is completed or cancelled.</li>
+            <li><strong>No advertising use:</strong> We do not sell location data to advertisers or data brokers.</li>
+          </ul>
+        </section>
+
+        <!-- 6. Third-Party Services -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">6</span> Third-Party Services &amp; SDKs</h2>
+          <div class="perm-table-wrap">
+            <table class="perm-table">
+              <thead>
+                <tr><th>Service</th><th>Provider</th><th>Purpose</th><th>Privacy Reference</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Firebase Authentication</td>
+                  <td>Google LLC</td>
+                  <td>Phone-number OTP login</td>
+                  <td><a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a></td>
+                </tr>
+                <tr>
+                  <td>Firebase Cloud Messaging</td>
+                  <td>Google LLC</td>
+                  <td>Push notifications for orders</td>
+                  <td><a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a></td>
+                </tr>
+                <tr>
+                  <td>Firebase App Check</td>
+                  <td>Google LLC</td>
+                  <td>Backend API abuse prevention</td>
+                  <td><a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a></td>
+                </tr>
+                <tr>
+                  <td>Notifee</td>
+                  <td>Invertase (open-source)</td>
+                  <td>Local notification rendering with custom sound &amp; action buttons</td>
+                  <td><a href="https://notifee.app" target="_blank" rel="noopener">notifee.app</a></td>
+                </tr>
+                <tr>
+                  <td>Google Maps (deep link)</td>
+                  <td>Google LLC</td>
+                  <td>Turn-by-turn navigation to pickup / delivery</td>
+                  <td><a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a></td>
+                </tr>
+                <tr>
+                  <td>expo-location / expo-task-manager</td>
+                  <td>Expo (open-source)</td>
+                  <td>Background GPS foreground service</td>
+                  <td><a href="https://expo.dev/privacy" target="_blank" rel="noopener">expo.dev/privacy</a></td>
+                </tr>
+                <tr>
+                  <td>AsyncStorage</td>
+                  <td>React Native Community</td>
+                  <td>Secure on-device session storage</td>
+                  <td>No data leaves the device</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>We do <strong>not</strong> use any advertising SDKs, ad-tracking, or analytics services that profile individual riders for non-operational purposes.</p>
+        </section>
+
+        <!-- 7. Security -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">7</span> Data Storage &amp; Security</h2>
+          <ul>
+            <li>All network communication is encrypted in transit via <strong>HTTPS / TLS 1.2+</strong></li>
+            <li>Authentication uses short-lived <strong>JWT bearer tokens</strong>; tokens are validated server-side on every request and invalidated on logout</li>
+            <li>Stale or reinstalled-app sessions are detected and invalidated automatically (re-login required)</li>
+            <li>KYC document images are transmitted over HTTPS and stored on access-controlled servers encrypted at rest</li>
+            <li>Firebase App Check prevents unauthorised clients from accessing backend APIs</li>
+            <li>On-device data (session tokens, rider ID) is stored in Android AsyncStorage — not in external or cloud-accessible storage</li>
+          </ul>
+        </section>
+
+        <!-- 8. Data Sharing -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">8</span> Data Sharing</h2>
+          <p>We do <strong>not sell, rent, or trade</strong> your personal information. We share data only as follows:</p>
+          <ul>
+            <li><strong>With customers:</strong> Your first name and real-time location (during active delivery only)</li>
+            <li><strong>With restaurants:</strong> Your first name and estimated arrival time</li>
+            <li><strong>With payment processors:</strong> UPI ID for disbursement only</li>
+            <li><strong>With Firebase / Google:</strong> Phone number (auth), FCM device token (notifications), App Check attestation</li>
+            <li><strong>Legal obligation:</strong> If required by law, court order, or governmental authority under Indian law (including the DPDP Act 2023)</li>
+          </ul>
+        </section>
+
+        <!-- 9. Retention -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">9</span> Data Retention</h2>
+          <ul>
+            <li><strong>Active account data:</strong> Retained for as long as the rider's account is active</li>
+            <li><strong>Location history:</strong> Up to <strong>90 days</strong>, then automatically deleted</li>
+            <li><strong>Order &amp; earnings history:</strong> Retained for <strong>3 years</strong> for legal and financial compliance</li>
+            <li><strong>KYC documents:</strong> Retained as required under applicable Indian labour and financial regulations</li>
+            <li><strong>Account deletion:</strong> Contact us at the address in Section 12. We will action deletion requests within 30 days, subject to legal retention requirements.</li>
+          </ul>
+        </section>
+
+        <!-- 10. Your Rights -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">10</span> Your Rights (DPDP Act 2023)</h2>
+          <p>Under the <strong>Digital Personal Data Protection Act, 2023 (India)</strong> you have the right to:</p>
+          <ul>
+            <li><strong>Access:</strong> Request a copy of the personal data we hold about you</li>
+            <li><strong>Correction:</strong> Update inaccurate personal data via Edit Profile in the App</li>
+            <li><strong>Deletion:</strong> Request erasure of your data (subject to legal obligations)</li>
+            <li><strong>Withdraw consent:</strong> Revoke location permission at any time via Android System Settings → App Permissions; note this will disable location-dependent features</li>
+            <li><strong>Grievance redressal:</strong> Raise concerns with our Data Protection Officer (see Section 12)</li>
+          </ul>
+        </section>
+
+        <!-- 11. Children -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">11</span> Children's Privacy</h2>
+          <p>
+            YumDude Rider is intended for <strong>adults (18 years and older)</strong> only. We do not knowingly collect personal data from anyone under 18. If you believe a minor has registered, please contact us immediately for account deletion.
+          </p>
+        </section>
+
+        <!-- 12. Contact -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">12</span> Contact Us / Data Protection Officer</h2>
+          <div class="contact-grid">
+            <div class="contact-item">
+              <span class="contact-label">Company</span>
+              <span class="contact-value">NearBite / YumDude</span>
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Privacy Email</span>
+              <a href="mailto:privacy@yumdude.com" class="contact-value">privacy&#64;yumdude.com</a>
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Support</span>
+              <a href="mailto:support@yumdude.com" class="contact-value">support&#64;yumdude.com</a>
+            </div>
+            <div class="contact-item">
+              <span class="contact-label">Response Time</span>
+              <span class="contact-value">Within 30 days</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 13. Applicable Law -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">13</span> Applicable Law</h2>
+          <p>
+            This Privacy Policy is governed by the laws of India, including the
+            <strong>Information Technology Act, 2000</strong>, the
+            <strong>IT (SPDI) Rules, 2011</strong>, and the
+            <strong>Digital Personal Data Protection Act, 2023</strong>.
+            Any disputes shall be subject to the jurisdiction of courts in India.
+          </p>
+        </section>
+
+        <!-- 14. References -->
+        <section class="policy-section">
+          <h2 class="section-title"><span class="section-num">14</span> Regulatory References</h2>
+          <ul class="ref-list">
+            <li><a href="https://support.google.com/googleplay/android-developer/answer/9799150" target="_blank" rel="noopener">Google Play — Permissions policy</a></li>
+            <li><a href="https://support.google.com/googleplay/android-developer/answer/9859455" target="_blank" rel="noopener">Google Play — Privacy, security, and deception</a></li>
+            <li><a href="https://developer.android.com/guide/topics/permissions/overview" target="_blank" rel="noopener">Android — Permissions overview</a></li>
+            <li><a href="https://developer.android.com/training/location/permissions#background" target="_blank" rel="noopener">Android — Background location</a></li>
+            <li><a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">Firebase Privacy</a></li>
+            <li><a href="https://www.meity.gov.in/writereaddata/files/Digital%20Personal%20Data%20Protection%20Act%202023.pdf" target="_blank" rel="noopener">DPDP Act 2023 (India) — MeitY</a></li>
+            <li><a href="https://www.meity.gov.in/writereaddata/files/GSR313E_10511(1).pdf" target="_blank" rel="noopener">IT (SPDI) Rules 2011 — MeitY</a></li>
+          </ul>
+        </section>
+
+      </div><!-- /policy-card -->
+    </div><!-- /policy-container -->
+  </main>
+
+  <!-- Footer -->
+  <footer class="policy-footer">
+    <div class="policy-container">
+      <p>© 2026 NearBite / YumDude. All rights reserved.</p>
+      <p class="footer-pkg">Package: <code>app.rork.honesteats.rider</code></p>
+    </div>
+  </footer>
+
+</div>

@@ -15,6 +15,7 @@ import { SupportComponent } from './features/support/support.component';
 import { GoOnlineComponent } from './features/go-online/go-online.component';
 import { PrinterSettingsComponent } from './features/printer-settings/printer-settings.component';
 import { TermsComponent } from './features/terms/terms.component';
+import { RiderPolicyComponent } from './features/rider-policy/rider-policy.component';
 
 export const routes: Routes = [
   {
@@ -25,6 +26,10 @@ export const routes: Routes = [
   {
     path: 'terms',
     component: TermsComponent
+  },
+  {
+    path: 'rider-policy',
+    component: RiderPolicyComponent
   },
   {
     path: 'login',
