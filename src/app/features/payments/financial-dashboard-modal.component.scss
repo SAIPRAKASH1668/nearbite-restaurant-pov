@@ -213,22 +213,41 @@ section {
 .commission-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   padding: 0.75rem 1.25rem;
   font-size: 0.875rem;
   border-bottom: 1px solid #F0EEEC;
 
   &:last-child { border-bottom: none; }
 
-  .label { color: v.$text-secondary; font-weight: 500; }
+  .label {
+    color: v.$text-secondary;
+    font-weight: 500;
+    flex: 1;
+
+    .sub-note {
+      display: block;
+      font-size: 0.72rem;
+      color: v.$text-muted;
+      font-weight: 400;
+      margin-top: 0.15rem;
+    }
+  }
 
   .value {
     color: v.$text-primary;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
+    margin-left: 1rem;
+    flex-shrink: 0;
   }
 
   &.negative .value { color: v.$status-error; }
+
+  &.coupon-note {
+    background: rgba(v.$status-error, 0.03);
+    .value { color: v.$text-muted; font-weight: 400; font-style: italic; font-size: 0.8rem; }
+  }
 
   &.total {
     background: #FAFAF9;
@@ -243,6 +262,17 @@ section {
       font-weight: 700;
     }
   }
+}
+
+.formula-hint {
+  padding: 0.625rem 1.25rem;
+  background: rgba(v.$primary-orange, 0.05);
+  border-top: 1px solid rgba(v.$primary-orange, 0.15);
+  font-size: 0.75rem;
+  color: v.$text-muted;
+  line-height: 1.4;
+
+  i { color: v.$primary-orange; margin-right: 0.35rem; }
 }
 
 // ============================================================

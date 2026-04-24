@@ -51,17 +51,35 @@
         <div class="card-value">{{ preview.totalOrders }}</div>
       </div>
       <div class="summary-card">
-        <div class="card-label">Total Menu Value</div>
+        <div class="card-label">Gross Menu Value</div>
         <div class="card-value">{{ formatCurrency(preview.totalGMV) }}</div>
       </div>
-      <div class="summary-card">
+      <div class="summary-card deduction-card">
         <div class="card-label">Platform Commission</div>
-        <div class="card-value deduction">{{ formatCurrency(preview.totalCommission) }}</div>
+        <div class="card-value deduction">− {{ formatCurrency(preview.totalCommission) }}</div>
+      </div>
+      <div class="summary-card deduction-card" *ngIf="preview.totalCouponDeduction > 0">
+        <div class="card-label">Your Coupon Discount</div>
+        <div class="card-value deduction">− {{ formatCurrency(preview.totalCouponDeduction) }}</div>
       </div>
       <div class="summary-card highlight">
-        <div class="card-label">Net Payable to You</div>
+        <div class="card-label">Your Net Earnings</div>
         <div class="card-value net">{{ formatCurrency(preview.netPayable) }}</div>
       </div>
+    </div>
+
+    <!-- Earnings Formula Hint -->
+    <div class="earnings-formula-hint">
+      <i class="fas fa-info-circle"></i>
+      <span>
+        <strong>How your payout is calculated:</strong>
+        Gross Menu Value
+        <span class="formula-op">−</span> Platform Commission
+        <span class="formula-op" *ngIf="preview.totalCouponDeduction > 0">−</span>
+        <span *ngIf="preview.totalCouponDeduction > 0">Your Coupon Discount</span>
+        <span class="formula-op">=</span>
+        <strong class="formula-result">Your Net Earnings ({{ formatCurrency(preview.netPayable) }})</strong>
+      </span>
     </div>
 
     <!-- Order Breakdown Table -->

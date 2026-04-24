@@ -3,6 +3,27 @@ export interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  /** Key used by the backend API response */
+  addOns?: { optionId: string; name: string; extraPrice: number }[];
+  /** Legacy alias — kept for backwards compatibility */
+  addOnOptions?: { optionId: string; name: string; extraPrice: number }[];
+}
+
+/** Revenue breakdown returned by the backend on each order */
+export interface OrderRevenue {
+  platformRevenue?: {
+    foodCommission?    : number;
+    platformFee?       : number;
+    finalPayout?       : number;
+    couponDiscount?    : number;
+    itemCouponDiscount?: number;
+  };
+  restaurantRevenue?: {
+    revenue?           : number;  // gross before coupon deductions
+    finalPayout?       : number;  // net earnings (after commission + coupon deductions)
+    couponDiscount?    : number;  // restaurant-issued order-level coupon
+    itemCouponDiscount?: number;  // restaurant-issued item-level coupon
+  };
 }
 
 export enum OrderStatus {
@@ -47,6 +68,8 @@ export interface Order {
   acceptedAt?: string;
   pickupOtp?: string; // 4-digit OTP for restaurant to verify with rider during pickup
   deliveryOtp?: string; // 4-digit OTP for customer to verify with rider during delivery
+  /** Revenue breakdown — present once the order has been processed by the revenue calculator */
+  revenue?: OrderRevenue;
 }
 
 export interface OrdersResponse {

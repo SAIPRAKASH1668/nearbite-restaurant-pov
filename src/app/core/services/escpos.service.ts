@@ -131,6 +131,15 @@ export class EscPosService {
       if ((item as any).notes) {
         text('  >> ' + this.trim((item as any).notes, CHARS - 5)); line();
       }
+      // Print add-on options
+      if (item.addOnOptions?.length) {
+        item.addOnOptions.forEach(ao => {
+          const aoLabel = ao.extraPrice > 0
+            ? `  + ${ao.name} (+${ao.extraPrice.toFixed(0)})`
+            : `  + ${ao.name}`;
+          text(this.trim(aoLabel, CHARS)); line();
+        });
+      }
     });
 
     text('-'.repeat(CHARS)); line();
@@ -192,6 +201,15 @@ export class EscPosService {
       const qty   = this.padLeft(`x${item.quantity}`, qtyW);
       const amt   = this.padLeft(`${(item.price * item.quantity).toFixed(0)}`, priceW);
       text(name + qty + amt); line();
+      // Print add-on options indented
+      if (item.addOnOptions?.length) {
+        item.addOnOptions.forEach(ao => {
+          const aoLabel = ao.extraPrice > 0
+            ? `  + ${ao.name} (+${ao.extraPrice.toFixed(0)})`
+            : `  + ${ao.name}`;
+          text(this.trim(aoLabel, CHARS)); line();
+        });
+      }
     });
 
     text('-'.repeat(CHARS)); line();

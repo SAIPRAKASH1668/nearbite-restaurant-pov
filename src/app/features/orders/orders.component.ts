@@ -35,6 +35,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   // Orders state
   allOrders: Order[] = [];
   loading = true;
+  isSampleMode = false;
   
   // Rejection modal state
   showRejectionModal = false;
@@ -118,6 +119,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
    * Filter orders for today only
    */
   private filterTodayOrders(orders: Order[]): Order[] {
+    if (this.isSampleMode) return orders; // samples already span today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -395,6 +397,167 @@ export class OrdersComponent implements OnInit, OnDestroy {
       OrderStatus.OFFERED_TO_RIDER,
       OrderStatus.RIDER_ASSIGNED
     ].includes(order.status);
+  }
+
+  // ── Sample / Demo mode ────────────────────────────────────────────────────
+
+  loadSampleOrders(): void {
+    const now = new Date();
+    const ts = (minsAgo: number) =>
+      new Date(now.getTime() - minsAgo * 60_000).toISOString();
+
+    const samples: Order[] = [
+      {
+        orderId: 'ORD-DEMO-001',
+        customerPhone: '918****3421',
+        restaurantId: 'DEMO',
+        restaurantName: 'YumDude Kitchen',
+        restaurantImage: '',
+        items: [
+          { itemId: 'itm1', name: 'Butter Chicken', quantity: 2, price: 320,
+            addOnOptions: [{ optionId: 'ao1', name: 'Extra Gravy', extraPrice: 30 }] },
+          { itemId: 'itm2', name: 'Garlic Naan', quantity: 4, price: 60 },
+          { itemId: 'itm3', name: 'Raita', quantity: 1, price: 49 }
+        ],
+        foodTotal: 809,
+        deliveryFee: 35,
+        platformFee: 10,
+        grandTotal: 854,
+        status: OrderStatus.CONFIRMED,
+        riderId: null,
+        createdAt: ts(2),
+        deliveryAddress: '42, Lakeview Apartments, HSR Layout',
+        formattedAddress: 'HSR Layout, Bengaluru 560034',
+        addressId: 'addr1'
+      },
+      {
+        orderId: 'ORD-DEMO-002',
+        customerPhone: '917****9856',
+        restaurantId: 'DEMO',
+        restaurantName: 'YumDude Kitchen',
+        restaurantImage: '',
+        items: [
+          { itemId: 'itm4', name: 'Paneer Tikka Masala', quantity: 1, price: 299,
+            addOnOptions: [
+              { optionId: 'ao2', name: 'Extra Paneer', extraPrice: 50 },
+              { optionId: 'ao3', name: 'Less Spicy', extraPrice: 0 }
+            ] },
+          { itemId: 'itm5', name: 'Jeera Rice', quantity: 2, price: 120 },
+          { itemId: 'itm6', name: 'Mango Lassi', quantity: 1, price: 99 },
+          { itemId: 'itm7', name: 'Gulab Jamun', quantity: 2, price: 80 },
+          { itemId: 'itm8', name: 'Papad', quantity: 2, price: 30 }
+        ],
+        foodTotal: 758,
+        deliveryFee: 35,
+        platformFee: 10,
+        grandTotal: 803,
+        status: OrderStatus.CONFIRMED,
+        riderId: null,
+        createdAt: ts(6),
+        deliveryAddress: 'F-12, Silver Oak Society, Koramangala',
+        formattedAddress: 'Koramangala, Bengaluru 560095',
+        addressId: 'addr2'
+      },
+      {
+        orderId: 'ORD-DEMO-003',
+        customerPhone: '919****1234',
+        restaurantId: 'DEMO',
+        restaurantName: 'YumDude Kitchen',
+        restaurantImage: '',
+        items: [
+          { itemId: 'itm9', name: 'Chicken Biryani', quantity: 1, price: 349 },
+          { itemId: 'itm10', name: 'Salan', quantity: 1, price: 59 },
+          { itemId: 'itm11', name: 'Cold Drink', quantity: 2, price: 60 }
+        ],
+        foodTotal: 527,
+        deliveryFee: 40,
+        platformFee: 10,
+        grandTotal: 577,
+        status: OrderStatus.PREPARING,
+        riderId: null,
+        createdAt: ts(18),
+        deliveryAddress: 'B-304, Green Valley Apts, BTM Layout',
+        formattedAddress: 'BTM Layout, Bengaluru 560076',
+        addressId: 'addr3'
+      },
+      {
+        orderId: 'ORD-DEMO-004',
+        customerPhone: '916****7890',
+        restaurantId: 'DEMO',
+        restaurantName: 'YumDude Kitchen',
+        restaurantImage: '',
+        items: [
+          { itemId: 'itm12', name: 'Dal Makhani', quantity: 1, price: 249 },
+          { itemId: 'itm13', name: 'Butter Naan', quantity: 3, price: 55 },
+          { itemId: 'itm14', name: 'Sweet Lassi', quantity: 1, price: 89 }
+        ],
+        foodTotal: 503,
+        deliveryFee: 35,
+        platformFee: 10,
+        grandTotal: 548,
+        status: OrderStatus.READY_FOR_PICKUP,
+        riderId: null,
+        createdAt: ts(32),
+        deliveryAddress: '11, Palm Grove Road, Indiranagar',
+        formattedAddress: 'Indiranagar, Bengaluru 560038',
+        addressId: 'addr4',
+        pickupOtp: '4872'
+      },
+      {
+        orderId: 'ORD-DEMO-005',
+        customerPhone: '913****5566',
+        restaurantId: 'DEMO',
+        restaurantName: 'YumDude Kitchen',
+        restaurantImage: '',
+        items: [
+          { itemId: 'itm15', name: 'Veggie Thali', quantity: 2, price: 199 },
+          { itemId: 'itm16', name: 'Papad', quantity: 2, price: 30 }
+        ],
+        foodTotal: 458,
+        deliveryFee: 35,
+        platformFee: 10,
+        grandTotal: 503,
+        status: OrderStatus.DELIVERED,
+        riderId: 'RDR-091',
+        createdAt: ts(95),
+        deliveryAddress: '22, Sunrise Apartments, Whitefield',
+        formattedAddress: 'Whitefield, Bengaluru 560066',
+        addressId: 'addr5'
+      },
+      {
+        orderId: 'ORD-DEMO-006',
+        customerPhone: '912****3344',
+        restaurantId: 'DEMO',
+        restaurantName: 'YumDude Kitchen',
+        restaurantImage: '',
+        items: [
+          { itemId: 'itm17', name: 'Chicken Burger', quantity: 1, price: 179 },
+          { itemId: 'itm18', name: 'Fries', quantity: 1, price: 99 }
+        ],
+        foodTotal: 278,
+        deliveryFee: 35,
+        platformFee: 10,
+        grandTotal: 323,
+        status: OrderStatus.CANCELLED,
+        riderId: null,
+        createdAt: ts(55),
+        deliveryAddress: '7, MG Road, Central Bengaluru',
+        formattedAddress: 'MG Road, Bengaluru 560001',
+        addressId: 'addr6',
+        cancellationReason: 'Customer requested cancellation'
+      }
+    ];
+
+    this.allOrders = samples;
+    this.isSampleMode = true;
+    this.cdr.detectChanges();
+  }
+
+  dismissSampleMode(): void {
+    this.isSampleMode = false;
+    this.allOrders = [];
+    this.orderService.fetchOrders({ suppressNewOrderEffects: true });
+    this.cdr.detectChanges();
   }
 }
 

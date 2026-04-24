@@ -45,19 +45,30 @@
 
       <!-- Section 2: Commission Breakdown -->
       <section class="section-commission" *ngIf="commission">
-        <h3 class="section-title">Commission Breakdown</h3>
+        <h3 class="section-title">Earnings Breakdown</h3>
         <div class="commission-grid">
           <div class="commission-row">
-            <span class="label">Menu Order Value</span>
+            <span class="label">Gross Menu Value</span>
             <span class="value">{{ formatCurrency(commission.grossRevenue) }}</span>
           </div>
           <div class="commission-row negative">
             <span class="label">Platform Commission ({{ commission.commissionPercentage.toFixed(1) }}%)</span>
-            <span class="value">- {{ formatCurrency(commission.platformCommission) }}</span>
+            <span class="value">− {{ formatCurrency(commission.platformCommission) }}</span>
+          </div>
+          <div class="commission-row negative coupon-note">
+            <span class="label">
+              Your Coupon Discount
+              <span class="sub-note">(restaurant-issued coupons only — deducted from your payout)</span>
+            </span>
+            <span class="value">included in net</span>
           </div>
           <div class="commission-row total">
-            <span class="label">Net Payout to Restaurant (Filtered Period)</span>
+            <span class="label">Your Net Payout (Filtered Period)</span>
             <span class="value">{{ formatCurrency(commission.netPayout) }}</span>
+          </div>
+          <div class="formula-hint">
+            <i class="fas fa-info-circle"></i>
+            Net Payout = Gross Menu Value − Platform Commission − Your Coupon Discount
           </div>
         </div>
       </section>

@@ -15,8 +15,9 @@
         <div class="stat-value">{{ stats.totalOrders }}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Total Menu Value</div>
+        <div class="stat-label">Total Gross Sold</div>
         <div class="stat-value">{{ formatCurrency(stats.totalRevenue) }}</div>
+        <div class="stat-sub">before commissions</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Avg Menu Value</div>
@@ -273,11 +274,19 @@
           <h3>Menu Items</h3>
           <div class="items-list">
             <div class="item-row" *ngFor="let item of selectedOrder.items">
-              <div class="item-name">
-                <span class="qty-badge">{{ item.quantity }}x</span>
-                {{ item.name }}
+              <div class="item-name-block">
+                <div class="item-name">
+                  <span class="qty-badge">{{ item.quantity }}x</span>
+                  {{ item.name }}
+                </div>
+                <div class="item-addons" *ngIf="(item.addOns || item.addOnOptions)?.length">
+                  <span class="addon-chip" *ngFor="let ao of (item.addOns || item.addOnOptions)">
+                    + {{ ao.name }}
+                    <span class="addon-price">+{{ formatCurrency(ao.extraPrice) }}</span>
+                  </span>
+                </div>
               </div>
-              <div class="item-price">{{ formatCurrency(item.price * item.quantity) }}</div>
+              <div class="item-price">{{ formatCurrency((item.price + getAddonsTotal(item)) * item.quantity) }}</div>
             </div>
           </div>
           

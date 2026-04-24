@@ -5,6 +5,12 @@ import { tap, catchError } from 'rxjs/operators';
 import { RestaurantContextService } from './restaurant-context.service';
 import { environment } from '../../../environments/environment';
 
+export interface AddOnOption {
+  optionId: string;
+  name: string;
+  extraPrice: number;
+}
+
 export interface MenuItem {
   restaurant_id: string;
   itemId: string;
@@ -21,6 +27,7 @@ export interface MenuItem {
   isAvailable: boolean;
   description: string;
   image: string[];
+  addOnOptions?: AddOnOption[];
 }
 
 export interface MenuResponse {
@@ -112,7 +119,8 @@ export class MenuService {
         isVeg: itemData.isVeg,
         isAvailable: itemData.isAvailable,
         description: itemData.description,
-        image: itemData.image
+        image: itemData.image,
+        addOnOptions: itemData.addOnOptions ?? []
       }
     ).pipe(
       catchError(error => {
@@ -138,7 +146,8 @@ export class MenuService {
         isVeg: itemData.isVeg,
         isAvailable: itemData.isAvailable,
         description: itemData.description,
-        image: itemData.image
+        image: itemData.image,
+        addOnOptions: itemData.addOnOptions ?? []
       }
     ).pipe(
       tap(() => {
@@ -185,7 +194,8 @@ export class MenuService {
         isVeg: itemData.isVeg,
         isAvailable: itemData.isAvailable,
         description: itemData.description,
-        image: itemData.image
+        image: itemData.image,
+        addOnOptions: itemData.addOnOptions ?? []
       }
     ).pipe(
       tap(() => {

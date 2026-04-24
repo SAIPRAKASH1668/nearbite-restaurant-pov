@@ -26,7 +26,16 @@
       <span>Cancelled</span>
     </button>
   </div>
-
+  <!-- ── Sample mode banner ───────────────────────────────────────────────────── -->
+  <div class="ord-sample-banner" *ngIf="isSampleMode">
+    <span class="ord-sample-banner-icon"><i class="fas fa-eye"></i></span>
+    <div class="ord-sample-banner-text">
+      <strong>Preview Mode</strong> — These are sample orders to show you how incoming orders look. No real data.
+    </div>
+    <button class="ord-sample-banner-dismiss" (click)="dismissSampleMode()">
+      <i class="fas fa-times"></i> Exit Preview
+    </button>
+  </div>
   <!-- ── Printer: no-printer nudge ─────────────────────────────────────────── -->
   <div class="ord-printer-nudge" *ngIf="!hasPrinter">
     <i class="fas fa-print"></i>
@@ -94,8 +103,15 @@
       <div class="ord-items">
         <div class="ord-items-lbl">ITEMS</div>
         <div class="ord-item-row" *ngFor="let item of order.items.slice(0, 4)">
-          <span class="ord-item-name">{{ item.name }}</span>
-          <span class="ord-item-qty">×{{ item.quantity }}</span>
+          <div class="ord-item-main">
+            <span class="ord-item-name">{{ item.name }}</span>
+            <span class="ord-item-qty">×{{ item.quantity }}</span>
+          </div>
+          <div class="ord-item-addons" *ngIf="(item.addOns || item.addOnOptions)?.length">
+            <span class="ord-addon-chip" *ngFor="let ao of (item.addOns || item.addOnOptions)">
+              + {{ ao.name }}<span *ngIf="ao.extraPrice > 0"> (₹{{ ao.extraPrice }})</span>
+            </span>
+          </div>
         </div>
         <button class="ord-see-more"
           *ngIf="hasMoreItems(order)"
@@ -129,7 +145,7 @@
       <div class="ord-footer">
         <div class="ord-amount">
           <div class="ord-amount-sub">
-            <span>Menu Value: ₹{{ order.foodTotal }}</span>
+            <span>Gross Menu Value: ₹{{ order.foodTotal }}</span>
           </div>
           <div class="ord-total">₹{{ order.foodTotal }}</div>
         </div>
@@ -166,8 +182,15 @@
 
     <!-- Empty state -->
     <div class="ord-empty" *ngIf="getOrders().length === 0">
-      <i class="fas fa-inbox"></i>
-      <p>No {{ activeTab }} orders</p>
+      <div class="ord-empty-icon">
+        <i class="fas fa-receipt"></i>
+      </div>
+      <p class="ord-empty-title">No {{ activeTab }} orders right now</p>
+      <p class="ord-empty-sub">Orders placed by customers will appear here in real time.</p>
+      <button class="ord-empty-sample-btn" *ngIf="!isSampleMode" (click)="loadSampleOrders(); setActiveTab('new')">
+        <i class="fas fa-eye"></i>
+        Preview sample orders
+      </button>
     </div>
 
   </div><!-- /ord-grid -->
@@ -236,7 +259,14 @@
               <span class="right">Total</span>
             </div>
             <div class="ord-modal-item" *ngFor="let item of expandedOrder.items; let odd = odd" [class.alt]="odd">
-              <span class="ord-modal-item-name">{{ item.name }}</span>
+              <span class="ord-modal-item-name">
+                <span class="ord-modal-item-title">{{ item.name }}</span>
+                <span class="ord-modal-addons" *ngIf="(item.addOns || item.addOnOptions)?.length">
+                  <span class="ord-modal-addon-chip" *ngFor="let ao of (item.addOns || item.addOnOptions)">
+                    + {{ ao.name }}<span *ngIf="ao.extraPrice > 0"> (₹{{ ao.extraPrice }})</span>
+                  </span>
+                </span>
+              </span>
               <span class="ord-modal-item-qty center">{{ item.quantity }}</span>
               <span class="ord-modal-item-price right">₹{{ item.price }}</span>
               <span class="ord-modal-item-total right">₹{{ item.price * item.quantity }}</span>
@@ -293,13 +323,36 @@
           </div>
           <div class="ord-bill-rows">
             <div class="ord-bill-line">
-              <span>Menu Order Value</span>
+              <span>Gross Menu Value</span>
               <span>₹{{ expandedOrder.foodTotal }}</span>
             </div>
+            <!-- Earnings breakdown — shown when backend revenue data is available -->
+            <ng-container *ngIf="expandedOrder.revenue?.platformRevenue?.foodCommission != null">
+              <div class="ord-bill-line ord-bill-deduction">
+                <span>Platform Commission</span>
+                <span>− ₹{{ expandedOrder.revenue!.platformRevenue!.foodCommission!.toFixed(2) }}</span>
+              </div>
+              <ng-container *ngIf="(expandedOrder.revenue?.restaurantRevenue?.couponDiscount || 0) + (expandedOrder.revenue?.restaurantRevenue?.itemCouponDiscount || 0) > 0">
+                <div class="ord-bill-line ord-bill-deduction">
+                  <span>Your Coupon Discount</span>
+                  <span>− ₹{{ ((expandedOrder.revenue!.restaurantRevenue!.couponDiscount || 0) + (expandedOrder.revenue!.restaurantRevenue!.itemCouponDiscount || 0)).toFixed(2) }}</span>
+                </div>
+              </ng-container>
+            </ng-container>
           </div>
           <div class="ord-bill-total">
-            <span class="ord-bill-total-lbl">Restaurant Relevant Total</span>
-            <span class="ord-bill-total-amt">₹{{ expandedOrder.foodTotal }}</span>
+            <ng-container *ngIf="expandedOrder.revenue?.restaurantRevenue?.finalPayout != null; else grossFallback">
+              <span class="ord-bill-total-lbl">Your Net Earnings</span>
+              <span class="ord-bill-total-amt ord-bill-earnings">₹{{ expandedOrder.revenue!.restaurantRevenue!.finalPayout!.toFixed(2) }}</span>
+            </ng-container>
+            <ng-template #grossFallback>
+              <span class="ord-bill-total-lbl">Gross Menu Value</span>
+              <span class="ord-bill-total-amt">₹{{ expandedOrder.foodTotal }}</span>
+            </ng-template>
+          </div>
+          <div class="ord-bill-formula-note" *ngIf="expandedOrder.revenue?.restaurantRevenue?.finalPayout != null">
+            <i class="fas fa-info-circle"></i>
+            Net Earnings = Gross Menu Value − Platform Commission − Your Coupon Discount
           </div>
         </div>
 

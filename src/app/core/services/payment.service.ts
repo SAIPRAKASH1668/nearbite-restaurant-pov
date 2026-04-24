@@ -466,9 +466,9 @@ export class PaymentService {
     const headers = [
       'Date',
       'Order ID',
-      'Menu Order Value',
-      'Commission',
-      'Net Payout',
+      'Gross Menu Value',
+      'Platform Commission',
+      'Net Payout (Your Earnings)',
       'Settlement Status',
       'Transaction ID'
     ];
@@ -483,8 +483,12 @@ export class PaymentService {
       payment.transactionId
     ]);
 
+    // Formula note as first data row (informational)
+    const formulaNote = ['Formula: Net Payout = Gross Menu Value - Platform Commission - Your Coupon Discount', '', '', '', '', '', ''];
+
     const csvContent = [
       headers.join(','),
+      formulaNote.map(cell => this.escapeCsvCell(cell)).join(','),
       ...rows.map((row) => row.map((cell) => this.escapeCsvCell(cell)).join(','))
     ].join('\n');
 
@@ -527,12 +531,15 @@ export class PaymentService {
       lines.forEach((line: string) => addLine(line, fontSize));
     };
 
-    addLine('Financial Dashboard Report', 18, 'bold');
+    addLine('YumDude - Financial Dashboard Report', 18, 'bold');
     addLine(`Generated: ${new Date().toLocaleString('en-IN')}`, 10);
     addLine(`Total Transactions: ${payments.length}`, 10);
-    addLine(`Total Gross Revenue: Rs.${totalGross.toFixed(2)}`, 10);
+    y += 4;
+    addLine('Earnings Formula: Net Payout = Gross Menu Value - Platform Commission - Your Coupon Discount', 9);
+    y += 8;
+    addLine(`Total Gross Menu Value: Rs.${totalGross.toFixed(2)}`, 10);
     addLine(`Total Platform Commission: Rs.${totalCommission.toFixed(2)}`, 10);
-    addLine(`Total Net Payout: Rs.${totalNet.toFixed(2)}`, 10);
+    addLine(`Total Net Payout (Your Earnings): Rs.${totalNet.toFixed(2)}`, 10, 'bold');
     y += 6;
 
     payments.forEach((payment, index) => {
@@ -551,7 +558,7 @@ export class PaymentService {
         9
       );
       addWrappedLine(
-        `Menu Value: Rs.${payment.grossAmount.toFixed(2)} | Commission: Rs.${payment.commissionAmount.toFixed(2)} | Net: Rs.${payment.netPayoutAmount.toFixed(2)}`,
+        `Gross Menu Value: Rs.${payment.grossAmount.toFixed(2)} | Commission: Rs.${payment.commissionAmount.toFixed(2)} | Net Payout: Rs.${payment.netPayoutAmount.toFixed(2)}`,
         9
       );
       addWrappedLine(

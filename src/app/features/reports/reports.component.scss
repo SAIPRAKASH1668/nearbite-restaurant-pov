@@ -95,6 +95,13 @@
     &.status-error { color: $status-error; }
   }
 
+  .stat-sub {
+    font-size: 0.65rem;
+    color: $text-muted;
+    margin-top: 0.125rem;
+    font-style: italic;
+  }
+
   @include mobile {
     padding: 0.625rem 0.75rem;
     .stat-value { font-size: 1.125rem; }
@@ -943,7 +950,7 @@
 .item-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   padding: 0.5rem 0;
   border-bottom: 1px solid lighten($bg-secondary, 5%);
 
@@ -956,6 +963,14 @@
     padding-top: 0;
   }
 
+  .item-name-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+    min-width: 0; // prevent flex overflow on narrow screens
+  }
+
   .item-name {
     display: flex;
     align-items: center;
@@ -964,6 +979,8 @@
     color: $text-primary;
     font-weight: 500;
 
+    @include mobile { font-size: 0.8125rem; }
+
     .qty-badge {
       background: $primary-orange;
       color: white;
@@ -971,6 +988,38 @@
       border-radius: 4px;
       font-size: 0.75rem;
       font-weight: 600;
+      flex-shrink: 0;
+    }
+  }
+
+  .item-addons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.35rem;
+    padding-left: 0.25rem;
+  }
+
+  .addon-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: $primary-orange;
+    background: rgba($primary-orange, 0.08);
+    border-radius: 3px;
+    padding: 0.0875rem 0.35rem;
+    line-height: 1.5;
+    white-space: nowrap;
+
+    @include mobile {
+      font-size: 0.6875rem;
+      white-space: normal; // allow wrapping on very narrow screens
+    }
+
+    .addon-price {
+      font-weight: 600;
+      opacity: 0.85;
     }
   }
 
@@ -978,6 +1027,11 @@
     font-size: 0.875rem;
     color: $status-success;
     font-weight: 600;
+    flex-shrink: 0;
+    padding-left: 0.75rem;
+    padding-top: 0.1rem;
+
+    @include mobile { font-size: 0.8125rem; padding-left: 0.5rem; }
   }
 }
 

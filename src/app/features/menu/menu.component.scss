@@ -1292,3 +1292,165 @@
   @include mobile { width: 100%; min-height: 48px; font-size: 0.9375rem; }
   @include tablet { min-height: 44px; }
 }
+
+// ── Add-on Options Section ─────────────────────────────────────────────────────
+.mn-section-optional {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #A09890;
+  margin-left: 0.25rem;
+}
+
+.mn-addon-hint {
+  font-size: 0.8rem;
+  color: #9A9380;
+  margin: 0 0 0.875rem;
+  line-height: 1.5;
+}
+
+.mn-addon-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.mn-addon-header-row {
+  display: grid;
+  grid-template-columns: 1fr 10rem 2.25rem;
+  gap: 0.5rem;
+  padding: 0 0 0.25rem;
+
+  span {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #7A7068;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  @include mobile {
+    grid-template-columns: 1fr 8rem 2rem;
+  }
+}
+
+.mn-addon-row {
+  display: grid;
+  grid-template-columns: 1fr 10rem 2.25rem;
+  gap: 0.5rem;
+  align-items: center;
+
+  @include mobile {
+    grid-template-columns: 1fr 8rem 2rem;
+  }
+}
+
+.mn-fg-addon-name,
+.mn-fg-addon-price {
+  margin: 0;
+
+  input {
+    width: 100%;
+    height: 2.375rem;
+    padding: 0 0.625rem;
+    border: 1.5px solid #DDD9D4;
+    border-radius: 3px;
+    font-family: v.$font-family;
+    font-size: 0.8375rem;
+    color: #1A1512;
+    background: #FDFBF8;
+    outline: none;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+
+    &:focus { border-color: v.$primary-orange; background: #FFFFFF; }
+    &::placeholder { color: #B8B0A6; }
+
+    @include mobile { height: 44px; }
+  }
+}
+
+.mn-addon-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.375rem;
+  border: 1.5px solid #E8E5E2;
+  border-radius: 3px;
+  background: #FDFBF8;
+  color: #C4392A;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(232, 53, 42, 0.06);
+    border-color: #C4392A;
+  }
+
+  i { font-size: 0.75rem; }
+
+  @include mobile {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.mn-btn-add-addon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1.5px dashed #C8C2BA;
+  border-radius: 3px;
+  background: transparent;
+  padding: 0.4375rem 0.875rem;
+  font-family: v.$font-family;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #6B5E4E;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: v.$primary-orange;
+    color: v.$primary-orange;
+    background: rgba(232, 53, 42, 0.04);
+  }
+
+  svg { flex-shrink: 0; }
+
+  @include mobile {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+}
+
+// ── Add-ons column in table ────────────────────────────────────────────────────
+.mn-th-addons { width: 5.5rem; }
+.mn-td-addons {}
+
+.mn-addons-cell {
+  display: flex;
+  align-items: center;
+}
+
+.mn-addons-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.175rem 0.5rem;
+  border-radius: 20px;
+  background: rgba(232, 53, 42, 0.08);
+  color: v.$primary-orange;
+  font-size: 0.725rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.mn-addons-none {
+  color: #C4BEBC;
+  font-size: 0.8rem;
+}

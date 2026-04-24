@@ -510,6 +510,13 @@ export class ReportsComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  /** Sum of all addon extraPrice values for a single OrderItem */
+  getAddonsTotal(item: { addOns?: { extraPrice: number }[]; addOnOptions?: { extraPrice: number }[] }): number {
+    const options = item.addOns ?? item.addOnOptions;
+    if (!options?.length) return 0;
+    return options.reduce((sum, ao) => sum + (ao.extraPrice ?? 0), 0);
+  }
+
   /**
    * Calculate delivery time in minutes
    */
@@ -550,17 +557,33 @@ export class ReportsComponent implements OnInit {
    * Export to CSV
    */
   async exportCSV(): Promise<void> {
-    const headers = ['Order ID', 'Date', 'Time', 'Customer Phone', 'Items', 'Menu Order Value', 'Status'];
-    const rows = this.filteredOrders.map(order => [
-      order.orderId,
-      order.formattedDate,
-      order.formattedTime,
-      order.customerPhone,
-      order.itemsCount.toString(),
-      order.foodTotal?.toFixed(2) || '0.00',
-      this.getStatusLabel(order.status)
-    ]);
-    
+    const headers = ['Order ID', 'Date', 'Time', 'Customer Phone', 'Items',
+                     'Gross Menu Value', 'Platform Commission', 'Your Coupon Discount', 'Net Earnings', 'Status'];
+    const rows = this.filteredOrders.map(order => {
+      const rev = (order as any).revenue;
+      const commission   = rev?.platformRevenue?.foodCommission   != null
+        ? rev.platformRevenue.foodCommission.toFixed(2)
+        : '';
+      const couponDisc   = rev?.restaurantRevenue != null
+        ? ((rev.restaurantRevenue.couponDiscount || 0) + (rev.restaurantRevenue.itemCouponDiscount || 0)).toFixed(2)
+        : '';
+      const netEarnings  = rev?.restaurantRevenue?.finalPayout != null
+        ? rev.restaurantRevenue.finalPayout.toFixed(2)
+        : '';
+      return [
+        order.orderId,
+        order.formattedDate,
+        order.formattedTime,
+        order.customerPhone,
+        order.itemsCount.toString(),
+        order.foodTotal?.toFixed(2) || '0.00',
+        commission,
+        couponDisc,
+        netEarnings,
+        this.getStatusLabel(order.status)
+      ];
+    });
+
     const csvContent = [
       headers.join(','),
       ...rows.map(row => row.map(cell => this.escapeCsvCell(cell)).join(','))

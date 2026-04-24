@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MenuService, MenuItem } from '../../core/services/menu.service';
+import { MenuService, MenuItem, AddOnOption } from '../../core/services/menu.service';
 import { ImageUploadService } from '../../core/services/image-upload.service';
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 import { NotificationService } from '../../shared/components/notification/notification.service';
@@ -31,6 +31,10 @@ export class MenuComponent implements OnInit, OnDestroy {
   priceHikePercentage: number | null = null;
   applyingPriceHike = false;
 
+  // ── Add-on options state ──────────────────────────────────────────────────
+  /** Working copy of addon options for the open form */
+  addonOptions: AddOnOption[] = [];
+
   // ── Item image upload state ────────────────────────────────────────────────
   pendingImageFiles: File[] = [];
   pendingImagePreviews: string[] = [];
@@ -57,7 +61,8 @@ export class MenuComponent implements OnInit, OnDestroy {
     isAvailable: true,
     description: '',
     isVeg: true,
-    image: []
+    image: [],
+    addOnOptions: []
   };
 
   /** Customer-facing display price computed from restaurantPrice + hikePercentage (nearest 0.5). */
@@ -228,8 +233,11 @@ export class MenuComponent implements OnInit, OnDestroy {
       isAvailable: item.isAvailable,
       description: item.description,
       isVeg: item.isVeg,
-      image: item.image
+      image: item.image,
+      addOnOptions: item.addOnOptions ? [...item.addOnOptions] : []
     };
+    // Mirror addon options into the working array
+    this.addonOptions = this.newItem.addOnOptions ? [...this.newItem.addOnOptions] : [];
     // Clear any pending uploads from a previous open
     this.pendingImageFiles = [];
     this.pendingImagePreviews = [];
@@ -265,8 +273,10 @@ export class MenuComponent implements OnInit, OnDestroy {
       isAvailable: true,
       description: '',
       isVeg: true,
-      image: []
+      image: [],
+      addOnOptions: []
     };
+    this.addonOptions = [];
     this.pendingImageFiles = [];
     this.pendingImagePreviews = [];
   }
@@ -298,6 +308,25 @@ export class MenuComponent implements OnInit, OnDestroy {
       this.notificationService.warning('Please fill all required fields');
       return;
     }
+
+    // Validate addon options
+    for (const opt of this.addonOptions) {
+      if (!opt.name.trim()) {
+        this.notificationService.warning('All add-on options must have a name');
+        return;
+      }
+      if (opt.extraPrice < 0) {
+        this.notificationService.warning('Add-on extra price cannot be negative');
+        return;
+      }
+    }
+
+    // Sync working addon array into the item before saving
+    this.newItem.addOnOptions = this.addonOptions.map((o, i) => ({
+      optionId: o.optionId || `addon_${i + 1}`,
+      name: o.name.trim(),
+      extraPrice: o.extraPrice
+    }));
 
     this.savingItem = true;
 
@@ -340,6 +369,23 @@ export class MenuComponent implements OnInit, OnDestroy {
     } finally {
       this.savingItem = false;
       this.cdr.detectChanges();
+    }
+  }
+
+  // ── Add-on option management ──────────────────────────────────────────────────
+
+  addAddonOption(): void {
+    this.addonOptions.push({ optionId: '', name: '', extraPrice: 0 });
+  }
+
+  removeAddonOption(index: number): void {
+    this.addonOptions.splice(index, 1);
+  }
+
+  /** Clamp addon extra price to non-negative on change */
+  onAddonPriceChange(index: number): void {
+    if (this.addonOptions[index].extraPrice < 0) {
+      this.addonOptions[index].extraPrice = 0;
     }
   }
 

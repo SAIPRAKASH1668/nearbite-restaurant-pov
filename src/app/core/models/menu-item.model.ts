@@ -4,6 +4,15 @@
  */
 
 /**
+ * A single add-on option that can be attached to a menu item
+ */
+export interface AddOnOption {
+  optionId: string;
+  name: string;
+  extraPrice: number;
+}
+
+/**
  * MenuItem interface matching AWS DynamoDB MenuItem model
  */
 export interface MenuItem {
@@ -22,6 +31,9 @@ export interface MenuItem {
   // Availability
   isAvailable: boolean;
   isVeg?: boolean;
+
+  // Add-on options
+  addOnOptions?: AddOnOption[];
 }
 
 /**

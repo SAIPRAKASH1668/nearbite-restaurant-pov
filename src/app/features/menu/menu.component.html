@@ -63,6 +63,7 @@
           <th class="mn-th mn-th-menprice">Menu Price</th>
           <th class="mn-th mn-th-hike">Hike %</th>
           <th class="mn-th mn-th-disprice">Cust. Price</th>
+          <th class="mn-th mn-th-addons">Add-ons</th>
           <th class="mn-th mn-th-avail">Available</th>
           <th class="mn-th mn-th-act">Edit</th>
         </tr>
@@ -112,6 +113,16 @@
           <!-- Display / Customer Price -->
           <td class="mn-td mn-td-price">
             <div class="mn-price-cell">₹{{ item.price }}</div>
+          </td>
+
+          <!-- Add-on count badge -->
+          <td class="mn-td mn-td-addons">
+            <div class="mn-addons-cell">
+              <span class="mn-addons-badge" *ngIf="item.addOnOptions?.length">
+                {{ item.addOnOptions!.length }} addon{{ item.addOnOptions!.length !== 1 ? 's' : '' }}
+              </span>
+              <span class="mn-addons-none" *ngIf="!item.addOnOptions?.length">&mdash;</span>
+            </div>
           </td>
 
           <!-- Availability Toggle -->
@@ -317,6 +328,49 @@
               <div class="mn-disprice-preview">₹{{ computedDisplayPrice | number:'1.0-1' }}</div>
             </div>
           </div>
+        </div>
+
+        <!-- ── Section: Add-on Options ──────────────────────────────────── -->
+        <div class="mn-form-section">
+          <div class="mn-section-header">
+            <i class="fas fa-plus-circle"></i>
+            <span>Add-on Options <span class="mn-section-optional">(optional)</span></span>
+          </div>
+
+          <p class="mn-addon-hint">Add customisation options customers can choose when ordering this item (e.g. Extra Cheese, Large Size, Extra Spicy).</p>
+
+          <!-- Existing addon rows -->
+          <div class="mn-addon-list" *ngIf="addonOptions.length > 0">
+            <div class="mn-addon-header-row">
+              <span class="mn-addon-col-name">Option Name</span>
+              <span class="mn-addon-col-price">Extra Price (₹)</span>
+              <span class="mn-addon-col-del"></span>
+            </div>
+            <div class="mn-addon-row" *ngFor="let opt of addonOptions; let i = index">
+              <div class="mn-fg mn-fg-addon-name">
+                <input type="text" [(ngModel)]="opt.name" [name]="'addonName' + i"
+                  placeholder="e.g. Extra Cheese" maxlength="60" />
+              </div>
+              <div class="mn-fg mn-fg-addon-price">
+                <div class="mn-price-input-wrap">
+                  <span class="mn-price-prefix">₹</span>
+                  <input type="number" [(ngModel)]="opt.extraPrice" [name]="'addonPrice' + i"
+                    placeholder="0" min="0" step="0.5"
+                    (ngModelChange)="onAddonPriceChange(i)" />
+                </div>
+              </div>
+              <button type="button" class="mn-addon-remove" (click)="removeAddonOption(i)" title="Remove option">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="button" class="mn-btn-add-addon" (click)="addAddonOption()">
+            <svg width="11" height="11" viewBox="0 0 13 13" fill="none">
+              <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Add Option
+          </button>
         </div>
 
         <!-- ── Section: Media & Availability ─────────────────────────────── -->
