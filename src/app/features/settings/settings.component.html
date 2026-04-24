@@ -419,6 +419,47 @@
     </ng-container>
   </div>
 
+  <!-- __ Order Notifications Card (view-only mode) __________________________ -->
+  <div class="st-card st-notif-card" *ngIf="isViewOnlyMode">
+
+    <div class="st-card-head">
+      <div class="st-card-head-info">
+        <div class="st-card-icon st-card-icon--warn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="st-card-title">Order Notifications</h2>
+          <p class="st-card-desc">Another device is currently handling order alerts</p>
+        </div>
+      </div>
+      <span class="st-view-only-badge">View only</span>
+    </div>
+
+    <div class="st-notif-info">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span>You're in view-only mode. Order notifications and sounds are being sent to another device. Switching over will stop them on that device.</span>
+    </div>
+
+    <button
+      class="st-btn-takeover"
+      (click)="takeOverNotifications()"
+      [disabled]="takingOverNotifications">
+      <span class="st-spinner" *ngIf="takingOverNotifications"></span>
+      <svg *ngIf="!takingOverNotifications" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      {{ takingOverNotifications ? 'Taking over...' : 'Receive notifications on this device' }}
+    </button>
+
+  </div>
+
 </div>
 
 <!-- â”€â”€ Lightbox â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->

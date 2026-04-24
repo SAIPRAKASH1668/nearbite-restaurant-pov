@@ -9,6 +9,7 @@ import { RestaurantContextService } from '../../core/services/restaurant-context
 export interface DashboardStats {
   todayOrders: number;
   todayRevenue: number;
+  todayPayout: number;
   avgOrderValue: number;
   pendingOrders: number;
   ordersChangePercent: number;
@@ -22,6 +23,7 @@ export interface RecentOrder {
   customerName: string;
   items: number;
   amount: number;
+  payout: number | null;
   status: 'new' | 'preparing' | 'ready' | 'completed';
   time: string;
 }
@@ -72,6 +74,13 @@ export class DashboardService {
           .filter((order) => order.status !== OrderStatus.CANCELLED)
           .reduce((sum, order) => sum + order.foodTotal, 0);
 
+        const todayPayout = todayOrders
+          .filter((order) => order.status !== OrderStatus.CANCELLED)
+          .reduce((sum, order) => {
+            const fp = order.revenue?.restaurantRevenue?.finalPayout;
+            return sum + (fp != null ? fp : order.foodTotal);
+          }, 0);
+
         const yesterdayRevenue = yesterdayOrders
           .filter((order) => order.status !== OrderStatus.CANCELLED)
           .reduce((sum, order) => sum + order.foodTotal, 0);
@@ -88,6 +97,7 @@ export class DashboardService {
         return {
           todayOrders: todayOrders.length,
           todayRevenue: Math.round(todayRevenue),
+          todayPayout: Math.round(todayPayout),
           avgOrderValue: Math.round(avgOrderValue),
           pendingOrders,
           ordersChangePercent: this.calculatePercentChange(todayOrders.length, yesterdayOrders.length),
@@ -100,6 +110,7 @@ export class DashboardService {
         return of({
           todayOrders: 0,
           todayRevenue: 0,
+          todayPayout: 0,
           avgOrderValue: 0,
           pendingOrders: 0,
           ordersChangePercent: 0,
@@ -127,6 +138,7 @@ export class DashboardService {
           customerName: this.maskPhoneNumber(order.customerPhone),
           items: order.items.length,
           amount: order.foodTotal,
+          payout: order.revenue?.restaurantRevenue?.finalPayout ?? null,
           status: this.mapOrderStatus(order.status),
           time: this.getRelativeTime(order.createdAt)
         }));

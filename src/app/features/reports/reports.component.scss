@@ -93,6 +93,7 @@
     color: $text-primary;
 
     &.status-error { color: $status-error; }
+    &.payout-value { color: $status-success; }
   }
 
   .stat-sub {
@@ -106,6 +107,10 @@
     padding: 0.625rem 0.75rem;
     .stat-value { font-size: 1.125rem; }
   }
+}
+
+.stat-card--payout {
+  border-left: 3px solid $status-success;
 }
 
 // Filters Section
@@ -604,6 +609,13 @@
         font-weight: 600;
         color: $status-success;
       }
+
+      &.payout-col {
+        font-weight: 600;
+        color: $status-success;
+        .payout-amount { color: $status-success; }
+        .payout-pending { color: $text-muted; font-size: 0.8rem; }
+      }
     }
   }
 }
@@ -1056,6 +1068,18 @@
     font-size: 1rem;
     font-weight: 700;
     color: $primary-orange;
+  }
+
+  &.payout-row {
+    margin-top: 0.375rem;
+    padding-top: 0.75rem;
+    border-top: 2px solid lighten($bg-secondary, 10%);
+    font-size: 1rem;
+    font-weight: 700;
+
+    .payout-highlight {
+      color: $status-success;
+    }
   }
 }
 

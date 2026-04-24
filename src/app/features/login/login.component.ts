@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, NgZone, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { PushNotificationService } from '../../core/services/push-notification.service';
+import { Capacitor } from '@capacitor/core';
 
 @Component({
   selector: 'app-login',
@@ -17,13 +19,17 @@ export class LoginComponent implements OnInit {
   errorMessage = '';
   showPassword = false;
   returnUrl = '/dashboard/welcome';
+  showFcmDialog = false;
+  readonly isNativePlatform = Capacitor.isNativePlatform();
   readonly desktopAppUrl = 'https://yumdude-assets.s3.ap-south-1.amazonaws.com/downloads/YumDude-Restaurant-Setup.exe';
 
   constructor(
     private formBuilder: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private pushNotificationService: PushNotificationService,
+    private ngZone: NgZone
   ) {}
 
   ngOnInit(): void {
@@ -58,18 +64,38 @@ export class LoginComponent implements OnInit {
 
     this.authService.login(username, password).subscribe({
       next: (result) => {
-        if (result.success) {
-          this.router.navigate([this.returnUrl]);
-        } else {
-          this.errorMessage = result.message || 'Login failed. Please try again.';
-          this.isLoading = false;
-        }
+        this.ngZone.run(() => {
+          if (result.success) {
+            if (result.fcmConflict) {
+              this.showFcmDialog = true;
+              this.isLoading = false;
+            } else {
+              this.isLoading = false;
+              this.router.navigate([this.returnUrl]);
+            }
+          } else {
+            this.errorMessage = result.message || 'Login failed. Please try again.';
+            this.isLoading = false;
+          }
+        });
       },
       error: () => {
-        this.errorMessage = 'An error occurred. Please try again later.';
-        this.isLoading = false;
+        this.ngZone.run(() => {
+          this.errorMessage = 'An error occurred. Please try again later.';
+          this.isLoading = false;
+        });
       }
     });
+  }
+
+  onTakeOverNotifications(): void {
+    void this.pushNotificationService.takeOverNotifications();
+    this.router.navigate([this.returnUrl]);
+  }
+
+  onViewOnlyMode(): void {
+    this.pushNotificationService.setViewOnlyMode();
+    this.router.navigate([this.returnUrl]);
   }
 
   onForgotPassword(): void {

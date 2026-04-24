@@ -504,6 +504,23 @@
   flex-shrink: 0;  // never let the total be crushed or wrapped
 }
 
+.ord-payout-line {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  .ord-payout-lbl {
+    color: v.$text-muted;
+    font-weight: 500;
+  }
+  .ord-payout-amt {
+    color: v.$status-success;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
 .ord-actions {
   display: flex;
   gap: 0.5rem;

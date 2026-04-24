@@ -3,9 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
+import { Capacitor } from '@capacitor/core';
 import { ImageUploadService } from '../../core/services/image-upload.service';
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 import { RestaurantOnlineService } from '../../core/services/restaurant-online.service';
+import { PushNotificationService } from '../../core/services/push-notification.service';
 import { NotificationService } from '../../shared/components/notification/notification.service';
 
 interface PendingFile {
@@ -60,6 +62,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
   // ── In-flight subscription tracking ────────────────────────────────────────
   private galleryLoadSub?: Subscription;
 
+  // ── Notification mode ─────────────────────────────────────────────────────
+  readonly isNativePlatform = Capacitor.isNativePlatform();
+  takingOverNotifications = false;
+
   // ── Touch swipe tracking ───────────────────────────────────────────────────
   private touchStartX = 0;
   private readonly SWIPE_THRESHOLD = 40;
@@ -69,6 +75,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private imageUploadService: ImageUploadService,
     private restaurantContext: RestaurantContextService,
     private restaurantOnlineService: RestaurantOnlineService,
+    private pushNotificationService: PushNotificationService,
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
@@ -78,11 +85,48 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.loadGallery();
     this.loadOperatingHours();
     this.loadAvgPreparationTime();
+    this.checkNotificationDisplacement();
+  }
+
+  private checkNotificationDisplacement(): void {
+    if (!this.isNativePlatform || !this.pushNotificationService.isDeviceRegistered()) {
+      return;
+    }
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    if (!restaurantId) return;
+
+    void this.pushNotificationService.checkIsActiveNotifier(restaurantId).then((isActive) => {
+      if (!isActive) {
+        // Another device has taken over — switch this device to view-only so the card appears
+        this.ngZone.run(() => {
+          this.pushNotificationService.setViewOnlyMode();
+          this.cdr.markForCheck();
+        });
+      }
+    });
   }
 
   ngOnDestroy(): void {
     document.body.style.overflow = '';
     this.galleryLoadSub?.unsubscribe();
+  }
+
+  get isViewOnlyMode(): boolean {
+    return this.isNativePlatform && this.pushNotificationService.isViewOnlyMode();
+  }
+
+  takeOverNotifications(): void {
+    if (this.takingOverNotifications) return;
+    this.takingOverNotifications = true;
+    this.pushNotificationService.takeOverNotifications().then(() => {
+      this.takingOverNotifications = false;
+      this.notificationService.success('This device will now receive order notifications');
+      this.cdr.markForCheck();
+    }).catch(() => {
+      this.takingOverNotifications = false;
+      this.notificationService.error('Failed to take over notifications. Please try again.');
+      this.cdr.markForCheck();
+    });
   }
 
   // ── Operating Hours ────────────────────────────────────────────────────────

@@ -318,6 +318,21 @@ $dude-red:   hsl(0,  79%,  55%);
   &--neutral { color: $text-muted;     background: $bg-secondary; }
 }
 
+.db-stat-payout {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.725rem;
+  font-weight: 600;
+  color: $status-success;
+  margin-top: 0.375rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+  background: rgba($status-success, 0.08);
+  border: 1px solid rgba($status-success, 0.18);
+  i { font-size: 0.65rem; opacity: 0.8; }
+}
+
 
 // ── Middle grid ────────────────────────────────────────────────────────────
 .db-mid-grid {
@@ -844,6 +859,9 @@ $dude-red:   hsl(0,  79%,  55%);
 .db-td-customer { font-weight: $font-weight-semibold; color: $text-primary !important; }
 .db-td-meta     { color: $text-muted !important; }
 .db-td-amount   { font-weight: $font-weight-bold; color: $primary-orange !important; font-size: 0.9375rem !important; }
+.db-td-payout   { font-weight: $font-weight-bold; color: $status-success !important; font-size: 0.9rem !important; }
+.db-td-payout-na { color: $text-muted !important; }
+.db-acc-val--payout { color: $status-success; font-weight: $font-weight-bold; }
 
 // ── Status badges ──────────────────────────────────────────────────────────
 .db-badge {

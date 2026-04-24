@@ -15,6 +15,7 @@ interface OrderReport extends Order {
 interface SummaryStats {
   totalOrders: number;
   totalRevenue: number;
+  totalNetPayout: number;
   avgOrderValue: number;
   deliveredOrders: number;
   cancelledOrders: number;
@@ -66,6 +67,7 @@ export class ReportsComponent implements OnInit {
   stats: SummaryStats = {
     totalOrders: 0,
     totalRevenue: 0,
+    totalNetPayout: 0,
     avgOrderValue: 0,
     deliveredOrders: 0,
     cancelledOrders: 0,
@@ -244,6 +246,12 @@ export class ReportsComponent implements OnInit {
     
     this.stats.totalOrders = orders.length;
     this.stats.totalRevenue = orders.reduce((sum, o) => sum + (o.foodTotal || 0), 0);
+    this.stats.totalNetPayout = orders
+      .filter(o => o.status !== OrderStatus.CANCELLED)
+      .reduce((sum, o) => {
+        const fp = (o as any).revenue?.restaurantRevenue?.finalPayout;
+        return sum + (fp != null ? fp : (o.foodTotal || 0));
+      }, 0);
     this.stats.avgOrderValue = this.stats.totalOrders > 0 
       ? this.stats.totalRevenue / this.stats.totalOrders 
       : 0;

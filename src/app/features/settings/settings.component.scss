@@ -132,7 +132,8 @@
 }
 
 // card head — make room for the pill on the right
-.st-hours-card .st-card-head {
+.st-hours-card .st-card-head,
+.st-notif-card .st-card-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1403,6 +1404,85 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+// ── Notification / View-Only Card ─────────────────────────────────────────────
+.st-notif-card {
+  margin-top: 1.5rem;
+  border-top: 4px solid v.$status-warning;
+
+  @include mobile { margin-top: 1rem; }
+}
+
+.st-card-icon--warn {
+  background: rgba(v.$status-warning, 0.1);
+  border: 1.5px solid rgba(v.$status-warning, 0.2);
+  color: darken(#F59E0B, 5%);
+}
+
+.st-view-only-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: v.$radius-full;
+  background: rgba(v.$status-warning, 0.12);
+  border: 1.5px solid rgba(v.$status-warning, 0.3);
+  color: darken(#F59E0B, 12%);
+  font-size: 0.72rem;
+  font-weight: v.$font-weight-semibold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.st-notif-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  background: rgba(v.$status-warning, 0.06);
+  border: 1px solid rgba(v.$status-warning, 0.18);
+  border-radius: v.$radius-lg;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: v.$text-secondary;
+  margin-bottom: 1.25rem;
+
+  svg {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    color: darken(#F59E0B, 5%);
+  }
+}
+
+.st-btn-takeover {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 48px;
+  padding: 0 1.5rem;
+  background: v.$primary-orange;
+  color: #fff;
+  border: none;
+  border-radius: v.$radius-lg;
+  font-size: 0.9rem;
+  font-weight: v.$font-weight-bold;
+  font-family: v.$font-family;
+  cursor: pointer;
+  box-shadow: 0 4px 0 v.$dark-orange;
+  transition: transform 80ms ease, box-shadow 80ms ease, background v.$transition-fast;
+  width: 100%;
+
+  svg { flex-shrink: 0; }
+
+  &:hover:not(:disabled) { background: v.$accent-orange; }
+  &:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 v.$dark-orange;
+  }
+  &:disabled { opacity: 0.55; cursor: not-allowed; }
 }
 
 .st-progress-bar {

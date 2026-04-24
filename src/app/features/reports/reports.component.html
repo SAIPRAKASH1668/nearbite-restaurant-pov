@@ -19,6 +19,11 @@
         <div class="stat-value">{{ formatCurrency(stats.totalRevenue) }}</div>
         <div class="stat-sub">before commissions</div>
       </div>
+      <div class="stat-card stat-card--payout">
+        <div class="stat-label">Total Net Payout</div>
+        <div class="stat-value payout-value">{{ formatCurrency(stats.totalNetPayout) }}</div>
+        <div class="stat-sub">after commissions &amp; discounts</div>
+      </div>
       <div class="stat-card">
         <div class="stat-label">Avg Menu Value</div>
         <div class="stat-value">{{ formatCurrency(stats.avgOrderValue) }}</div>
@@ -148,6 +153,7 @@
           <th (click)="sortBy('foodTotal')" class="sortable text-right">
             Menu Value {{ getSortIcon('foodTotal') }}
           </th>
+          <th class="text-right">Your Payout</th>
           <th (click)="sortBy('status')" class="sortable">
             Status {{ getSortIcon('status') }}
           </th>
@@ -173,6 +179,12 @@
           </td>
           <td class="text-center">{{ order.itemsCount }}</td>
           <td class="text-right amount-col">{{ formatCurrency(order.foodTotal || 0) }}</td>
+          <td class="text-right payout-col">
+            <ng-container *ngIf="order.revenue?.restaurantRevenue?.finalPayout != null">
+              <span class="payout-amount">{{ formatCurrency(order.revenue!.restaurantRevenue!.finalPayout!) }}</span>
+            </ng-container>
+            <span *ngIf="order.revenue?.restaurantRevenue?.finalPayout == null" class="payout-pending">—</span>
+          </td>
           <td>
             <span class="status-badge" [ngClass]="getStatusColorClass(order.status)">
               {{ getStatusLabel(order.status) }}
@@ -296,7 +308,13 @@
               <span>Menu Order Value:</span>
               <span>{{ formatCurrency(selectedOrder.foodTotal) }}</span>
             </div>
-            <div class="total-row grand-total">
+            <ng-container *ngIf="selectedOrder.revenue?.restaurantRevenue?.finalPayout != null">
+              <div class="total-row payout-row">
+                <span>Your Net Payout:</span>
+                <span class="payout-highlight">{{ formatCurrency(selectedOrder.revenue!.restaurantRevenue!.finalPayout!) }}</span>
+              </div>
+            </ng-container>
+            <div class="total-row grand-total" *ngIf="selectedOrder.revenue?.restaurantRevenue?.finalPayout == null">
               <span>Restaurant Relevant Total:</span>
               <span>{{ formatCurrency(selectedOrder.foodTotal) }}</span>
             </div>

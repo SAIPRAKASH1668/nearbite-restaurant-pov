@@ -66,6 +66,10 @@
            [class.fa-arrow-trend-down]="stats.revenueChangePercent < 0"></i>
         <span>{{ Math.abs(stats.revenueChangePercent) }}% vs yesterday</span>
       </div>
+      <div class="db-stat-payout">
+        <i class="fas fa-wallet"></i>
+        <span>Est. Payout: ₹{{ stats.todayPayout | number }}</span>
+      </div>
     </div>
 
     <div class="db-stat db-stat--avg">
@@ -213,6 +217,7 @@
             <th>Items</th>
             <th>Time</th>
             <th>Amount</th>
+            <th>Payout</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -223,6 +228,10 @@
             <td class="db-td-meta">{{ order.items }} items</td>
             <td class="db-td-meta">{{ order.time }}</td>
             <td class="db-td-amount">₹{{ order.amount }}</td>
+            <td class="db-td-payout">
+              <span *ngIf="order.payout != null">₹{{ order.payout | number }}</span>
+              <span *ngIf="order.payout == null" class="db-td-payout-na">—</span>
+            </td>
             <td>
               <span class="db-badge" [ngClass]="getStatusClass(order.status)">
                 {{ getStatusLabel(order.status) }}
@@ -256,6 +265,10 @@
             <div class="db-acc-row">
               <span class="db-acc-key">Amount</span>
               <span class="db-acc-val db-acc-val--amount">₹{{ order.amount }}</span>
+            </div>
+            <div class="db-acc-row" *ngIf="order.payout != null">
+              <span class="db-acc-key">Your Payout</span>
+              <span class="db-acc-val db-acc-val--payout">₹{{ order.payout | number }}</span>
             </div>
             <div class="db-acc-row">
               <span class="db-acc-key">Items</span>

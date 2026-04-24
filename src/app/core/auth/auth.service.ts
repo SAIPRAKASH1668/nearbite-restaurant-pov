@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, map, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, from, map, of, switchMap } from 'rxjs';
 import { RestaurantContextService } from '../services/restaurant-context.service';
 import { PushNotificationService } from '../services/push-notification.service';
 import { RuntimeEnvironmentService } from '../services/runtime-environment.service';
@@ -55,7 +55,7 @@ export class AuthService {
     return !!this.currentUserSubject.value && !!localStorage.getItem(this.TOKEN_STORAGE_KEY);
   }
 
-  login(username: string, password: string): Observable<{ success: boolean; message?: string }> {
+  login(username: string, password: string): Observable<{ success: boolean; message?: string; fcmConflict?: boolean }> {
     const targetEnvironment = this.runtimeEnvironmentService.resolveEnvironmentForUsername(username);
     this.runtimeEnvironmentService.setActiveEnvironment(targetEnvironment);
 
@@ -63,22 +63,35 @@ export class AuthService {
       username,
       password
     }).pipe(
-      map((response) => {
+      switchMap((response) => {
         const user: User = { ...response };
 
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(user));
         localStorage.setItem(this.TOKEN_STORAGE_KEY, response.token);
         this.restaurantContext.setRestaurantId(response.restaurantId);
         this.currentUserSubject.next(user);
-        void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId);
 
-        return { success: true };
+        // This device was previously the active notifier — re-sync without prompting
+        if (this.pushNotificationService.isDeviceRegistered()) {
+          void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId);
+          return of({ success: true as const });
+        }
+
+        // Check whether another device already has the FCM token for this restaurant
+        return from(this.pushNotificationService.checkRemoteTokenExists(response.restaurantId)).pipe(
+          map((hasConflict) => {
+            if (!hasConflict) {
+              void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId);
+            }
+            return { success: true as const, fcmConflict: hasConflict };
+          })
+        );
       }),
       catchError((error: HttpErrorResponse) => {
         const message = error.status === 401
           ? 'Invalid username or password. Please try again.'
           : (error.error?.message || 'Login failed. Please try again later.');
-        return of({ success: false, message });
+        return of({ success: false as const, message });
       })
     );
   }

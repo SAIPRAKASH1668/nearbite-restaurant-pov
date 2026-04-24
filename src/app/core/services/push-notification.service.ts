@@ -20,6 +20,8 @@ export class PushNotificationService {
   private readonly API_BASE_URL = environment.apiUrl;
   private readonly CHANNEL_ID = 'new_orders';
   private readonly TOKEN_STORAGE_KEY = 'nearbite_fcm_token';
+  private readonly VIEW_ONLY_KEY = 'nearbite_notification_mode';
+  private readonly DEVICE_REGISTERED_KEY = 'nearbite_fcm_device_registered';
   private initialized = false;
 
   constructor(
@@ -29,6 +31,74 @@ export class PushNotificationService {
     private router: Router,
     private ngZone: NgZone
   ) {}
+
+  isViewOnlyMode(): boolean {
+    return localStorage.getItem(this.VIEW_ONLY_KEY) === 'view_only';
+  }
+
+  setViewOnlyMode(): void {
+    localStorage.setItem(this.VIEW_ONLY_KEY, 'view_only');
+    localStorage.removeItem(this.DEVICE_REGISTERED_KEY);
+  }
+
+  clearViewOnlyMode(): void {
+    localStorage.removeItem(this.VIEW_ONLY_KEY);
+  }
+
+  isDeviceRegistered(): boolean {
+    return localStorage.getItem(this.DEVICE_REGISTERED_KEY) === 'true';
+  }
+
+  clearDeviceRegistered(): void {
+    localStorage.removeItem(this.DEVICE_REGISTERED_KEY);
+  }
+
+  async checkRemoteTokenExists(restaurantId: string): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) {
+      return false;
+    }
+    try {
+      const result = await firstValueFrom(
+        this.http.get<{ hasActiveToken: boolean }>(
+          `${this.API_BASE_URL}/restaurants/${restaurantId}/fcm-token-status`
+        )
+      );
+      return result.hasActiveToken === true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Returns true if this device's FCM token is still the active one on the backend.
+   * Returns true (safe default) if no local token exists or request fails.
+   */
+  async checkIsActiveNotifier(restaurantId: string): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) {
+      return true;
+    }
+    const localToken = localStorage.getItem(this.TOKEN_STORAGE_KEY);
+    if (!localToken) {
+      return true;
+    }
+    try {
+      const result = await firstValueFrom(
+        this.http.get<{ hasActiveToken: boolean; isThisDeviceActive?: boolean }>(
+          `${this.API_BASE_URL}/restaurants/${restaurantId}/fcm-token-status`,
+          { headers: { 'X-Device-FCM-Token': localToken } }
+        )
+      );
+      // If backend returned the comparison, use it; otherwise assume active
+      return result.isThisDeviceActive !== false;
+    } catch {
+      return true;
+    }
+  }
+
+  async takeOverNotifications(restaurantId?: string): Promise<void> {
+    this.clearViewOnlyMode();
+    await this.syncTokenForRestaurant(restaurantId);
+  }
 
   async initialize(): Promise<void> {
     if (!Capacitor.isNativePlatform() || this.initialized) {
@@ -57,6 +127,10 @@ export class PushNotificationService {
   }
 
   async syncTokenForRestaurant(restaurantId?: string): Promise<void> {
+    if (this.isViewOnlyMode()) {
+      return;
+    }
+
     if (!Capacitor.isNativePlatform()) {
       return;
     }
@@ -75,6 +149,7 @@ export class PushNotificationService {
           { fcmToken: token }
         )
       );
+      localStorage.setItem(this.DEVICE_REGISTERED_KEY, 'true');
     } catch (error) {
       console.error('Failed to sync restaurant FCM token', error);
     }
@@ -90,6 +165,8 @@ export class PushNotificationService {
 
     PushNotifications.unregister().catch(() => undefined);
     localStorage.removeItem(this.TOKEN_STORAGE_KEY);
+    localStorage.removeItem(this.VIEW_ONLY_KEY);
+    localStorage.removeItem(this.DEVICE_REGISTERED_KEY);
 
     if (!resolvedRestaurantId) {
       return;

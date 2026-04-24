@@ -218,3 +218,35 @@
   </main>
 
 </div>
+
+<!-- ===== FCM Device Conflict Dialog ===== -->
+<div class="fcm-overlay" *ngIf="showFcmDialog && isNativePlatform" role="dialog" aria-modal="true" aria-labelledby="fcm-dialog-title">
+  <div class="fcm-card">
+
+    <div class="fcm-icon-wrap">
+      <i class="fas fa-bell-slash fcm-icon-main"></i>
+      <span class="fcm-icon-badge"><i class="fas fa-circle-exclamation"></i></span>
+    </div>
+
+    <h3 class="fcm-title" id="fcm-dialog-title">Active device detected</h3>
+    <p class="fcm-body">
+      Another device is already set to receive <strong>order notifications</strong> for this restaurant.
+      Only one device should handle orders at a time to avoid conflicts.
+    </p>
+    <p class="fcm-body fcm-body--q">
+      Do you want to receive order notifications on <strong>this device</strong>?
+    </p>
+
+    <div class="fcm-actions">
+      <button class="fcm-btn-primary" (click)="onTakeOverNotifications()">
+        <i class="fas fa-bell"></i>
+        Yes, receive notifications here
+      </button>
+      <button class="fcm-btn-secondary" (click)="onViewOnlyMode()">
+        <i class="fas fa-eye"></i>
+        No, just view &mdash; no alerts
+      </button>
+    </div>
+
+  </div>
+</div>
