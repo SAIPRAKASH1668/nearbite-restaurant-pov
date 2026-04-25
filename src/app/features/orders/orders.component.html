@@ -157,6 +157,25 @@
         </div>
       </div>
 
+      <!-- Print shortcuts row – buttons shown only when the matching printer is configured -->
+      <div class="ord-print-row" *ngIf="hasPrinter">
+        <button class="ord-print-btn" *ngIf="hasBillPrinter" (click)="manualPrint('bill', order); $event.stopPropagation()" title="Reprint customer bill">
+          <i class="fas fa-receipt"></i><span>Bill</span>
+        </button>
+        <button class="ord-print-btn" *ngIf="hasKotPrinter" (click)="manualPrint('kot', order); $event.stopPropagation()" title="Reprint KOT (all items)">
+          <i class="fas fa-utensils"></i><span>KOT</span>
+        </button>
+        <button class="ord-print-btn ord-print-btn--veg" *ngIf="hasVegKotPrinter && hasVegItems(order)" (click)="manualPrint('vegkot', order); $event.stopPropagation()" title="Reprint Veg KOT">
+          <i class="fas fa-leaf"></i><span>Veg KOT</span>
+        </button>
+        <button class="ord-print-btn ord-print-btn--nonveg" *ngIf="hasNonVegKotPrinter && hasNonVegItems(order)" (click)="manualPrint('nonvegkot', order); $event.stopPropagation()" title="Reprint Non-Veg KOT">
+          <i class="fas fa-drumstick-bite"></i><span>Non-Veg</span>
+        </button>
+        <button class="ord-print-btn ord-print-btn--all" (click)="manualPrint('all', order); $event.stopPropagation()" title="Reprint everything (Bill + KOT)">
+          <i class="fas fa-print"></i><span>All</span>
+        </button>
+      </div>
+
     </div><!-- /ord-card -->
 
     <!-- Empty state -->

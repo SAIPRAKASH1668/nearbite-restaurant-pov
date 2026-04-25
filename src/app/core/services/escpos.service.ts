@@ -94,52 +94,51 @@ export class EscPosService {
     const text   = (s: string) => buf.push(...this.encode(s));
     const line   = () => append(CMD.LF);
 
-    // Init
+    // ── Header ───────────────────────────────────────────────────────────────
     append(CMD.INIT, CMD.ALIGN_CENTER, CMD.BOLD_ON, CMD.SIZE_DOUBLE);
     text(label ? `KOT - ${label}` : 'KOT'); line();
     append(CMD.SIZE_NORMAL, CMD.BOLD_OFF);
-    line();
 
-    // YumDude branding
+    // YumDude × Restaurant
     append(CMD.BOLD_ON, CMD.SIZE_DOUBLE);
     text('YumDude'); line();
     append(CMD.SIZE_NORMAL);
     text('X'); line();
     append(CMD.BOLD_OFF);
-
-    // Restaurant
     append(CMD.BOLD_ON);
     text(this.trim(order.restaurantName || 'Restaurant', CHARS)); line();
     append(CMD.BOLD_OFF);
+    text('='.repeat(CHARS)); line();
 
-    text('-'.repeat(CHARS)); line();
-
-    // Order meta
+    // ── Order meta ────────────────────────────────────────────────────────────
     append(CMD.ALIGN_LEFT);
     {
-      const suffix = order.orderId.slice(-4).toUpperCase();
-      const prefix = 'Order  : #' + order.orderId.slice(0, -4).toUpperCase();
-      text(prefix); append(CMD.BOLD_ON); text(suffix); append(CMD.BOLD_OFF); line();
+      // Print order prefix (everything except last 4) in normal size
+      const prefix = '#' + order.orderId.slice(0, -4).toUpperCase();
+      text(this.twoCol('Order', prefix, CHARS)); line();
     }
-    text(`Time   : ${this.formatTime(order.createdAt)}`);       line();
-
+    // Last 4 digits: centered, double-height bold — easy to spot in kitchen
+    append(CMD.ALIGN_CENTER, CMD.BOLD_ON, CMD.SIZE_DOUBLE_H);
+    text(order.orderId.slice(-4).toUpperCase()); line();
+    append(CMD.SIZE_NORMAL, CMD.BOLD_OFF, CMD.ALIGN_LEFT);
+    text(this.twoCol('Time', this.formatTime(order.createdAt), CHARS)); line();
     text('-'.repeat(CHARS)); line();
 
-    // Items
+    // ── Items ─────────────────────────────────────────────────────────────────
     append(CMD.BOLD_ON);
     text(this.padRight('ITEM', CHARS - 8) + this.padLeft('QTY', 8)); line();
     append(CMD.BOLD_OFF);
     text('-'.repeat(CHARS)); line();
 
     items.forEach(item => {
-      const qty   = `x${item.quantity}`;
-      const name  = this.trim(item.name, CHARS - qty.length - 1);
+      const qty  = `x${item.quantity}`;
+      const name = this.trim(item.name, CHARS - qty.length - 1);
+      append(CMD.BOLD_ON);
       text(this.padRight(name, CHARS - qty.length) + qty); line();
-      // Print notes/modifiers if present
+      append(CMD.BOLD_OFF);
       if ((item as any).notes) {
         text('  >> ' + this.trim((item as any).notes, CHARS - 5)); line();
       }
-      // Print add-on options
       if (item.addOnOptions?.length) {
         item.addOnOptions.forEach(ao => {
           const aoLabel = ao.extraPrice > 0
@@ -150,23 +149,13 @@ export class EscPosService {
       }
     });
 
-    text('-'.repeat(CHARS)); line();
-
-    // Pickup OTP (for rider to show restaurant on collection)
-    if (order.pickupOtp) {
-      append(CMD.ALIGN_CENTER, CMD.BOLD_ON, CMD.SIZE_DOUBLE);
-      text(`PICKUP OTP: ${order.pickupOtp}`); line();
-      append(CMD.SIZE_NORMAL, CMD.BOLD_OFF, CMD.ALIGN_LEFT);
-      text('-'.repeat(CHARS)); line();
-    }
-
+    // ── Footer ────────────────────────────────────────────────────────────────
     text('='.repeat(CHARS)); line();
     append(CMD.ALIGN_CENTER, CMD.BOLD_ON);
     text('** KITCHEN COPY **'); line();
     append(CMD.BOLD_OFF);
 
     append(CMD.FEED_5, CMD.CUT);
-
     return new Uint8Array(buf);
   }
 
@@ -186,56 +175,71 @@ export class EscPosService {
     const text   = (s: string) => buf.push(...this.encode(s));
     const line   = () => append(CMD.LF);
 
-    // Init — YumDude branding
+    // ── Header ───────────────────────────────────────────────────────────────
     append(CMD.INIT, CMD.ALIGN_CENTER, CMD.BOLD_ON, CMD.SIZE_DOUBLE);
     text('YumDude'); line();
     append(CMD.SIZE_NORMAL);
     text('X'); line();
     append(CMD.BOLD_OFF);
 
-    // Restaurant name
+    // Restaurant name — double-width+height, clearly readable
     append(CMD.BOLD_ON, CMD.SIZE_DOUBLE);
     text(this.trim(order.restaurantName || 'Restaurant', CHARS - 4)); line();
-    append(CMD.SIZE_NORMAL);
-    text('TAX INVOICE'); line();
+    append(CMD.SIZE_NORMAL, CMD.BOLD_OFF);
+
+    append(CMD.BOLD_ON);
+    text('CUSTOMER BILL'); line();
     append(CMD.BOLD_OFF);
     if (gstNumber) {
-      text(`GSTIN  : ${this.trim(gstNumber, CHARS - 9)}`); line();
+      text(`GSTIN: ${this.trim(gstNumber, CHARS - 7)}`); line();
     }
-    line();
+    text('='.repeat(CHARS)); line();
 
-    text('-'.repeat(CHARS)); line();
-
-    // Order meta
+    // ── Order meta ────────────────────────────────────────────────────────────
     append(CMD.ALIGN_LEFT);
     {
-      const suffix = order.orderId.slice(-4).toUpperCase();
-      const prefix = 'Order  : #' + order.orderId.slice(0, -4).toUpperCase();
-      text(prefix); append(CMD.BOLD_ON); text(suffix); append(CMD.BOLD_OFF); line();
+      // Print order prefix in normal size
+      const prefix = '#' + order.orderId.slice(0, -4).toUpperCase();
+      text(this.twoCol('Order', prefix, CHARS)); line();
     }
-    text(`Date   : ${this.formatDate(order.createdAt)}`);          line();
-    text(`Time   : ${this.formatTime(order.createdAt)}`);          line();
-
+    // Last 4 digits large — makes the order instantly identifiable
+    append(CMD.ALIGN_CENTER, CMD.BOLD_ON, CMD.SIZE_DOUBLE_H);
+    text(order.orderId.slice(-4).toUpperCase()); line();
+    append(CMD.SIZE_NORMAL, CMD.BOLD_OFF, CMD.ALIGN_LEFT);
+    text(this.twoCol('Date', this.formatDate(order.createdAt), CHARS)); line();
+    text(this.twoCol('Time', this.formatTime(order.createdAt), CHARS)); line();
     text('-'.repeat(CHARS)); line();
 
-    // Items header
-    const qtyW   = 5;
-    const priceW = CHARS <= 32 ? 8 : 12;
-    const nameW  = CHARS - qtyW - priceW;
+    // ── Items ─────────────────────────────────────────────────────────────────
+    // Column widths: name | qty | unit price | line total
+    const qtyW   = 4;
+    const unitW  = CHARS <= 32 ? 7 : 9;
+    const amtW   = CHARS <= 32 ? 7 : 9;
+    const nameW  = CHARS - qtyW - unitW - amtW;
+
     append(CMD.BOLD_ON);
-    text(this.padRight('ITEM', nameW) + this.padLeft('QTY', qtyW) + this.padLeft('AMT', priceW)); line();
+    text(
+      this.padRight('ITEM', nameW) +
+      this.padLeft('QTY', qtyW) +
+      this.padLeft('UNIT', unitW) +
+      this.padLeft('AMT', amtW)
+    ); line();
     append(CMD.BOLD_OFF);
     text('-'.repeat(CHARS)); line();
 
-    // Items
+    // NOTE: item.price is the customer-facing price (restaurantPrice hiked by
+    // hikePercentage). This is exactly what the customer was shown and charged.
     order.items.forEach(item => {
-      const name  = this.padRight(this.trim(item.name, nameW), nameW);
-      const qty   = this.padLeft(`x${item.quantity}`, qtyW);
-      const amt   = this.padLeft(`${(item.price * item.quantity).toFixed(0)}`, priceW);
-      text(name + qty + amt); line();
-      // Print add-on options indented
-      if (item.addOnOptions?.length) {
-        item.addOnOptions.forEach(ao => {
+      const name = this.padRight(this.trim(item.name, nameW), nameW);
+      const qty  = this.padLeft(`${item.quantity}`, qtyW);
+      const unit = this.padLeft(item.price.toFixed(0), unitW);
+      const amt  = this.padLeft((item.price * item.quantity).toFixed(0), amtW);
+      append(CMD.BOLD_ON);
+      text(name + qty + unit + amt); line();
+      append(CMD.BOLD_OFF);
+      const addons = item.addOns ?? item.addOnOptions ?? [];
+      if (addons.length) {
+        addons.forEach(ao => {
           const aoLabel = ao.extraPrice > 0
             ? `  + ${ao.name} (+${ao.extraPrice.toFixed(0)})`
             : `  + ${ao.name}`;
@@ -244,42 +248,39 @@ export class EscPosService {
       }
     });
 
-    text('-'.repeat(CHARS)); line();
-
-    // Totals
-    text(this.twoCol('Food Total',    `${order.foodTotal.toFixed(2)}`,    CHARS)); line();
-    text(this.twoCol('Delivery',      `${order.deliveryFee.toFixed(2)}`,  CHARS)); line();
-    text(this.twoCol('Platform Fee',  `${order.platformFee.toFixed(2)}`,  CHARS)); line();
+    // ── Totals ────────────────────────────────────────────────────────────────
+    text('='.repeat(CHARS)); line();
+    text(this.twoCol('Item Total',   `Rs.${order.foodTotal.toFixed(2)}`,   CHARS)); line();
+    text(this.twoCol('Delivery Fee', `Rs.${order.deliveryFee.toFixed(2)}`, CHARS)); line();
+    if (order.platformFee > 0) {
+      text(this.twoCol('Platform Fee', `Rs.${order.platformFee.toFixed(2)}`, CHARS)); line();
+    }
     text('='.repeat(CHARS)); line();
 
-    append(CMD.BOLD_ON);
-    text(this.twoCol('GRAND TOTAL', `Rs.${order.grandTotal.toFixed(2)}`, CHARS)); line();
-    append(CMD.BOLD_OFF);
+    append(CMD.BOLD_ON, CMD.SIZE_DOUBLE_H);
+    text(this.twoCol('TOTAL', `Rs.${order.grandTotal.toFixed(2)}`, CHARS)); line();
+    append(CMD.SIZE_NORMAL, CMD.BOLD_OFF);
 
     text('-'.repeat(CHARS)); line();
-
-    // OTP if present
-    if (order.deliveryOtp) {
-      append(CMD.ALIGN_CENTER, CMD.BOLD_ON);
-      text(`Delivery OTP: ${order.deliveryOtp}`); line();
-      append(CMD.BOLD_OFF, CMD.ALIGN_LEFT);
-    }
 
     // Payment mode
     if ((order as any).paymentMode) {
-      text(`Payment: ${(order as any).paymentMode}`); line();
+      append(CMD.BOLD_ON);
+      text(this.twoCol('Payment', (order as any).paymentMode, CHARS)); line();
+      append(CMD.BOLD_OFF);
       text('-'.repeat(CHARS)); line();
     }
 
-    // Footer
+    // ── Footer ────────────────────────────────────────────────────────────────
     line();
-    append(CMD.ALIGN_CENTER);
+    append(CMD.ALIGN_CENTER, CMD.BOLD_ON);
     text('Thank you for your order!'); line();
+    append(CMD.BOLD_OFF);
+    text('Powered by YumDude'); line();
     text('www.yumdude.com'); line();
     line();
 
     append(CMD.FEED_5, CMD.CUT);
-
     return new Uint8Array(buf);
   }
 

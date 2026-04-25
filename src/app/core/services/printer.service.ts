@@ -322,16 +322,21 @@ export class PrinterService {
    *
    * KOT routing:
    *   – vegKotPrinters    → only veg items (isVeg === true)
-   *   – nonVegKotPrinters → only non-veg items (isVeg !== true, includes unknown)
-   *   – kotPrinters       → full order (all items, no split)
+   *   – nonVegKotPrinters → only non-veg items (isVeg === false)
+   *   – kotPrinters       → full order (all items, no split); also covers items
+   *                         where isVeg is undefined (not tagged by the menu)
    */
   async printOrderAccepted(order: Order): Promise<void> {
     this.escpos.setPaperWidth(this.getPaperWidth());
     const bill = this.escpos.formatBill(order, this.getGstNumber() || undefined);
 
-    // Build KOT variants
+    // Build KOT variants.
+    // IMPORTANT: use strict equality (=== true / === false).
+    // isVeg === undefined means the menu item was not tagged — those items are
+    // included in the full KOT (kotPrinters) but NOT forced into the non-veg
+    // split printer, so the veg KOT is not accidentally empty.
     const vegItems    = order.items.filter(i => i.isVeg === true);
-    const nonVegItems = order.items.filter(i => i.isVeg !== true);
+    const nonVegItems = order.items.filter(i => i.isVeg === false);
     const fullKot     = this.escpos.formatKOT(order);
     const vegKot      = vegItems.length    ? this.escpos.formatFilteredKOT(order, vegItems,    'VEG')     : null;
     const nonVegKot   = nonVegItems.length ? this.escpos.formatFilteredKOT(order, nonVegItems, 'NON-VEG') : null;
@@ -404,6 +409,85 @@ export class PrinterService {
         if (p.type === 'usb')     await this.sendBytesUsb(p.address, bill, 'Bill');
         else if (p.type === 'network') await this.sendBytesNetwork(p.address, p.port ?? 9100, bill, 'Bill');
         else                      await this.sendBytes(p.address, bill, 'Bill');
+      }
+    } finally {
+      this.printInProgress = false;
+    }
+  }
+
+  // ── Manual / individual print commands ────────────────────────────────────
+
+  /** Manually reprint only the customer bill for an order. */
+  async printBillOnly(order: Order): Promise<void> {
+    this.escpos.setPaperWidth(this.getPaperWidth());
+    const bill = this.escpos.formatBill(order, this.getGstNumber() || undefined);
+    await this._printToPool(this.getBillPrinters(), bill, 'Bill');
+  }
+
+  /** Manually reprint only the full KOT (all items) for an order. */
+  async printKotOnly(order: Order): Promise<void> {
+    this.escpos.setPaperWidth(this.getPaperWidth());
+    const kot = this.escpos.formatKOT(order);
+    await this._printToPool(this.getKotPrinters(), kot, 'KOT');
+  }
+
+  /** Manually reprint only the veg KOT for an order. */
+  async printVegKotOnly(order: Order): Promise<void> {
+    this.escpos.setPaperWidth(this.getPaperWidth());
+    const vegItems = order.items.filter(i => i.isVeg === true);
+    if (!vegItems.length) return;
+    const kot = this.escpos.formatFilteredKOT(order, vegItems, 'VEG');
+    await this._printToPool(this.getVegKotPrinters(), kot, 'KOT-VEG');
+  }
+
+  /** Manually reprint only the non-veg KOT for an order. */
+  async printNonVegKotOnly(order: Order): Promise<void> {
+    this.escpos.setPaperWidth(this.getPaperWidth());
+    const nonVegItems = order.items.filter(i => i.isVeg === false);
+    if (!nonVegItems.length) return;
+    const kot = this.escpos.formatFilteredKOT(order, nonVegItems, 'NON-VEG');
+    await this._printToPool(this.getNonVegKotPrinters(), kot, 'KOT-NONVEG');
+  }
+
+  /**
+   * Shared helper: sends `data` to every printer in `printers`.
+   * Handles BT, USB, and Network printer types.
+   * Respects the printInProgress mutex to prevent overlapping prints.
+   */
+  private async _printToPool(printers: PrinterDevice[], data: Uint8Array, label: string): Promise<void> {
+    if (printers.length === 0) {
+      console.warn(`PrinterService: no printers in pool for [${label}] — skipping.`);
+      return;
+    }
+
+    if (!this.isNativeApp()) {
+      console.group(`%c🖨️  ${label}`, 'color: #ff6b35; font-weight: bold;');
+      console.log(this.escpos.toDebugString(data));
+      console.groupEnd();
+      const netPrinters = printers.filter(p => p.type === 'network');
+      if (netPrinters.length === 0) {
+        this.statusSubject.next('success');
+        setTimeout(() => this.statusSubject.next('idle'), 3000);
+        return;
+      }
+      if (this.printInProgress) return;
+      this.printInProgress = true;
+      try {
+        for (const p of netPrinters) await this.sendBytesNetwork(p.address, p.port ?? 9100, data, label);
+      } finally { this.printInProgress = false; }
+      return;
+    }
+
+    if (this.printInProgress) {
+      console.warn('PrinterService: another print in progress — skipping.');
+      return;
+    }
+    this.printInProgress = true;
+    try {
+      for (const p of printers) {
+        if (p.type === 'usb')          await this.sendBytesUsb(p.address, data, label);
+        else if (p.type === 'network') await this.sendBytesNetwork(p.address, p.port ?? 9100, data, label);
+        else                           await this.sendBytes(p.address, data, label);
       }
     } finally {
       this.printInProgress = false;

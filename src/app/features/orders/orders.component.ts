@@ -31,6 +31,18 @@ export class OrdersComponent implements OnInit, OnDestroy {
   get hasPrinter(): boolean {
     return this.printerService.hasAnyPrinter();
   }
+  get hasBillPrinter(): boolean {
+    return this.printerService.getBillPrinters().length > 0;
+  }
+  get hasKotPrinter(): boolean {
+    return this.printerService.getKotPrinters().length > 0;
+  }
+  get hasVegKotPrinter(): boolean {
+    return this.printerService.getVegKotPrinters().length > 0;
+  }
+  get hasNonVegKotPrinter(): boolean {
+    return this.printerService.getNonVegKotPrinters().length > 0;
+  }
 
   // Orders state
   allOrders: Order[] = [];
@@ -397,6 +409,26 @@ export class OrdersComponent implements OnInit, OnDestroy {
       OrderStatus.RIDER_ASSIGNED
     ].includes(order.status);
   }
+  // ── Manual print shortcuts ────────────────────────────────────────────────
+
+  manualPrint(type: 'bill' | 'kot' | 'vegkot' | 'nonvegkot' | 'all', order: Order): void {
+    switch (type) {
+      case 'bill':     this.printerService.printBillOnly(order);    break;
+      case 'kot':      this.printerService.printKotOnly(order);     break;
+      case 'vegkot':   this.printerService.printVegKotOnly(order);  break;
+      case 'nonvegkot':this.printerService.printNonVegKotOnly(order); break;
+      case 'all':      this.printerService.printOrderAccepted(order); break;
+    }
+  }
+
+  hasVegItems(order: Order): boolean {
+    return order.items.some(i => i.isVeg === true);
+  }
+
+  hasNonVegItems(order: Order): boolean {
+    return order.items.some(i => i.isVeg !== true);
+  }
+
   // ── Manual refresh ───────────────────────────────────────────────────────────
 
   manualRefresh(): void {

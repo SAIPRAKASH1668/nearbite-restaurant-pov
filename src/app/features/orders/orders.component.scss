@@ -19,8 +19,9 @@
   // Compensate for the fixed tab bar being taken out of normal flow.
   // Tab bar height: icon(~24px) + gap(~2px) + label(~12px) + vert-padding(~15px) + border(3px) ≈ 58px.
   // Using 3.75rem (60px) as a safe ceiling so the first card header is never obscured.
-  @include tablet { padding-top: 3.75rem; }
-  @include mobile { padding-top: 3.75rem; }
+  @include laptop-up { padding-top: 3.75rem; }
+  @include tablet    { padding-top: 3.75rem; }
+  @include mobile    { padding-top: 3.75rem; }
 }
 
 @keyframes ordFade {
@@ -41,6 +42,24 @@
   background: #FFFFFF;
 
   &::-webkit-scrollbar { height: 0; }
+
+  // ── Laptop / Desktop: same fixed pattern as tablet/mobile ──────────────────
+  // position:sticky is broken here because .content has overflow-x:auto which
+  // makes the browser treat it as the sticky scroll-container. Since .content
+  // never actually scrolls (it grows freely), the sticky top offset is applied
+  // from .content's scroll-offset (always 0), permanently clamping the tabs
+  // 38px below their natural in-flow position and into the first card row.
+  // Fixing with position:fixed (same proven pattern as tablet/mobile).
+  @include laptop-up {
+    position: fixed;
+    top: var(--navbar-total-height);
+    left: v.$sidebar-width; // full sidebar on laptop+desktop
+    right: 0;
+    width: auto;
+    margin-bottom: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    z-index: 50;
+  }
 
   // ── Tablet: fixed positioning so cards NEVER scroll behind the tab bar ──
   // The sticky approach causes the first card header to slip under the tabs
@@ -658,6 +677,79 @@
 
   i { flex-shrink: 0; margin-top: 1px; }
   span { line-height: 1.35; }
+}
+
+// ── Manual print shortcuts row ────────────────────────────────────────────────
+.ord-print-row {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0.75rem 0.625rem;
+  border-top: 1px dashed #E8E5E2;
+  background: #FDFCFB;
+}
+
+.ord-print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 4px;
+  border: 1px solid #D6D3D0;
+  background: #FFFFFF;
+  color: v.$text-secondary;
+  font-family: v.$font-family;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+
+  i { font-size: 0.7rem; }
+
+  &:hover {
+    border-color: v.$primary-orange;
+    color: v.$primary-orange;
+    background: rgba(232, 53, 42, 0.04);
+  }
+
+  &:active { transform: scale(0.97); }
+
+  &--veg {
+    border-color: #86EFAC;
+    color: #15803D;
+    i { color: #16A34A; }
+    &:hover { background: rgba(22, 163, 74, 0.06); border-color: #16A34A; color: #15803D; }
+  }
+
+  &--nonveg {
+    border-color: #FCA5A5;
+    color: #B91C1C;
+    i { color: #DC2626; }
+    &:hover { background: rgba(220, 38, 38, 0.06); border-color: #DC2626; color: #B91C1C; }
+  }
+
+  &--all {
+    margin-left: auto;
+    border-color: #CBD5E1;
+    color: v.$text-primary;
+    font-weight: 700;
+    i { color: v.$text-secondary; }
+    &:hover {
+      border-color: v.$primary-orange;
+      color: v.$primary-orange;
+      background: rgba(232, 53, 42, 0.04);
+      i { color: v.$primary-orange; }
+    }
+  }
+
+  @include mobile {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    i { font-size: 0.65rem; }
+  }
 }
 
 // ── Loading + Empty ───────────────────────────────────────────────────────────
@@ -1301,37 +1393,10 @@
   }
 }
 
-// Desktop/laptop only: when printer is missing, keep hierarchy clean:
-// navbar -> printer banner -> tabs
-.ord-root--no-printer {
+// When sidebar is collapsed on laptop+desktop, shift the fixed tab bar left.
+:host-context(.sidebar-collapsed) .ord-tabs {
   @include laptop-up {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .ord-printer-nudge {
-    @include laptop-up {
-      order: 1;
-      position: static;
-      margin: 0 1rem 0.5rem;
-    }
-  }
-
-  .ord-tabs {
-    @include laptop-up {
-      order: 2;
-      position: static;
-      top: auto;
-      z-index: auto;
-      margin-bottom: 1rem;
-    }
-  }
-
-  .ord-loading,
-  .ord-grid {
-    @include laptop-up {
-      order: 3;
-    }
+    left: v.$sidebar-collapsed-width;
   }
 }
 
