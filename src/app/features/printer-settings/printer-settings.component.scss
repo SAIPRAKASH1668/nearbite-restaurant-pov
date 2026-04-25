@@ -112,6 +112,66 @@
   color: $text-secondary;
 }
 
+// ── Printer mode toggle ───────────────────────────────────────────────────────
+
+.ps-mode-row {
+  display: flex;
+  gap: 12px;
+}
+
+.ps-mode-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 12px;
+  border-radius: 10px;
+  border: 2px solid $border-primary;
+  background: $bg-card;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  i { font-size: 22px; color: $text-secondary; }
+
+  &--active {
+    border-color: $primary-orange;
+    background: rgba($primary-orange, 0.06);
+
+    i { color: $primary-orange; }
+
+    .ps-mode-label { color: $primary-orange; }
+  }
+}
+
+.ps-mode-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.ps-mode-hint {
+  font-size: 11px;
+  color: $text-secondary;
+  text-align: center;
+}
+
+.ps-mode-desc {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba($primary-orange, 0.05);
+  border: 1.5px solid rgba($primary-orange, 0.2);
+  font-size: 13px;
+  color: $text-secondary;
+  line-height: 1.5;
+
+  &--customized {
+    background: rgba($primary-orange, 0.08);
+    border-color: rgba($primary-orange, 0.3);
+  }
+}
+
 // ── Active printer card ───────────────────────────────────────────────────────
 
 .ps-card {
@@ -1084,5 +1144,204 @@ $net-color: #1976d2;  // Material Blue — distinct from orange (BT) and teal (U
   gap: 4px;
 
   i { font-size: 10px; }
+}
+
+// ── Category chips (inside configured device card) ────────────────────────────
+
+.ps-cd-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.ps-cat-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  background: rgba($primary-orange, 0.10);
+  color: darken($primary-orange, 8%);
+  border: 1px solid rgba($primary-orange, 0.25);
+
+  &--nonveg {
+    background: rgba(#b71c1c, 0.08);
+    color: #b71c1c;
+    border-color: rgba(#b71c1c, 0.25);
+  }
+}
+
+.ps-cat-all {
+  font-size: 10px;
+  color: $text-muted;
+  font-style: italic;
+}
+
+// ── Tags icon button ──────────────────────────────────────────────────────────
+
+.ps-icon-btn--cats {
+  background: rgba($secondary-orange, 0.12);
+  color: darken($secondary-orange, 22%);
+
+  &:hover { background: rgba($secondary-orange, 0.24); }
+}
+
+// ── Category picker overlay ───────────────────────────────────────────────────
+
+.ps-cat-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(#2E241B, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+  padding: 0;
+
+  @media (min-width: 540px) {
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+}
+
+.ps-cat-sheet {
+  width: 100%;
+  max-width: 520px;
+  background: $bg-primary;
+  border-radius: 24px 24px 0 0;
+  padding: 8px 20px 32px;
+  box-shadow: $shadow-xl;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 80vh;
+  overflow: hidden;
+
+  @media (min-width: 540px) {
+    border-radius: 20px;
+    padding: 24px;
+    max-height: 70vh;
+  }
+}
+
+// drag handle pill
+.ps-cat-sheet::before {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: $border-secondary;
+  margin: 8px auto 16px;
+
+  @media (min-width: 540px) {
+    display: none;
+  }
+}
+
+.ps-cat-sheet-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.ps-cat-sheet-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  color: $text-primary;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  i { color: $secondary-orange; font-size: 15px; }
+}
+
+.ps-cat-sheet-hint {
+  font-size: 13px;
+  color: $text-secondary;
+  margin: 0 0 16px;
+  line-height: 1.5;
+
+  strong { color: $text-primary; }
+}
+
+.ps-cat-empty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 0;
+  font-size: 13px;
+  color: $text-muted;
+
+  i { font-size: 22px; opacity: 0.4; flex-shrink: 0; }
+}
+
+.ps-cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  flex: 1;
+  margin-bottom: 16px;
+  padding-right: 2px;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb { background: $border-secondary; border-radius: 4px; }
+}
+
+.ps-cat-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid $border-primary;
+  background: $bg-card;
+  font-size: 14px;
+  font-weight: 500;
+  color: $text-primary;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
+  font-family: inherit;
+
+  i {
+    font-size: 16px;
+    color: $border-secondary;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+
+  &--selected {
+    border-color: $primary-orange;
+    background: rgba($primary-orange, 0.05);
+
+    i { color: $primary-orange; }
+  }
+
+  &:hover:not(.ps-cat-item--selected) {
+    border-color: rgba($primary-orange, 0.4);
+    background: rgba($primary-orange, 0.03);
+  }
+}
+
+.ps-cat-sheet-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid $border-primary;
+  flex-shrink: 0;
+
+  .ps-btn--primary {
+    flex: 1;
+    gap: 6px;
+    i { font-size: 13px; }
+  }
 }
 

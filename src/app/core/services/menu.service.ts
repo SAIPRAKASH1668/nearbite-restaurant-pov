@@ -53,6 +53,11 @@ export class MenuService {
     private restaurantContext: RestaurantContextService
   ) {}
 
+  /** Synchronous snapshot of the current cached menu items. */
+  get currentItems(): MenuItem[] {
+    return this.menuItemsSubject.getValue();
+  }
+
   /**
    * Fetch menu items from API
    */

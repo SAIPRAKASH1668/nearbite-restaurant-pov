@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, NgZone, ChangeDetectorRef } from '@angula
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { PrinterService, PrinterDevice, PrintStatus, PaperWidth, UsbDevice } from '../../core/services/printer.service';
+import { MenuService } from '../../core/services/menu.service';
 import { Order, OrderStatus } from '../../core/models/order.model';
 
 type ScanError =
@@ -23,11 +24,12 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
   paperWidth:  PaperWidth  = 80;
   printStatus: PrintStatus = 'idle';
 
-  // ── KOT / Bill pools ───────────────────────────────────────────────────────
-  kotPrinters:    PrinterDevice[] = [];
-  vegKotPrinters: PrinterDevice[] = [];
-  nonVegKotPrinters: PrinterDevice[] = [];
-  billPrinters:   PrinterDevice[] = [];
+  // ── Printer mode ───────────────────────────────────────────────
+  printerMode: 'basic' | 'customized' = 'basic';
+
+  // ── KOT / Bill pools ─────────────────────────────────────────────
+  kotPrinters:  PrinterDevice[] = [];
+  billPrinters: PrinterDevice[] = [];
 
   // ── Bluetooth scan state ───────────────────────────────────────────────────
   btDevices:  PrinterDevice[] = [];
@@ -57,19 +59,36 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
   btTestResults = new Map<string, 'success' | 'error'>();
   private statusSub?: Subscription;
 
+  // ── Category picker state ──────────────────────────────────────────────────
+  catPickerOpen    = false;
+  catPickerAddress = '';
+  catPickerDraft: string[] = [];
+
+  get menuCategories(): string[] {
+    const cats = [...new Set(
+      this.menuService.currentItems.map(i => i.category).filter(Boolean) as string[]
+    )];
+    return cats.sort();
+  }
+
   // ── Lifecycle ──────────────────────────────────────────────────────────────
   constructor(
     public  printerService: PrinterService,
+    private menuService: MenuService,
     private zone: NgZone,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.paperWidth = this.printerService.getPaperWidth();
+    this.paperWidth   = this.printerService.getPaperWidth();
+    this.printerMode  = this.printerService.getPrinterMode();
     this.refreshPools();
     this.statusSub = this.printerService.status$.subscribe(s => {
       this.printStatus = s;
     });
+    if (this.menuService.currentItems.length === 0) {
+      this.menuService.fetchMenuItems();
+    }
   }
 
   ngOnDestroy(): void {
@@ -79,10 +98,15 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
   // ── Pool sync ──────────────────────────────────────────────────────────────
 
   refreshPools(): void {
-    this.kotPrinters       = this.printerService.getKotPrinters();
-    this.vegKotPrinters    = this.printerService.getVegKotPrinters();
-    this.nonVegKotPrinters = this.printerService.getNonVegKotPrinters();
-    this.billPrinters      = this.printerService.getBillPrinters();
+    this.kotPrinters  = this.printerService.getKotPrinters();
+    this.billPrinters = this.printerService.getBillPrinters();
+  }
+
+  // ── Printer mode ───────────────────────────────────────────────
+
+  selectPrinterMode(mode: 'basic' | 'customized'): void {
+    this.printerMode = mode;
+    this.printerService.savePrinterMode(mode);
   }
 
   // ── Paper width ────────────────────────────────────────────────────────────
@@ -157,16 +181,6 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
     this.refreshPools();
   }
 
-  addToVegKot(device: PrinterDevice): void {
-    this.printerService.addVegKotPrinter(device);
-    this.refreshPools();
-  }
-
-  addToNonVegKot(device: PrinterDevice): void {
-    this.printerService.addNonVegKotPrinter(device);
-    this.refreshPools();
-  }
-
   addToBill(device: PrinterDevice): void {
     this.printerService.addBillPrinter(device);
     this.refreshPools();
@@ -174,16 +188,6 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
 
   addUsbToKot(device: UsbDevice): void {
     this.printerService.addKotPrinter({ name: device.productName || 'USB Printer', address: device.deviceName, type: 'usb' });
-    this.refreshPools();
-  }
-
-  addUsbToVegKot(device: UsbDevice): void {
-    this.printerService.addVegKotPrinter({ name: device.productName || 'USB Printer', address: device.deviceName, type: 'usb' });
-    this.refreshPools();
-  }
-
-  addUsbToNonVegKot(device: UsbDevice): void {
-    this.printerService.addNonVegKotPrinter({ name: device.productName || 'USB Printer', address: device.deviceName, type: 'usb' });
     this.refreshPools();
   }
 
@@ -201,30 +205,6 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
   addNetworkToKot(): void {
     if (!this.isNetworkFormValid) { this.netError = 'Enter a valid IP address and port.'; return; }
     this.printerService.addKotPrinter({
-      name:    this.netName.trim() || this.netHost.trim(),
-      address: this.netHost.trim(),
-      type:    'network',
-      port:    this.netPort,
-    });
-    this.refreshPools();
-    this.netError = null;
-  }
-
-  addNetworkToVegKot(): void {
-    if (!this.isNetworkFormValid) { this.netError = 'Enter a valid IP address and port.'; return; }
-    this.printerService.addVegKotPrinter({
-      name:    this.netName.trim() || this.netHost.trim(),
-      address: this.netHost.trim(),
-      type:    'network',
-      port:    this.netPort,
-    });
-    this.refreshPools();
-    this.netError = null;
-  }
-
-  addNetworkToNonVegKot(): void {
-    if (!this.isNetworkFormValid) { this.netError = 'Enter a valid IP address and port.'; return; }
-    this.printerService.addNonVegKotPrinter({
       name:    this.netName.trim() || this.netHost.trim(),
       address: this.netHost.trim(),
       type:    'network',
@@ -271,16 +251,6 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
     this.refreshPools();
   }
 
-  removeVegKot(address: string): void {
-    this.printerService.removeVegKotPrinter(address);
-    this.refreshPools();
-  }
-
-  removeNonVegKot(address: string): void {
-    this.printerService.removeNonVegKotPrinter(address);
-    this.refreshPools();
-  }
-
   removeBill(address: string): void {
     this.printerService.removeBillPrinter(address);
     this.refreshPools();
@@ -290,16 +260,45 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
     return this.kotPrinters.some(p => p.address === address);
   }
 
-  isInVegKot(address: string): boolean {
-    return this.vegKotPrinters.some(p => p.address === address);
-  }
-
-  isInNonVegKot(address: string): boolean {
-    return this.nonVegKotPrinters.some(p => p.address === address);
-  }
-
   isInBill(address: string): boolean {
     return this.billPrinters.some(p => p.address === address);
+  }
+
+  // ── Category picker ────────────────────────────────────────────────────────
+
+  openCategoryPicker(printer: PrinterDevice): void {
+    this.catPickerAddress = printer.address;
+    this.catPickerDraft   = [...(printer.categoryIds ?? [])];
+    this.catPickerOpen    = true;
+    if (this.menuService.currentItems.length === 0) {
+      this.menuService.fetchMenuItems();
+    }
+  }
+
+  closeCategoryPicker(): void {
+    this.catPickerOpen = false;
+  }
+
+  toggleCatDraft(cat: string): void {
+    const idx = this.catPickerDraft.indexOf(cat);
+    if (idx === -1) this.catPickerDraft.push(cat);
+    else            this.catPickerDraft.splice(idx, 1);
+  }
+
+  isCatDraftSelected(cat: string): boolean {
+    return this.catPickerDraft.includes(cat);
+  }
+
+  saveCategoryAssignment(): void {
+    this.printerService.updateKotPrinterCategories(
+      'kot', this.catPickerAddress, this.catPickerDraft,
+    );
+    this.refreshPools();
+    this.catPickerOpen = false;
+  }
+
+  printerCategories(printer: PrinterDevice): string[] {
+    return printer.categoryIds ?? [];
   }
 
   // ── Per-device test print ──────────────────────────────────────────────────

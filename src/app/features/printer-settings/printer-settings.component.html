@@ -75,108 +75,58 @@
     </div>
   </div>
 
-  <!-- ── 2. Configured printer pools ─────────────────────────────────────── -->
+  <!-- ── 2. Printer mode toggle ──────────────────────────────────────────── -->
+  <div class="ps-section">
+    <h3 class="ps-section-title">Print Mode</h3>
+    <p class="ps-hint">
+      <i class="fas fa-info-circle"></i>
+      Choose how your kitchen printers work.
+    </p>
+    <div class="ps-mode-row">
+      <button
+        class="ps-mode-btn"
+        [class.ps-mode-btn--active]="printerMode === 'basic'"
+        (click)="selectPrinterMode('basic')">
+        <i class="fas fa-print"></i>
+        <span class="ps-mode-label">Basic</span>
+        <span class="ps-mode-hint">Bills + KOTs</span>
+      </button>
+      <button
+        class="ps-mode-btn"
+        [class.ps-mode-btn--active]="printerMode === 'customized'"
+        (click)="selectPrinterMode('customized')">
+        <i class="fas fa-layer-group"></i>
+        <span class="ps-mode-label">Customized</span>
+        <span class="ps-mode-hint">Category-wise KOTs</span>
+      </button>
+    </div>
+    <div class="ps-mode-desc" [class.ps-mode-desc--customized]="printerMode === 'customized'">
+      <ng-container *ngIf="printerMode === 'basic'">
+        <i class="fas fa-check-circle"></i>
+        <span>Each KOT printer receives the <strong>full order</strong>. Simple and straightforward.</span>
+      </ng-container>
+      <ng-container *ngIf="printerMode === 'customized'">
+        <i class="fas fa-tags"></i>
+        <span>Assign <strong>specific menu categories</strong> to each KOT printer — e.g. send Grills &amp; Kebabs to the grill station and Tiffins to a separate printer.</span>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- ── 3. Configured printer pools ─────────────────────────────────────── -->
   <div class="ps-section">
     <h3 class="ps-section-title">Configured Printers</h3>
     <div class="ps-pools">
 
-      <!-- Veg KOT pool -->
-      <div class="ps-pool">
-        <div class="ps-pool-head ps-pool-head--veg-kot">
-          <i class="fas fa-leaf"></i>
-          <span class="ps-pool-name">Veg KOT Printers</span>
-          <span class="ps-pool-count">{{ vegKotPrinters.length }}</span>
-        </div>
-        <div class="ps-pool-body">
-          <p class="ps-pool-hint">Prints only <strong>veg items</strong> when an order is accepted.</p>
-          <div *ngIf="vegKotPrinters.length === 0" class="ps-pool-empty">
-            <i class="fas fa-plus-circle"></i>
-            <span>No Veg KOT printers yet</span>
-          </div>
-          <div *ngFor="let p of vegKotPrinters" class="ps-configured-device">
-            <div class="ps-cd-icon" [class.ps-cd-icon--usb]="p.type === 'usb'" [class.ps-cd-icon--net]="p.type === 'network'">
-              <i class="fas" [class.fa-print]="p.type === 'bluetooth'" [class.fa-plug]="p.type === 'usb'" [class.fa-wifi]="p.type === 'network'"></i>
-            </div>
-            <div class="ps-cd-info">
-              <span class="ps-cd-name">{{ p.name }}</span>
-              <span class="ps-cd-addr">
-                <span class="ps-conn-badge" [class.ps-conn-badge--usb]="p.type === 'usb'" [class.ps-conn-badge--bt]="p.type === 'bluetooth'" [class.ps-conn-badge--net]="p.type === 'network'">
-                  <i class="fas" [class.fa-plug]="p.type === 'usb'" [class.fa-bluetooth-b]="p.type === 'bluetooth'" [class.fa-wifi]="p.type === 'network'"></i>
-                  {{ p.type === 'usb' ? 'USB' : p.type === 'network' ? 'WiFi' : 'BT' }}
-                </span>
-                {{ p.type === 'network' ? p.address + ':' + (p.port ?? 9100) : p.address }}
-              </span>
-            </div>
-            <div class="ps-cd-actions">
-              <button class="ps-icon-btn ps-icon-btn--test" (click)="testOn(p)" [disabled]="isTesting(p.address)"
-                [title]="testResult(p.address) === 'success' ? 'Print OK!' : testResult(p.address) === 'error' ? 'Failed' : 'Test print'">
-                <i class="fas"
-                   [class.fa-print]="!isTesting(p.address) && !testResult(p.address)"
-                   [class.fa-spinner]="isTesting(p.address)" [class.fa-spin]="isTesting(p.address)"
-                   [class.fa-check]="testResult(p.address) === 'success'" [class.fa-times]="testResult(p.address) === 'error'"
-                   [class.ps-icon--ok]="testResult(p.address) === 'success'" [class.ps-icon--err]="testResult(p.address) === 'error'"></i>
-              </button>
-              <button class="ps-icon-btn ps-icon-btn--remove" (click)="removeVegKot(p.address)" title="Remove">
-                <i class="fas fa-trash-alt"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Non-Veg KOT pool -->
-      <div class="ps-pool">
-        <div class="ps-pool-head ps-pool-head--nonveg-kot">
-          <i class="fas fa-drumstick-bite"></i>
-          <span class="ps-pool-name">Non-Veg KOT Printers</span>
-          <span class="ps-pool-count">{{ nonVegKotPrinters.length }}</span>
-        </div>
-        <div class="ps-pool-body">
-          <p class="ps-pool-hint">Prints only <strong>non-veg items</strong> when an order is accepted.</p>
-          <div *ngIf="nonVegKotPrinters.length === 0" class="ps-pool-empty">
-            <i class="fas fa-plus-circle"></i>
-            <span>No Non-Veg KOT printers yet</span>
-          </div>
-          <div *ngFor="let p of nonVegKotPrinters" class="ps-configured-device">
-            <div class="ps-cd-icon" [class.ps-cd-icon--usb]="p.type === 'usb'" [class.ps-cd-icon--net]="p.type === 'network'">
-              <i class="fas" [class.fa-print]="p.type === 'bluetooth'" [class.fa-plug]="p.type === 'usb'" [class.fa-wifi]="p.type === 'network'"></i>
-            </div>
-            <div class="ps-cd-info">
-              <span class="ps-cd-name">{{ p.name }}</span>
-              <span class="ps-cd-addr">
-                <span class="ps-conn-badge" [class.ps-conn-badge--usb]="p.type === 'usb'" [class.ps-conn-badge--bt]="p.type === 'bluetooth'" [class.ps-conn-badge--net]="p.type === 'network'">
-                  <i class="fas" [class.fa-plug]="p.type === 'usb'" [class.fa-bluetooth-b]="p.type === 'bluetooth'" [class.fa-wifi]="p.type === 'network'"></i>
-                  {{ p.type === 'usb' ? 'USB' : p.type === 'network' ? 'WiFi' : 'BT' }}
-                </span>
-                {{ p.type === 'network' ? p.address + ':' + (p.port ?? 9100) : p.address }}
-              </span>
-            </div>
-            <div class="ps-cd-actions">
-              <button class="ps-icon-btn ps-icon-btn--test" (click)="testOn(p)" [disabled]="isTesting(p.address)"
-                [title]="testResult(p.address) === 'success' ? 'Print OK!' : testResult(p.address) === 'error' ? 'Failed' : 'Test print'">
-                <i class="fas"
-                   [class.fa-print]="!isTesting(p.address) && !testResult(p.address)"
-                   [class.fa-spinner]="isTesting(p.address)" [class.fa-spin]="isTesting(p.address)"
-                   [class.fa-check]="testResult(p.address) === 'success'" [class.fa-times]="testResult(p.address) === 'error'"
-                   [class.ps-icon--ok]="testResult(p.address) === 'success'" [class.ps-icon--err]="testResult(p.address) === 'error'"></i>
-              </button>
-              <button class="ps-icon-btn ps-icon-btn--remove" (click)="removeNonVegKot(p.address)" title="Remove">
-                <i class="fas fa-trash-alt"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- KOT pool (all items) -->
+      <!-- KOT pool -->
       <div class="ps-pool">
         <div class="ps-pool-head ps-pool-head--kot">
           <i class="fas fa-utensils"></i>
-          <span class="ps-pool-name">KOT Printers <span class="ps-pool-head-sub">(All Items)</span></span>
+          <span class="ps-pool-name">KOT Printers</span>
           <span class="ps-pool-count">{{ kotPrinters.length }}</span>
         </div>
         <div class="ps-pool-body">
-          <p class="ps-pool-hint">Prints the <strong>full order</strong> regardless of veg/non-veg. Use when you don't need split printing.</p>
+          <p class="ps-pool-hint" *ngIf="printerMode === 'basic'">Prints the <strong>full order</strong> when an order is accepted.</p>
+          <p class="ps-pool-hint" *ngIf="printerMode === 'customized'">Each printer receives items matching its <strong>category filter</strong>. Add multiple printers for different stations.</p>
           <div *ngIf="kotPrinters.length === 0" class="ps-pool-empty">
             <i class="fas fa-plus-circle"></i>
             <span>No KOT printers yet</span>
@@ -194,20 +144,25 @@
                 </span>
                 {{ p.type === 'network' ? p.address + ':' + (p.port ?? 9100) : p.address }}
               </span>
+              <div class="ps-cd-cats" *ngIf="printerMode === 'customized'">
+                <ng-container *ngIf="printerCategories(p).length; else kotAllCat">
+                  <span class="ps-cat-chip" *ngFor="let cat of printerCategories(p)">{{ cat }}</span>
+                </ng-container>
+                <ng-template #kotAllCat><span class="ps-cat-all">All items</span></ng-template>
+              </div>
             </div>
             <div class="ps-cd-actions">
-              <button class="ps-icon-btn ps-icon-btn--test"
-                (click)="testOn(p)"
-                [disabled]="isTesting(p.address)"
+              <button *ngIf="printerMode === 'customized'"
+                class="ps-icon-btn ps-icon-btn--cats" (click)="openCategoryPicker(p)" title="Set category filter">
+                <i class="fas fa-tags"></i>
+              </button>
+              <button class="ps-icon-btn ps-icon-btn--test" (click)="testOn(p)" [disabled]="isTesting(p.address)"
                 [title]="testResult(p.address) === 'success' ? 'Print OK!' : testResult(p.address) === 'error' ? 'Failed' : 'Test print'">
                 <i class="fas"
                    [class.fa-print]="!isTesting(p.address) && !testResult(p.address)"
-                   [class.fa-spinner]="isTesting(p.address)"
-                   [class.fa-spin]="isTesting(p.address)"
-                   [class.fa-check]="testResult(p.address) === 'success'"
-                   [class.fa-times]="testResult(p.address) === 'error'"
-                   [class.ps-icon--ok]="testResult(p.address) === 'success'"
-                   [class.ps-icon--err]="testResult(p.address) === 'error'"></i>
+                   [class.fa-spinner]="isTesting(p.address)" [class.fa-spin]="isTesting(p.address)"
+                   [class.fa-check]="testResult(p.address) === 'success'" [class.fa-times]="testResult(p.address) === 'error'"
+                   [class.ps-icon--ok]="testResult(p.address) === 'success'" [class.ps-icon--err]="testResult(p.address) === 'error'"></i>
               </button>
               <button class="ps-icon-btn ps-icon-btn--remove" (click)="removeKot(p.address)" title="Remove">
                 <i class="fas fa-trash-alt"></i>
@@ -225,6 +180,7 @@
           <span class="ps-pool-count">{{ billPrinters.length }}</span>
         </div>
         <div class="ps-pool-body">
+          <p class="ps-pool-hint">Prints the <strong>customer bill</strong> with full tax invoice when an order is accepted.</p>
           <div *ngIf="billPrinters.length === 0" class="ps-pool-empty">
             <i class="fas fa-plus-circle"></i>
             <span>No Bill printers yet</span>
@@ -268,7 +224,7 @@
     </div><!-- /ps-pools -->
   </div>
 
-  <!-- ── 3. Add a Printer ─────────────────────────────────────────────────── -->
+  <!-- ── 4. Add a Printer ─────────────────────────────────────────────────── -->
   <div class="ps-section">
     <h3 class="ps-section-title">Add a Printer</h3>
     <p class="ps-hint">
@@ -294,8 +250,11 @@
     </div>
 
     <!-- BT: permission instructions -->
-    <div *ngIf="!btScanDone && !btScanning" class="ps-hint ps-hint--indent">
+    <div *ngIf="!btScanDone && !btScanning && isNativeApp" class="ps-hint ps-hint--indent">
       Go to <strong>Android Settings → Bluetooth</strong>, pair your printer once, then tap <strong>Scan Bluetooth</strong>.
+    </div>
+    <div *ngIf="!btScanDone && !btScanning && !isNativeApp" class="ps-hint ps-hint--indent">
+      Bluetooth printing is not available on desktop. Use <strong>USB</strong> or <strong>Network/WiFi</strong> printers instead.
     </div>
 
     <!-- BT: permission denied -->
@@ -342,7 +301,8 @@
       <div *ngIf="btDevices.length === 0" class="ps-empty">
         <i class="fas fa-bluetooth-b ps-empty-icon"></i>
         <p>No paired Bluetooth devices found.</p>
-        <p class="ps-empty-sub">Pair your printer from <strong>Android Settings → Bluetooth</strong> first.</p>
+        <p class="ps-empty-sub" *ngIf="isNativeApp">Pair your printer from <strong>Android Settings → Bluetooth</strong> first.</p>
+        <p class="ps-empty-sub" *ngIf="!isNativeApp">Bluetooth scanning is not supported in this environment. Use USB or Network printers.</p>
       </div>
       <div *ngFor="let d of btDevices" class="ps-avail-device">
         <div class="ps-avail-icon">
@@ -374,18 +334,6 @@
                [class.fa-times]="btTestResult(d.address) === 'error'"
                [class.ps-icon--ok]="btTestResult(d.address) === 'success'"
                [class.ps-icon--err]="btTestResult(d.address) === 'error'"></i>
-          </button>
-          <button class="ps-add-btn ps-add-btn--veg-kot"
-            [class.ps-add-btn--active]="isInVegKot(d.address)"
-            (click)="isInVegKot(d.address) ? removeVegKot(d.address) : addToVegKot(d)">
-            <i class="fas" [class.fa-check]="isInVegKot(d.address)" [class.fa-leaf]="!isInVegKot(d.address)"></i>
-            Veg KOT
-          </button>
-          <button class="ps-add-btn ps-add-btn--nonveg-kot"
-            [class.ps-add-btn--active]="isInNonVegKot(d.address)"
-            (click)="isInNonVegKot(d.address) ? removeNonVegKot(d.address) : addToNonVegKot(d)">
-            <i class="fas" [class.fa-check]="isInNonVegKot(d.address)" [class.fa-drumstick-bite]="!isInNonVegKot(d.address)"></i>
-            Non-Veg KOT
           </button>
           <button class="ps-add-btn"
             [class.ps-add-btn--active]="isInKot(d.address)"
@@ -427,7 +375,8 @@
       <div *ngIf="usbDevices.length === 0" class="ps-empty">
         <i class="fas fa-plug ps-empty-icon"></i>
         <p>No USB devices detected.</p>
-        <p class="ps-empty-sub">Connect the printer via USB cable (OTG adapter may be required).</p>
+        <p class="ps-empty-sub" *ngIf="isNativeApp">Connect the printer via USB cable (OTG adapter may be required).</p>
+        <p class="ps-empty-sub" *ngIf="!isNativeApp">Connect the printer via USB cable and click <strong>Detect USB</strong> again.</p>
       </div>
       <div *ngFor="let d of usbDevices" class="ps-avail-device">
         <div class="ps-avail-icon ps-avail-icon--usb">
@@ -444,18 +393,6 @@
           </span>
         </div>
         <div class="ps-avail-actions">
-          <button class="ps-add-btn ps-add-btn--veg-kot"
-            [class.ps-add-btn--active]="isInVegKot(d.deviceName)"
-            (click)="isInVegKot(d.deviceName) ? removeVegKot(d.deviceName) : addUsbToVegKot(d)">
-            <i class="fas" [class.fa-check]="isInVegKot(d.deviceName)" [class.fa-leaf]="!isInVegKot(d.deviceName)"></i>
-            Veg KOT
-          </button>
-          <button class="ps-add-btn ps-add-btn--nonveg-kot"
-            [class.ps-add-btn--active]="isInNonVegKot(d.deviceName)"
-            (click)="isInNonVegKot(d.deviceName) ? removeNonVegKot(d.deviceName) : addUsbToNonVegKot(d)">
-            <i class="fas" [class.fa-check]="isInNonVegKot(d.deviceName)" [class.fa-drumstick-bite]="!isInNonVegKot(d.deviceName)"></i>
-            Non-Veg KOT
-          </button>
           <button class="ps-add-btn"
             [class.ps-add-btn--active]="isInKot(d.deviceName)"
             (click)="isInKot(d.deviceName) ? removeKot(d.deviceName) : addUsbToKot(d)">
@@ -534,20 +471,6 @@
 
       <!-- Add buttons -->
       <div class="ps-net-add-row">
-        <button class="ps-add-btn ps-add-btn--veg-kot"
-          [disabled]="!isNetworkFormValid"
-          [class.ps-add-btn--active]="isNetworkFormValid && isInVegKot(netHost)"
-          (click)="isInVegKot(netHost) ? removeVegKot(netHost) : addNetworkToVegKot()">
-          <i class="fas" [class.fa-check]="isInVegKot(netHost)" [class.fa-leaf]="!isInVegKot(netHost)"></i>
-          Add to Veg KOT
-        </button>
-        <button class="ps-add-btn ps-add-btn--nonveg-kot"
-          [disabled]="!isNetworkFormValid"
-          [class.ps-add-btn--active]="isNetworkFormValid && isInNonVegKot(netHost)"
-          (click)="isInNonVegKot(netHost) ? removeNonVegKot(netHost) : addNetworkToNonVegKot()">
-          <i class="fas" [class.fa-check]="isInNonVegKot(netHost)" [class.fa-drumstick-bite]="!isInNonVegKot(netHost)"></i>
-          Add to Non-Veg KOT
-        </button>
         <button class="ps-add-btn"
           [disabled]="!isNetworkFormValid"
           [class.ps-add-btn--active]="isNetworkFormValid && isInKot(netHost)"
@@ -567,16 +490,17 @@
 
   </div>
 
-  <!-- ── 4. How it works ──────────────────────────────────────────────────── -->
+  <!-- ── 5. How it works ──────────────────────────────────────────────────── -->
   <div class="ps-section">
     <div class="ps-infobox">
       <h4><i class="fas fa-lightbulb"></i> How printing works</h4>
       <ul>
-        <li><strong>Veg KOT</strong> prints only veg items on your Veg KOT printers; <strong>Non-Veg KOT</strong> prints only non-veg items on Non-Veg KOT printers. Use <strong>KOT (All Items)</strong> for a printer that should receive the full order regardless of food type.</li>
+        <li><strong>Basic mode</strong>: Every KOT printer receives the full order. Simple, no configuration needed.</li>
+        <li><strong>Customized mode</strong>: Add multiple KOT printers and tap the <i class="fas fa-tags"></i> icon to assign specific menu categories to each — e.g. Grills &amp; Kebabs to the grill station, Tiffins to a different printer. Leave all unchecked to print all items.</li>
         <li><strong>Customer Bill</strong> prints on all Bill printers — a full tax invoice with item breakdown and totals.</li>
-        <li>Both documents are sent automatically — no manual action needed.</li>
-        <li>Supported: 80 mm &amp; 58 mm ESC/POS printers via <strong>Bluetooth</strong> (Xprinter XP-58/80, Epson TM-T20, TVS RP-3200), <strong>USB cable</strong> (OTG adapter on phones), or <strong>Network/WiFi</strong> (Epson TM-T82X, TM-T88, any printer with port 9100 on your LAN).</li>
-        <li>You can add the same printer to both pools to receive both KOT and Bill.</li>
+        <li>Both documents are sent automatically when an order is accepted.</li>
+        <li>Supported: 80 mm &amp; 58 mm ESC/POS printers via <strong>Bluetooth</strong>, <strong>USB</strong> (OTG), or <strong>Network/WiFi</strong> (port 9100).</li>
+        <li>You can add the same printer to both KOT and Bill to receive both.</li>
       </ul>
     </div>
   </div>
@@ -592,4 +516,55 @@
     </div>
   </div>
 
+</div>
+
+<!-- ── Category picker overlay ──────────────────────────────────────────────── -->
+<div class="ps-cat-overlay" *ngIf="catPickerOpen" (click)="closeCategoryPicker()">
+  <div class="ps-cat-sheet" (click)="$event.stopPropagation()">
+
+    <div class="ps-cat-sheet-header">
+      <div class="ps-cat-sheet-title">
+        <i class="fas fa-tags"></i>
+        Filter by Category
+      </div>
+      <button class="ps-icon-btn ps-icon-btn--remove" (click)="closeCategoryPicker()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <p class="ps-cat-sheet-hint">
+      Select the categories this printer should handle. Leave all unchecked to print <strong>all items</strong>.
+    </p>
+
+    <!-- Empty state -->
+    <div class="ps-cat-empty" *ngIf="menuCategories.length === 0">
+      <i class="fas fa-folder-open"></i>
+      <span>No categories found. Check that your menu has been set up with categories.</span>
+    </div>
+
+    <!-- Category list -->
+    <div class="ps-cat-list" *ngIf="menuCategories.length > 0">
+      <button
+        *ngFor="let cat of menuCategories"
+        class="ps-cat-item"
+        [class.ps-cat-item--selected]="isCatDraftSelected(cat)"
+        (click)="toggleCatDraft(cat)">
+        <i class="fas"
+           [class.fa-check-square]="isCatDraftSelected(cat)"
+           [class.fa-square]="!isCatDraftSelected(cat)"></i>
+        {{ cat }}
+      </button>
+    </div>
+
+    <div class="ps-cat-sheet-actions">
+      <button class="ps-btn ps-btn--ghost ps-btn--sm" (click)="catPickerDraft = []">
+        Clear All
+      </button>
+      <button class="ps-btn ps-btn--primary" (click)="saveCategoryAssignment()">
+        <i class="fas fa-check"></i>
+        {{ catPickerDraft.length ? 'Apply (' + catPickerDraft.length + ' selected)' : 'Apply (All items)' }}
+      </button>
+    </div>
+
+  </div>
 </div>
