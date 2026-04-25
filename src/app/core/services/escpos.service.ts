@@ -112,7 +112,11 @@ export class EscPosService {
 
     // Order meta
     append(CMD.ALIGN_LEFT);
-    text(`Order  : #${order.orderId.toUpperCase()}`); line();
+    {
+      const suffix = order.orderId.slice(-4).toUpperCase();
+      const prefix = 'Order  : #' + order.orderId.slice(0, -4).toUpperCase();
+      text(prefix); append(CMD.BOLD_ON); text(suffix); append(CMD.BOLD_OFF); line();
+    }
     text(`Time   : ${this.formatTime(order.createdAt)}`);       line();
 
     text('-'.repeat(CHARS)); line();
@@ -153,7 +157,7 @@ export class EscPosService {
     return new Uint8Array(buf);
   }
 
-  formatBill(order: Order): Uint8Array {
+  formatBill(order: Order, gstNumber?: string): Uint8Array {
     const CHARS = this.CHARS;
     const buf: number[] = [];
 
@@ -174,13 +178,20 @@ export class EscPosService {
     append(CMD.SIZE_NORMAL);
     text('TAX INVOICE'); line();
     append(CMD.BOLD_OFF);
+    if (gstNumber) {
+      text(`GSTIN  : ${this.trim(gstNumber, CHARS - 9)}`); line();
+    }
     line();
 
     text('-'.repeat(CHARS)); line();
 
     // Order meta
     append(CMD.ALIGN_LEFT);
-    text(`Order  : #${order.orderId.toUpperCase()}`);              line();
+    {
+      const suffix = order.orderId.slice(-4).toUpperCase();
+      const prefix = 'Order  : #' + order.orderId.slice(0, -4).toUpperCase();
+      text(prefix); append(CMD.BOLD_ON); text(suffix); append(CMD.BOLD_OFF); line();
+    }
     text(`Date   : ${this.formatDate(order.createdAt)}`);          line();
     text(`Time   : ${this.formatTime(order.createdAt)}`);          line();
 

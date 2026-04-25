@@ -35,7 +35,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   // Orders state
   allOrders: Order[] = [];
   loading = true;
-  isSampleMode = false;
+  isRefreshing = false;
   
   // Rejection modal state
   showRejectionModal = false;
@@ -119,7 +119,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
    * Filter orders for today only
    */
   private filterTodayOrders(orders: Order[]): Order[] {
-    if (this.isSampleMode) return orders; // samples already span today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -398,7 +397,18 @@ export class OrdersComponent implements OnInit, OnDestroy {
       OrderStatus.RIDER_ASSIGNED
     ].includes(order.status);
   }
+  // ── Manual refresh ───────────────────────────────────────────────────────────
 
+  manualRefresh(): void {
+    if (this.isRefreshing) return;
+    this.isRefreshing = true;
+    this.orderService.fetchOrders({ suppressNewOrderEffects: true });
+    // spin icon briefly, then reset once orders$ emits
+    setTimeout(() => {
+      this.isRefreshing = false;
+      this.cdr.detectChanges();
+    }, 1200);
+  }
   // ── Sample / Demo mode ────────────────────────────────────────────────────
 
   loadSampleOrders(): void {
@@ -549,12 +559,10 @@ export class OrdersComponent implements OnInit, OnDestroy {
     ];
 
     this.allOrders = samples;
-    this.isSampleMode = true;
     this.cdr.detectChanges();
   }
 
   dismissSampleMode(): void {
-    this.isSampleMode = false;
     this.allOrders = [];
     this.orderService.fetchOrders({ suppressNewOrderEffects: true });
     this.cdr.detectChanges();

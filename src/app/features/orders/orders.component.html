@@ -25,15 +25,8 @@
       <i class="fas fa-ban"></i>
       <span>Cancelled</span>
     </button>
-  </div>
-  <!-- ── Sample mode banner ───────────────────────────────────────────────────── -->
-  <div class="ord-sample-banner" *ngIf="isSampleMode">
-    <span class="ord-sample-banner-icon"><i class="fas fa-eye"></i></span>
-    <div class="ord-sample-banner-text">
-      <strong>Preview Mode</strong> — These are sample orders to show you how incoming orders look. No real data.
-    </div>
-    <button class="ord-sample-banner-dismiss" (click)="dismissSampleMode()">
-      <i class="fas fa-times"></i> Exit Preview
+    <button class="ord-refresh-btn" (click)="manualRefresh()" [class.ord-refresh-btn--spinning]="isRefreshing" title="Refresh orders">
+      <i class="fas fa-sync-alt"></i>
     </button>
   </div>
   <!-- ── Printer: no-printer nudge ─────────────────────────────────────────── -->
@@ -191,10 +184,6 @@
       </div>
       <p class="ord-empty-title">No {{ activeTab }} orders right now</p>
       <p class="ord-empty-sub">Orders placed by customers will appear here in real time.</p>
-      <button class="ord-empty-sample-btn" *ngIf="!isSampleMode" (click)="loadSampleOrders(); setActiveTab('new')">
-        <i class="fas fa-eye"></i>
-        Preview sample orders
-      </button>
     </div>
 
   </div><!-- /ord-grid -->

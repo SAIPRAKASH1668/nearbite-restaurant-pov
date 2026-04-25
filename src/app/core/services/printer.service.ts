@@ -52,6 +52,7 @@ const NetworkPrinter = registerPlugin<NetworkPrinterPlugin>('NetworkPrinter');
 const STORAGE_KEY_PAPER_WIDTH   = 'nearbite_paper_width';
 const STORAGE_KEY_KOT_PRINTERS  = 'nearbite_kot_printers';
 const STORAGE_KEY_BILL_PRINTERS = 'nearbite_bill_printers';
+const STORAGE_KEY_GST_NUMBER    = 'nearbite_gst_number';
 
 /** Timeout for a single BT connect or write call (ms) */
 const PRINT_TIMEOUT_MS = 15_000;
@@ -147,6 +148,21 @@ export class PrinterService {
   savePaperWidth(w: PaperWidth): void {
     localStorage.setItem(STORAGE_KEY_PAPER_WIDTH, String(w));
     this.escpos.setPaperWidth(w);
+  }
+
+  // ── GST Number ─────────────────────────────────────────────────────────────
+
+  getGstNumber(): string {
+    return localStorage.getItem(STORAGE_KEY_GST_NUMBER) || '';
+  }
+
+  saveGstNumber(gst: string): void {
+    const trimmed = gst.trim();
+    if (trimmed) {
+      localStorage.setItem(STORAGE_KEY_GST_NUMBER, trimmed);
+    } else {
+      localStorage.removeItem(STORAGE_KEY_GST_NUMBER);
+    }
   }
 
   // ── Device scanning ────────────────────────────────────────────────────────
@@ -277,7 +293,7 @@ export class PrinterService {
   async printOrderAccepted(order: Order): Promise<void> {
     this.escpos.setPaperWidth(this.getPaperWidth());
     const kot  = this.escpos.formatKOT(order);
-    const bill = this.escpos.formatBill(order);
+    const bill = this.escpos.formatBill(order, this.getGstNumber() || undefined);
 
     if (!this.isNativeApp()) {
       console.group(`%c🖨️  KOT — Order #${order.orderId.slice(-8).toUpperCase()}`, 'color: #ff6b35; font-weight: bold;');
