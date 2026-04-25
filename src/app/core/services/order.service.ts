@@ -61,23 +61,29 @@ export class OrderService {
         tap((response) => {
           const visibleOrders = this.filterRestaurantVisibleOrders(response.orders);
 
-          const shouldAnnounceNewOrders =
-            !options?.suppressNewOrderEffects &&
-            (!isInitialFetch || options?.announceNewOrders);
-
-          if (shouldAnnounceNewOrders) {
-            const newConfirmedOrders = visibleOrders.filter((order) =>
-              !existingIds.has(order.orderId) && order.status === OrderStatus.CONFIRMED
-            );
-
-            if (newConfirmedOrders.length > 0) {
-              this.soundService.playNewOrderAlarm();
-              newConfirmedOrders.forEach((order) => {
-                this.orderNotificationService.notifyNewOrder(
-                  this.mapIncomingOrder(order),
-                  { playInAppSound: false, showSystemNotification: false }
-                );
-              });
+          if (!options?.suppressNewOrderEffects) {
+            if (isInitialFetch) {
+              // On startup: ring immediately if CONFIRMED orders are already waiting
+              const pendingConfirmed = visibleOrders.filter(
+                (order) => order.status === OrderStatus.CONFIRMED
+              );
+              if (pendingConfirmed.length > 0) {
+                this.soundService.playNewOrderAlarm();
+              }
+            } else {
+              // On subsequent fetches: detect brand-new CONFIRMED orders
+              const newConfirmedOrders = visibleOrders.filter((order) =>
+                !existingIds.has(order.orderId) && order.status === OrderStatus.CONFIRMED
+              );
+              if (newConfirmedOrders.length > 0) {
+                this.soundService.playNewOrderAlarm();
+                newConfirmedOrders.forEach((order) => {
+                  this.orderNotificationService.notifyNewOrder(
+                    this.mapIncomingOrder(order),
+                    { playInAppSound: false, showSystemNotification: false }
+                  );
+                });
+              }
             }
           }
 

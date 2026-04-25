@@ -434,7 +434,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   manualRefresh(): void {
     if (this.isRefreshing) return;
     this.isRefreshing = true;
-    this.orderService.fetchOrders({ suppressNewOrderEffects: true });
+    this.orderService.fetchOrders();
     // spin icon briefly, then reset once orders$ emits
     setTimeout(() => {
       this.isRefreshing = false;
