@@ -24,8 +24,10 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
   printStatus: PrintStatus = 'idle';
 
   // ── KOT / Bill pools ───────────────────────────────────────────────────────
-  kotPrinters:  PrinterDevice[] = [];
-  billPrinters: PrinterDevice[] = [];
+  kotPrinters:    PrinterDevice[] = [];
+  vegKotPrinters: PrinterDevice[] = [];
+  nonVegKotPrinters: PrinterDevice[] = [];
+  billPrinters:   PrinterDevice[] = [];
 
   // ── Bluetooth scan state ───────────────────────────────────────────────────
   btDevices:  PrinterDevice[] = [];
@@ -77,8 +79,10 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
   // ── Pool sync ──────────────────────────────────────────────────────────────
 
   refreshPools(): void {
-    this.kotPrinters  = this.printerService.getKotPrinters();
-    this.billPrinters = this.printerService.getBillPrinters();
+    this.kotPrinters       = this.printerService.getKotPrinters();
+    this.vegKotPrinters    = this.printerService.getVegKotPrinters();
+    this.nonVegKotPrinters = this.printerService.getNonVegKotPrinters();
+    this.billPrinters      = this.printerService.getBillPrinters();
   }
 
   // ── Paper width ────────────────────────────────────────────────────────────
@@ -153,6 +157,16 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
     this.refreshPools();
   }
 
+  addToVegKot(device: PrinterDevice): void {
+    this.printerService.addVegKotPrinter(device);
+    this.refreshPools();
+  }
+
+  addToNonVegKot(device: PrinterDevice): void {
+    this.printerService.addNonVegKotPrinter(device);
+    this.refreshPools();
+  }
+
   addToBill(device: PrinterDevice): void {
     this.printerService.addBillPrinter(device);
     this.refreshPools();
@@ -160,6 +174,16 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
 
   addUsbToKot(device: UsbDevice): void {
     this.printerService.addKotPrinter({ name: device.productName || 'USB Printer', address: device.deviceName, type: 'usb' });
+    this.refreshPools();
+  }
+
+  addUsbToVegKot(device: UsbDevice): void {
+    this.printerService.addVegKotPrinter({ name: device.productName || 'USB Printer', address: device.deviceName, type: 'usb' });
+    this.refreshPools();
+  }
+
+  addUsbToNonVegKot(device: UsbDevice): void {
+    this.printerService.addNonVegKotPrinter({ name: device.productName || 'USB Printer', address: device.deviceName, type: 'usb' });
     this.refreshPools();
   }
 
@@ -177,6 +201,30 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
   addNetworkToKot(): void {
     if (!this.isNetworkFormValid) { this.netError = 'Enter a valid IP address and port.'; return; }
     this.printerService.addKotPrinter({
+      name:    this.netName.trim() || this.netHost.trim(),
+      address: this.netHost.trim(),
+      type:    'network',
+      port:    this.netPort,
+    });
+    this.refreshPools();
+    this.netError = null;
+  }
+
+  addNetworkToVegKot(): void {
+    if (!this.isNetworkFormValid) { this.netError = 'Enter a valid IP address and port.'; return; }
+    this.printerService.addVegKotPrinter({
+      name:    this.netName.trim() || this.netHost.trim(),
+      address: this.netHost.trim(),
+      type:    'network',
+      port:    this.netPort,
+    });
+    this.refreshPools();
+    this.netError = null;
+  }
+
+  addNetworkToNonVegKot(): void {
+    if (!this.isNetworkFormValid) { this.netError = 'Enter a valid IP address and port.'; return; }
+    this.printerService.addNonVegKotPrinter({
       name:    this.netName.trim() || this.netHost.trim(),
       address: this.netHost.trim(),
       type:    'network',
@@ -223,6 +271,16 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
     this.refreshPools();
   }
 
+  removeVegKot(address: string): void {
+    this.printerService.removeVegKotPrinter(address);
+    this.refreshPools();
+  }
+
+  removeNonVegKot(address: string): void {
+    this.printerService.removeNonVegKotPrinter(address);
+    this.refreshPools();
+  }
+
   removeBill(address: string): void {
     this.printerService.removeBillPrinter(address);
     this.refreshPools();
@@ -230,6 +288,14 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
 
   isInKot(address: string): boolean {
     return this.kotPrinters.some(p => p.address === address);
+  }
+
+  isInVegKot(address: string): boolean {
+    return this.vegKotPrinters.some(p => p.address === address);
+  }
+
+  isInNonVegKot(address: string): boolean {
+    return this.nonVegKotPrinters.some(p => p.address === address);
   }
 
   isInBill(address: string): boolean {
@@ -311,8 +377,10 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
 
   /** Prints a mock KOT with sample items on all KOT printers. */
   async callPrintKOT(): Promise<void> {
-    const printers = this.printerService.getKotPrinters();
-    if (printers.length === 0) { alert('No KOT printers configured.'); return; }
+    const hasKot = this.printerService.getKotPrinters().length > 0
+               || this.printerService.getVegKotPrinters().length > 0
+               || this.printerService.getNonVegKotPrinters().length > 0;
+    if (!hasKot) { alert('No KOT printers configured.'); return; }
     await this.printerService.printOrderAccepted(this.buildMockOrder()).catch(e => console.error('Test KOT failed', e));
   }
 
@@ -325,11 +393,11 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
       restaurantName:   'NearBite Kitchen',
       restaurantImage:  '',
       items: [
-        { itemId: 'i1', name: 'Butter Chicken',      quantity: 2, price: 320 },
-        { itemId: 'i2', name: 'Garlic Naan',          quantity: 4, price: 60  },
-        { itemId: 'i3', name: 'Paneer Tikka Masala',  quantity: 1, price: 280 },
-        { itemId: 'i4', name: 'Veg Biryani',          quantity: 1, price: 220 },
-        { itemId: 'i5', name: 'Gulab Jamun (2 pcs)',   quantity: 2, price: 80  },
+        { itemId: 'i1', name: 'Butter Chicken',      quantity: 2, price: 320, isVeg: false },
+        { itemId: 'i2', name: 'Garlic Naan',          quantity: 4, price: 60,  isVeg: true  },
+        { itemId: 'i3', name: 'Paneer Tikka Masala',  quantity: 1, price: 280, isVeg: true  },
+        { itemId: 'i4', name: 'Veg Biryani',          quantity: 1, price: 220, isVeg: true  },
+        { itemId: 'i5', name: 'Gulab Jamun (2 pcs)',   quantity: 2, price: 80,  isVeg: true  },
       ],
       foodTotal:        1400,
       deliveryFee:      40,
@@ -342,6 +410,7 @@ export class PrinterSettingsComponent implements OnInit, OnDestroy {
       formattedAddress: 'Flat 302, Sunshine Apartments, MG Road, Bengaluru 560001',
       addressId:        'addr-mock-001',
       deliveryOtp:      '4829',
+      pickupOtp:        '7312',
     };
   }
 

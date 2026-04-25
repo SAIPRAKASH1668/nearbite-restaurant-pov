@@ -598,8 +598,17 @@
 
   i { font-size: 14px; }
 
-  &--kot  { background: $primary-orange; }
-  &--bill { background: #0f9d77; }
+  &--kot      { background: $primary-orange; }
+  &--bill     { background: #0f9d77; }
+  &--veg-kot  { background: #2e7d32; }
+  &--nonveg-kot { background: #b71c1c; }
+}
+
+.ps-pool-head-sub {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.85;
+  margin-left: 3px;
 }
 
 .ps-pool-name { flex: 1; }
@@ -616,6 +625,18 @@
   padding: 8px 0;
   min-height: 64px;
 }
+
+.ps-pool-hint {
+  font-size: 11px;
+  color: $text-secondary;
+  padding: 6px 16px 4px;
+  margin: 0;
+  line-height: 1.5;
+
+  strong { color: $text-primary; }
+}
+
+
 
 .ps-pool-empty {
   display: flex;
@@ -848,6 +869,16 @@
     color: #0f9d77;
   }
 
+  &--veg-kot {
+    border-color: #2e7d32;
+    color: #2e7d32;
+  }
+
+  &--nonveg-kot {
+    border-color: #b71c1c;
+    color: #b71c1c;
+  }
+
   &--active {
     background: $primary-orange;
     color: #fff;
@@ -856,6 +887,18 @@
     &.ps-add-btn--bill {
       background: #0f9d77;
       border-color: #0f9d77;
+      color: #fff;
+    }
+
+    &.ps-add-btn--veg-kot {
+      background: #2e7d32;
+      border-color: #2e7d32;
+      color: #fff;
+    }
+
+    &.ps-add-btn--nonveg-kot {
+      background: #b71c1c;
+      border-color: #b71c1c;
       color: #fff;
     }
   }

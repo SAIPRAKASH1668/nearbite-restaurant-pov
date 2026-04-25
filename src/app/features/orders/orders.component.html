@@ -38,24 +38,6 @@
     </a>
   </div>
 
-  <!-- ── Printer: live print status toast ──────────────────────────────────── -->
-  <div class="ord-print-toast"
-       [class.ord-print-toast--connecting]="printStatus === 'connecting'"
-       [class.ord-print-toast--printing]="printStatus === 'printing'"
-       [class.ord-print-toast--success]="printStatus === 'success'"
-       [class.ord-print-toast--error]="printStatus === 'error'"
-       *ngIf="printStatus !== 'idle'">
-    <i class="fas"
-       [class.fa-circle-notch]="printStatus === 'connecting' || printStatus === 'printing'"
-       [class.fa-spin]="printStatus === 'connecting' || printStatus === 'printing'"
-       [class.fa-check-circle]="printStatus === 'success'"
-       [class.fa-times-circle]="printStatus === 'error'"></i>
-    <span *ngIf="printStatus === 'connecting'">Connecting to printer…</span>
-    <span *ngIf="printStatus === 'printing'">Printing KOT &amp; Bill…</span>
-    <span *ngIf="printStatus === 'success'">Printed successfully ✓</span>
-    <span *ngIf="printStatus === 'error'">Print failed — check printer connection</span>
-  </div>
-
   <!-- ── Loading ───────────────────────────────────────────────────────────── -->
   <div class="ord-loading" *ngIf="loading">
     <div class="ord-spinner"></div>
@@ -189,6 +171,24 @@
   </div><!-- /ord-grid -->
 
 
+</div>
+
+<!-- ── Printer status toast — floating fixed overlay, never shifts layout ── -->
+<div class="ord-print-toast"
+     [class.ord-print-toast--connecting]="printStatus === 'connecting'"
+     [class.ord-print-toast--printing]="printStatus === 'printing'"
+     [class.ord-print-toast--success]="printStatus === 'success'"
+     [class.ord-print-toast--error]="printStatus === 'error'"
+     *ngIf="printStatus !== 'idle'">
+  <i class="fas"
+     [class.fa-circle-notch]="printStatus === 'connecting' || printStatus === 'printing'"
+     [class.fa-spin]="printStatus === 'connecting' || printStatus === 'printing'"
+     [class.fa-check-circle]="printStatus === 'success'"
+     [class.fa-times-circle]="printStatus === 'error'"></i>
+  <span *ngIf="printStatus === 'connecting'">Connecting to printer…</span>
+  <span *ngIf="printStatus === 'printing'">Printing KOT &amp; Bill…</span>
+  <span *ngIf="printStatus === 'success'">Printed successfully ✓</span>
+  <span *ngIf="printStatus === 'error'">Print failed — check printer connection</span>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════

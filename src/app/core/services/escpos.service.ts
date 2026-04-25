@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Order } from '../models/order.model';
+import { Order, OrderItem } from '../models/order.model';
 
 // ── ESC/POS byte constants ───────────────────────────────────────────────────
 const ESC = 0x1B;
@@ -83,6 +83,10 @@ export class EscPosService {
   }
 
   formatKOT(order: Order): Uint8Array {
+    return this._buildKOT(order, order.items);
+  }
+
+  private _buildKOT(order: Order, items: OrderItem[], label?: string): Uint8Array {
     const CHARS = this.CHARS;
     const buf: number[] = [];
 
@@ -92,7 +96,7 @@ export class EscPosService {
 
     // Init
     append(CMD.INIT, CMD.ALIGN_CENTER, CMD.BOLD_ON, CMD.SIZE_DOUBLE);
-    text('KOT'); line();
+    text(label ? `KOT - ${label}` : 'KOT'); line();
     append(CMD.SIZE_NORMAL, CMD.BOLD_OFF);
     line();
 
@@ -127,7 +131,7 @@ export class EscPosService {
     append(CMD.BOLD_OFF);
     text('-'.repeat(CHARS)); line();
 
-    order.items.forEach(item => {
+    items.forEach(item => {
       const qty   = `x${item.quantity}`;
       const name  = this.trim(item.name, CHARS - qty.length - 1);
       text(this.padRight(name, CHARS - qty.length) + qty); line();
@@ -147,6 +151,15 @@ export class EscPosService {
     });
 
     text('-'.repeat(CHARS)); line();
+
+    // Pickup OTP (for rider to show restaurant on collection)
+    if (order.pickupOtp) {
+      append(CMD.ALIGN_CENTER, CMD.BOLD_ON, CMD.SIZE_DOUBLE);
+      text(`PICKUP OTP: ${order.pickupOtp}`); line();
+      append(CMD.SIZE_NORMAL, CMD.BOLD_OFF, CMD.ALIGN_LEFT);
+      text('-'.repeat(CHARS)); line();
+    }
+
     text('='.repeat(CHARS)); line();
     append(CMD.ALIGN_CENTER, CMD.BOLD_ON);
     text('** KITCHEN COPY **'); line();
@@ -155,6 +168,14 @@ export class EscPosService {
     append(CMD.FEED_5, CMD.CUT);
 
     return new Uint8Array(buf);
+  }
+
+  /**
+   * Prints a KOT with a filtered subset of items (used for Veg/Non-Veg split printing).
+   * `label` is printed in the header, e.g. 'VEG' or 'NON-VEG'.
+   */
+  formatFilteredKOT(order: Order, items: OrderItem[], label: string): Uint8Array {
+    return this._buildKOT(order, items, label);
   }
 
   formatBill(order: Order, gstNumber?: string): Uint8Array {

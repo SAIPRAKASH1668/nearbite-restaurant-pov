@@ -3,6 +3,7 @@ export interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  isVeg?: boolean; // true = veg, false = non-veg, undefined = unknown
   /** Key used by the backend API response */
   addOns?: { optionId: string; name: string; extraPrice: number }[];
   /** Legacy alias — kept for backwards compatibility */

@@ -49,10 +49,12 @@ const NetworkPrinter = registerPlugin<NetworkPrinterPlugin>('NetworkPrinter');
 //   • Test-print function
 // ─────────────────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY_PAPER_WIDTH   = 'nearbite_paper_width';
-const STORAGE_KEY_KOT_PRINTERS  = 'nearbite_kot_printers';
-const STORAGE_KEY_BILL_PRINTERS = 'nearbite_bill_printers';
-const STORAGE_KEY_GST_NUMBER    = 'nearbite_gst_number';
+const STORAGE_KEY_PAPER_WIDTH     = 'nearbite_paper_width';
+const STORAGE_KEY_KOT_PRINTERS    = 'nearbite_kot_printers';
+const STORAGE_KEY_VEG_KOT_PRINTERS    = 'nearbite_veg_kot_printers';
+const STORAGE_KEY_NONVEG_KOT_PRINTERS = 'nearbite_nonveg_kot_printers';
+const STORAGE_KEY_BILL_PRINTERS   = 'nearbite_bill_printers';
+const STORAGE_KEY_GST_NUMBER      = 'nearbite_gst_number';
 
 /** Timeout for a single BT connect or write call (ms) */
 const PRINT_TIMEOUT_MS = 15_000;
@@ -103,6 +105,14 @@ export class PrinterService {
     return this.loadPrinters(STORAGE_KEY_KOT_PRINTERS);
   }
 
+  getVegKotPrinters(): PrinterDevice[] {
+    return this.loadPrinters(STORAGE_KEY_VEG_KOT_PRINTERS);
+  }
+
+  getNonVegKotPrinters(): PrinterDevice[] {
+    return this.loadPrinters(STORAGE_KEY_NONVEG_KOT_PRINTERS);
+  }
+
   getBillPrinters(): PrinterDevice[] {
     return this.loadPrinters(STORAGE_KEY_BILL_PRINTERS);
   }
@@ -110,6 +120,16 @@ export class PrinterService {
   addKotPrinter(device: PrinterDevice): void {
     const list = this.getKotPrinters().filter(p => p.address !== device.address);
     this.storePrinters(STORAGE_KEY_KOT_PRINTERS, [...list, device]);
+  }
+
+  addVegKotPrinter(device: PrinterDevice): void {
+    const list = this.getVegKotPrinters().filter(p => p.address !== device.address);
+    this.storePrinters(STORAGE_KEY_VEG_KOT_PRINTERS, [...list, device]);
+  }
+
+  addNonVegKotPrinter(device: PrinterDevice): void {
+    const list = this.getNonVegKotPrinters().filter(p => p.address !== device.address);
+    this.storePrinters(STORAGE_KEY_NONVEG_KOT_PRINTERS, [...list, device]);
   }
 
   addBillPrinter(device: PrinterDevice): void {
@@ -121,12 +141,21 @@ export class PrinterService {
     this.storePrinters(STORAGE_KEY_KOT_PRINTERS, this.getKotPrinters().filter(p => p.address !== address));
   }
 
+  removeVegKotPrinter(address: string): void {
+    this.storePrinters(STORAGE_KEY_VEG_KOT_PRINTERS, this.getVegKotPrinters().filter(p => p.address !== address));
+  }
+
+  removeNonVegKotPrinter(address: string): void {
+    this.storePrinters(STORAGE_KEY_NONVEG_KOT_PRINTERS, this.getNonVegKotPrinters().filter(p => p.address !== address));
+  }
+
   removeBillPrinter(address: string): void {
     this.storePrinters(STORAGE_KEY_BILL_PRINTERS, this.getBillPrinters().filter(p => p.address !== address));
   }
 
   hasAnyPrinter(): boolean {
-    return this.getKotPrinters().length > 0 || this.getBillPrinters().length > 0;
+    return this.getKotPrinters().length > 0 || this.getVegKotPrinters().length > 0
+        || this.getNonVegKotPrinters().length > 0 || this.getBillPrinters().length > 0;
   }
 
   private loadPrinters(key: string): PrinterDevice[] {
@@ -278,7 +307,8 @@ export class PrinterService {
 
   /** @deprecated Use testPrintOn(device) instead */
   async testPrint(): Promise<void> {
-    const all = [...this.getKotPrinters(), ...this.getBillPrinters()];
+    const all = [...this.getKotPrinters(), ...this.getVegKotPrinters(),
+                 ...this.getNonVegKotPrinters(), ...this.getBillPrinters()];
     if (all.length === 0) throw new Error('NO_PRINTER');
     await this.testPrintOn(all[0]);
   }
@@ -289,25 +319,38 @@ export class PrinterService {
    * Prints KOT (kitchen copy) and customer Bill when an order is accepted.
    * Silently skips if no printer is configured.
    * Each document is sent as a separate BT connection for maximum compatibility.
+   *
+   * KOT routing:
+   *   – vegKotPrinters    → only veg items (isVeg === true)
+   *   – nonVegKotPrinters → only non-veg items (isVeg !== true, includes unknown)
+   *   – kotPrinters       → full order (all items, no split)
    */
   async printOrderAccepted(order: Order): Promise<void> {
     this.escpos.setPaperWidth(this.getPaperWidth());
-    const kot  = this.escpos.formatKOT(order);
     const bill = this.escpos.formatBill(order, this.getGstNumber() || undefined);
+
+    // Build KOT variants
+    const vegItems    = order.items.filter(i => i.isVeg === true);
+    const nonVegItems = order.items.filter(i => i.isVeg !== true);
+    const fullKot     = this.escpos.formatKOT(order);
+    const vegKot      = vegItems.length    ? this.escpos.formatFilteredKOT(order, vegItems,    'VEG')     : null;
+    const nonVegKot   = nonVegItems.length ? this.escpos.formatFilteredKOT(order, nonVegItems, 'NON-VEG') : null;
 
     if (!this.isNativeApp()) {
       console.group(`%c🖨️  KOT — Order #${order.orderId.slice(-8).toUpperCase()}`, 'color: #ff6b35; font-weight: bold;');
-      console.log(this.escpos.toDebugString(kot));
+      console.log(this.escpos.toDebugString(fullKot));
       console.groupEnd();
       console.group(`%c🧾 BILL — Order #${order.orderId.slice(-8).toUpperCase()}`, 'color: #2ecc71; font-weight: bold;');
       console.log(this.escpos.toDebugString(bill));
       console.groupEnd();
 
       // In Electron/browser: only network printers can actually print
-      const netKot  = this.getKotPrinters().filter(p => p.type === 'network');
-      const netBill = this.getBillPrinters().filter(p => p.type === 'network');
+      const netKot      = this.getKotPrinters().filter(p => p.type === 'network');
+      const netVegKot   = this.getVegKotPrinters().filter(p => p.type === 'network');
+      const netNonVegKot = this.getNonVegKotPrinters().filter(p => p.type === 'network');
+      const netBill     = this.getBillPrinters().filter(p => p.type === 'network');
 
-      if (netKot.length === 0 && netBill.length === 0) {
+      if (netKot.length === 0 && netVegKot.length === 0 && netNonVegKot.length === 0 && netBill.length === 0) {
         console.info('ℹ️  PrinterService: No network printers — Bluetooth/USB require Android app.');
         this.statusSubject.next('success');
         setTimeout(() => this.statusSubject.next('idle'), 3000);
@@ -320,18 +363,23 @@ export class PrinterService {
       }
       this.printInProgress = true;
       try {
-        for (const p of netKot)  await this.sendBytesNetwork(p.address, p.port ?? 9100, kot,  'KOT');
-        for (const p of netBill) await this.sendBytesNetwork(p.address, p.port ?? 9100, bill, 'Bill');
+        for (const p of netKot)       await this.sendBytesNetwork(p.address, p.port ?? 9100, fullKot,  'KOT');
+        if (vegKot)    for (const p of netVegKot)    await this.sendBytesNetwork(p.address, p.port ?? 9100, vegKot,    'KOT-VEG');
+        if (nonVegKot) for (const p of netNonVegKot) await this.sendBytesNetwork(p.address, p.port ?? 9100, nonVegKot, 'KOT-NONVEG');
+        for (const p of netBill)      await this.sendBytesNetwork(p.address, p.port ?? 9100, bill,    'Bill');
       } finally {
         this.printInProgress = false;
       }
       return;
     }
 
-    const kotPrinters  = this.getKotPrinters();
-    const billPrinters = this.getBillPrinters();
+    const kotPrinters       = this.getKotPrinters();
+    const vegKotPrinters    = this.getVegKotPrinters();
+    const nonVegKotPrinters = this.getNonVegKotPrinters();
+    const billPrinters      = this.getBillPrinters();
 
-    if (kotPrinters.length === 0 && billPrinters.length === 0) {
+    if (kotPrinters.length === 0 && vegKotPrinters.length === 0 &&
+        nonVegKotPrinters.length === 0 && billPrinters.length === 0) {
       console.warn('PrinterService: no printers configured — skipping print.');
       return;
     }
@@ -341,13 +389,17 @@ export class PrinterService {
       return;
     }
 
+    const sendKot = async (p: PrinterDevice, data: Uint8Array, lbl: string) => {
+      if (p.type === 'usb')          await this.sendBytesUsb(p.address, data, lbl);
+      else if (p.type === 'network') await this.sendBytesNetwork(p.address, p.port ?? 9100, data, lbl);
+      else                           await this.sendBytes(p.address, data, lbl);
+    };
+
     this.printInProgress = true;
     try {
-      for (const p of kotPrinters) {
-        if (p.type === 'usb')     await this.sendBytesUsb(p.address, kot,  'KOT');
-        else if (p.type === 'network') await this.sendBytesNetwork(p.address, p.port ?? 9100, kot, 'KOT');
-        else                      await this.sendBytes(p.address, kot,  'KOT');
-      }
+      for (const p of kotPrinters)                        await sendKot(p, fullKot,   'KOT');
+      if (vegKot)    for (const p of vegKotPrinters)    await sendKot(p, vegKot,    'KOT-VEG');
+      if (nonVegKot) for (const p of nonVegKotPrinters) await sendKot(p, nonVegKot, 'KOT-NONVEG');
       for (const p of billPrinters) {
         if (p.type === 'usb')     await this.sendBytesUsb(p.address, bill, 'Bill');
         else if (p.type === 'network') await this.sendBytesNetwork(p.address, p.port ?? 9100, bill, 'Bill');
