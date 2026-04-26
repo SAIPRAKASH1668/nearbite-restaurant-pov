@@ -18,6 +18,8 @@ import { Subscription } from 'rxjs';
 })
 export class MenuComponent implements OnInit, OnDestroy {
   selectedCategory = 'all';
+  searchQuery = '';
+  categoryAvailabilityExpanded = false;
   showAddItemForm = false;
   loading = true;
   savingItem = false;
@@ -50,6 +52,12 @@ export class MenuComponent implements OnInit, OnDestroy {
   /** Category options for the form — sourced from food-categories API */
   get formCategories(): string[] {
     return this.foodCategoryService.getCategories();
+  }
+
+  get availabilityCategories(): string[] {
+    return this.categories.filter(
+      category => category !== 'All' && this.hasCategoryItems(category)
+    );
   }
 
   newItem: Partial<MenuItem> = {
@@ -134,13 +142,78 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.selectedCategory = category.toLowerCase();
   }
 
+  toggleCategoryAvailabilityAccordion(): void {
+    this.categoryAvailabilityExpanded = !this.categoryAvailabilityExpanded;
+  }
+
   getFilteredItems(): MenuItem[] {
-    if (this.selectedCategory === 'all') {
-      return this.menuItems;
-    }
-    return this.menuItems.filter(
-      item => item.category.toLowerCase() === this.selectedCategory
-    );
+    const query = this.searchQuery.trim().toLowerCase();
+    return this.menuItems.filter(item => {
+      const categoryMatch =
+        this.selectedCategory === 'all' || item.category.toLowerCase() === this.selectedCategory;
+      if (!categoryMatch) return false;
+
+      if (!query) return true;
+      const name = (item.itemName || '').toLowerCase();
+      const description = (item.description || '').toLowerCase();
+      const category = (item.category || '').toLowerCase();
+      const subCategory = (item.subCategory || '').toLowerCase();
+      return (
+        name.includes(query) ||
+        description.includes(query) ||
+        category.includes(query) ||
+        subCategory.includes(query)
+      );
+    });
+  }
+
+  hasCategoryItems(category: string): boolean {
+    const normalized = category.toLowerCase();
+    return this.menuItems.some(item => item.category.toLowerCase() === normalized);
+  }
+
+  isCategoryFullyAvailable(category: string): boolean {
+    const normalized = category.toLowerCase();
+    const categoryItems = this.menuItems.filter(item => item.category.toLowerCase() === normalized);
+    if (!categoryItems.length) return false;
+    return categoryItems.every(item => item.isAvailable);
+  }
+
+  toggleCategoryAvailability(category: string): void {
+    const normalized = category.toLowerCase();
+    const categoryItems = this.menuItems.filter(item => item.category.toLowerCase() === normalized);
+    if (!categoryItems.length) return;
+
+    const shouldEnable = !categoryItems.every(item => item.isAvailable);
+    this.loading = true;
+
+    const updateCalls = categoryItems.map(item => {
+      const updatedItemData: Partial<MenuItem> = {
+        itemName: item.itemName,
+        category: item.category,
+        subCategory: item.subCategory,
+        restaurantPrice: item.restaurantPrice,
+        hikePercentage: item.hikePercentage,
+        isVeg: item.isVeg,
+        isAvailable: shouldEnable,
+        description: item.description,
+        image: item.image,
+        addOnOptions: item.addOnOptions
+      };
+      return this.menuService.updateMenuItem(item.itemId, updatedItemData).toPromise();
+    });
+
+    Promise.all(updateCalls)
+      .then(() => {
+        const statusText = shouldEnable ? 'available' : 'unavailable';
+        this.notificationService.success(`${category} items marked as ${statusText}`);
+      })
+      .catch(err => {
+        console.error('❌ Error updating category availability:', err);
+        this.notificationService.error('Failed to update category availability');
+        this.loading = false;
+        this.cdr.detectChanges();
+      });
   }
 
   toggleAvailability(itemId: string): void {

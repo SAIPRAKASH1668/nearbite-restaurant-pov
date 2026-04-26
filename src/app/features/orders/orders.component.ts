@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { OrderNotificationService } from '../../core/services/order-notification.service';
 import { OrderService } from '../../core/services/order.service';
@@ -12,12 +13,13 @@ import { PrinterService, PrintStatus } from '../../core/services/printer.service
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, RouterLink, OrderRejectionModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, OrderRejectionModalComponent],
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.scss'
 })
 export class OrdersComponent implements OnInit, OnDestroy {
   activeTab: 'new' | 'preparing' | 'ready' | 'completed' | 'cancelled' = 'new';
+  searchQuery = '';
   expandedOrder: Order | null = null;
   
   // Subscriptions
@@ -124,7 +126,26 @@ export class OrdersComponent implements OnInit, OnDestroy {
       default:
         filteredOrders = [];
     }
-    return filteredOrders;
+    const query = this.searchQuery.trim().toLowerCase();
+    if (!query) return filteredOrders;
+    return filteredOrders.filter(order => this.matchesOrderSearch(order, query));
+  }
+
+  private matchesOrderSearch(order: Order, query: string): boolean {
+    const orderId = (order.orderId || '').toLowerCase();
+    const customerPhone = (order.customerPhone || '').toLowerCase();
+    const riderId = (order.riderId || '').toLowerCase();
+    const deliveryAddress = (order.deliveryAddress || '').toLowerCase();
+    const itemMatch = (order.items || []).some(item =>
+      ((item.name || '').toLowerCase().includes(query))
+    );
+    return (
+      orderId.includes(query) ||
+      customerPhone.includes(query) ||
+      riderId.includes(query) ||
+      deliveryAddress.includes(query) ||
+      itemMatch
+    );
   }
 
   /**

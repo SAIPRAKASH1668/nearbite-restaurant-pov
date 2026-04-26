@@ -131,6 +131,36 @@
   @include tablet { min-height: 44px; }
 }
 
+.mn-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1.5px solid #E8E5E2;
+  border-radius: 3px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  background: #FFFFFF;
+
+  i {
+    color: v.$text-muted;
+    font-size: 0.85rem;
+  }
+
+  input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-family: v.$font-family;
+    font-size: 0.82rem;
+    color: v.$text-primary;
+    background: transparent;
+
+    &::placeholder {
+      color: #9B9691;
+    }
+  }
+}
+
 // ── Category Tabs ─────────────────────────────────────────────────────────────
 .mn-cats {
   display: flex;
@@ -172,6 +202,142 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
     z-index: 50;
   }
+}
+
+.mn-cat-accordion {
+  margin-bottom: 0.85rem;
+  border: 1px solid #ECE8E4;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #FFFDFC 0%, #FFFFFF 100%);
+  overflow: hidden;
+}
+
+.mn-cat-accordion-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+
+  @include mobile {
+    align-items: flex-start;
+    padding: 0.75rem;
+  }
+}
+
+.mn-cat-accordion-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mn-cat-accordion-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: v.$text-primary;
+  letter-spacing: 0.01em;
+}
+
+.mn-cat-accordion-subtitle {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: v.$text-muted;
+  line-height: 1.35;
+}
+
+.mn-cat-accordion-icon {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #F6F2ED;
+  color: v.$text-secondary;
+  flex-shrink: 0;
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease;
+
+  &.open {
+    transform: rotate(180deg);
+    background: rgba(232, 53, 42, 0.08);
+    color: v.$primary-orange;
+  }
+}
+
+.mn-cat-accordion-body {
+  padding: 0 0.75rem 0.75rem;
+
+  @include mobile {
+    padding: 0 0.625rem 0.625rem;
+  }
+}
+
+.mn-cat-availability {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+
+  @include tablet {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include mobile {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4375rem;
+  }
+}
+
+.mn-cat-av-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid #ECE8E4;
+  border-radius: 4px;
+  background: #FFFFFF;
+  min-height: 46px;
+
+  @include mobile {
+    padding: 0.625rem;
+    min-height: 50px;
+  }
+}
+
+.mn-cat-av-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.mn-cat-av-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: v.$text-primary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mn-cat-av-state {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #B45309;
+
+  &.on {
+    color: #10B981;
+  }
+}
+
+.mn-toggle--category {
+  flex-shrink: 0;
 }
 
 .mn-cat {
@@ -234,7 +400,6 @@
   background: #FFFFFF;
   text-align: left;
 
-  &.mn-th-thumb    { width: 56px;  padding-right: 0; }
   &.mn-th-cat      { width: 110px; }
   &.mn-th-menprice { width: 90px;  text-align: center; }
   &.mn-th-hike     { width: 72px;  text-align: center; }
@@ -257,7 +422,6 @@
   padding: 0.625rem 0.625rem;
   vertical-align: middle;
 
-  &.mn-td-thumb    { padding-right: 0; }
   &.mn-td-info     { overflow: hidden; }  // prevent name/desc from breaking fixed layout
   &.mn-td-menprice,
   &.mn-td-hike,
@@ -280,33 +444,9 @@
   .mn-th-disprice, .mn-td-price { display: none; }
 }
 
-// ── Thumbnail ─────────────────────────────────────────────────────────────────
-.mn-thumb {
-  width: 44px;
-  height: 44px;
-  border-radius: 3px;
-  background-color: #F0EEEC;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border: 1px solid #E8E5E2;
-
-  &.no-img i {
-    font-size: 1.125rem;
-    color: #C8C4C0;
-  }
-
-  @include tablet { width: 56px; height: 56px; border-radius: 3px; }
-  @include mobile { width: 52px; height: 52px; border-radius: 4px; border-color: #E8E5E2; }
-}
-
 // ── Item info ─────────────────────────────────────────────────────────────────
 .mn-info {
-  padding: 0 1rem 0 0.875rem;
+  padding: 0 0.5rem 0 0;
   min-width: 0;
 }
 

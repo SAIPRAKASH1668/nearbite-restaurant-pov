@@ -57,6 +57,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
       .subscribe((event) => {
         const nav = event as NavigationEnd;
         this.currentPageTitle = this.getPageTitle(nav.urlAfterRedirects);
+        // Collapse account dropdown only after successful navigation.
+        this.showUserMenu = false;
         this.onlineService.loadFromApi();
         this.fetchRestaurantName();
         this.cdr.markForCheck();

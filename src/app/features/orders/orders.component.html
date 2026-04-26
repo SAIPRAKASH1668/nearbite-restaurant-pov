@@ -29,6 +29,15 @@
       <i class="fas fa-sync-alt"></i>
     </button>
   </div>
+
+  <div class="ord-search" *ngIf="!loading">
+    <i class="fas fa-search"></i>
+    <input
+      type="text"
+      [(ngModel)]="searchQuery"
+      name="orderSearch"
+      placeholder="Search by order ID, customer phone, item name, rider, address" />
+  </div>
   <!-- ── Printer: no-printer nudge ─────────────────────────────────────────── -->
   <div class="ord-printer-nudge" *ngIf="!hasPrinter">
     <i class="fas fa-print"></i>

@@ -22,6 +22,15 @@
     </div>
   </div>
 
+  <div class="mn-search-wrap" *ngIf="!loading">
+    <i class="fas fa-search"></i>
+    <input
+      type="text"
+      [(ngModel)]="searchQuery"
+      name="menuSearch"
+      placeholder="Search by item name, category, subcategory, description" />
+  </div>
+
   <!-- ── Category Tabs ─────────────────────────────────────────────────────── -->
   <div class="mn-cats" *ngIf="!loading">
     <button
@@ -31,6 +40,47 @@
       (click)="selectCategory(category)">
       {{ category }}
     </button>
+  </div>
+
+  <div class="mn-cat-accordion" *ngIf="!loading && availabilityCategories.length > 0">
+    <button
+      type="button"
+      class="mn-cat-accordion-head"
+      [class.open]="categoryAvailabilityExpanded"
+      (click)="toggleCategoryAvailabilityAccordion()"
+      [attr.aria-expanded]="categoryAvailabilityExpanded">
+      <div class="mn-cat-accordion-copy">
+        <span class="mn-cat-accordion-title">Category Availability</span>
+        <span class="mn-cat-accordion-subtitle">
+          {{ availabilityCategories.length }} categor{{ availabilityCategories.length === 1 ? 'y' : 'ies' }} with quick on/off control
+        </span>
+      </div>
+      <span class="mn-cat-accordion-icon" [class.open]="categoryAvailabilityExpanded">
+        <i class="fas fa-chevron-down"></i>
+      </span>
+    </button>
+
+    <div class="mn-cat-accordion-body" *ngIf="categoryAvailabilityExpanded">
+      <div class="mn-cat-availability">
+        <div class="mn-cat-av-item" *ngFor="let category of availabilityCategories">
+          <div class="mn-cat-av-text">
+            <span class="mn-cat-av-name">{{ category }}</span>
+            <span class="mn-cat-av-state" [class.on]="isCategoryFullyAvailable(category)">
+              {{ isCategoryFullyAvailable(category) ? 'Available' : 'Paused' }}
+            </span>
+          </div>
+          <label
+            class="mn-toggle mn-toggle--category"
+            [title]="isCategoryFullyAvailable(category) ? 'Mark this category unavailable' : 'Mark this category available'">
+            <input
+              type="checkbox"
+              [checked]="isCategoryFullyAvailable(category)"
+              (change)="toggleCategoryAvailability(category)" />
+            <span class="mn-track"></span>
+          </label>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ── Loading ───────────────────────────────────────────────────────────── -->
@@ -57,7 +107,6 @@
     <table class="mn-table">
       <thead>
         <tr>
-          <th class="mn-th mn-th-thumb"></th>
           <th class="mn-th mn-th-item">Item</th>
           <th class="mn-th mn-th-cat">Category</th>
           <th class="mn-th mn-th-menprice">Menu Price</th>
@@ -70,15 +119,6 @@
       </thead>
       <tbody>
         <tr class="mn-row" *ngFor="let item of getFilteredItems()">
-
-          <!-- Thumbnail -->
-          <td class="mn-td mn-td-thumb">
-            <div class="mn-thumb"
-              [style.background-image]="item.image?.length ? 'url(' + item.image[0] + ')' : 'none'"
-              [class.no-img]="!item.image?.length">
-              <i class="fas fa-utensils" *ngIf="!item.image?.length"></i>
-            </div>
-          </td>
 
           <!-- Name + description -->
           <td class="mn-td mn-td-info">

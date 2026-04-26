@@ -20,12 +20,6 @@ export class LandingComponent {
     { id: 'app-preview', label: 'App' }
   ];
 
-  readonly heroStats = [
-    { value: '0%',   label: 'Hidden Fees' },
-    { value: '5K+',  label: 'Restaurants' },
-    { value: '50K+', label: 'Happy Users' }
-  ];
-
   readonly problems = [
     { icon: 'fa-chart-line',         text: 'High commissions eating restaurant profits' },
     { icon: 'fa-eye',                text: 'Hidden surge fees surprising customers' },

@@ -90,6 +90,36 @@
   }
 }
 
+.ord-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1.5px solid #E8E5E2;
+  border-radius: 3px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.85rem;
+  background: #FFFFFF;
+
+  i {
+    color: v.$text-muted;
+    font-size: 0.85rem;
+  }
+
+  input {
+    border: none;
+    outline: none;
+    width: 100%;
+    font-family: v.$font-family;
+    font-size: 0.82rem;
+    color: v.$text-primary;
+    background: transparent;
+
+    &::placeholder {
+      color: #9B9691;
+    }
+  }
+}
+
 .ord-tab {
   display: inline-flex;
   align-items: center;

@@ -368,9 +368,11 @@ export class PrinterService {
       this.menuService.fetchMenuItems();
     }
 
-    /** Returns KOT bytes for one printer; null = skip (no matching items). */
+    /** Returns KOT bytes for one printer; null = skip (no matching items or unconfigured). */
     const kotDataForPrinter = (p: PrinterDevice): Uint8Array | null => {
-      if (!isCustomized || !p.categoryIds?.length) return fullKot;
+      if (!isCustomized) return fullKot;
+      // In customized mode: printer with no categories assigned is unconfigured — skip to prevent duplicates.
+      if (!p.categoryIds?.length) return null;
       const filtered = this.filterItemsByCategories(order.items, p.categoryIds);
       if (filtered.length === 0) return null;
       return this.escpos.formatFilteredKOT(order, filtered, this.categoryLabel(p.categoryIds));
@@ -471,13 +473,14 @@ export class PrinterService {
     if (!printers.length) { console.warn('PrinterService: no KOT printers configured.'); return; }
     const isCustomized = this.getPrinterMode() === 'customized';
     for (const p of printers) {
-      if (isCustomized && p.categoryIds?.length) {
+      if (!isCustomized) {
+        await this._printToPool([p], this.escpos.formatKOT(order), 'KOT');
+      } else if (p.categoryIds?.length) {
         const items = this.filterItemsByCategories(order.items, p.categoryIds);
         if (!items.length) continue;
         await this._printToPool([p], this.escpos.formatFilteredKOT(order, items, this.categoryLabel(p.categoryIds)), 'KOT');
-      } else {
-        await this._printToPool([p], this.escpos.formatKOT(order), 'KOT');
       }
+      // customized mode + no categories = skip (prevent duplicate prints)
     }
   }
 
