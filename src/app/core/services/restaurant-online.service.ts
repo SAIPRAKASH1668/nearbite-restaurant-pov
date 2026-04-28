@@ -162,4 +162,30 @@ export class RestaurantOnlineService {
     if (!restaurantId) return of(null);
     return this.http.put(`${API_BASE}/restaurants/${restaurantId}`, { avgPreparationTime });
   }
+
+  // ── Shift Timings ──────────────────────────────────────────────────────────
+
+  /**
+   * Fetch shiftTimings and timezone from the restaurant table.
+   */
+  fetchShiftTimings(): Observable<{ shiftTimings: any[]; timezone: string }> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    if (!restaurantId) return of({ shiftTimings: [], timezone: 'Asia/Kolkata' });
+    return this.http.get<any>(`${API_BASE}/restaurants/${restaurantId}`).pipe(
+      map((res: any) => ({
+        shiftTimings: Array.isArray(res.shiftTimings) ? res.shiftTimings : [],
+        timezone: res.timezone || 'Asia/Kolkata'
+      })),
+      catchError(() => of({ shiftTimings: [], timezone: 'Asia/Kolkata' }))
+    );
+  }
+
+  /**
+   * Persist shiftTimings and timezone to the restaurant table.
+   */
+  updateShiftTimings(shiftTimings: any[], timezone: string): Observable<any> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    if (!restaurantId) return of(null);
+    return this.http.put(`${API_BASE}/restaurants/${restaurantId}`, { shiftTimings, timezone });
+  }
 }

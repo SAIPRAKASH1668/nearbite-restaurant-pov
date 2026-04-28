@@ -69,15 +69,23 @@
               {{ isCategoryFullyAvailable(category) ? 'Available' : 'Paused' }}
             </span>
           </div>
-          <label
-            class="mn-toggle mn-toggle--category"
-            [title]="isCategoryFullyAvailable(category) ? 'Mark this category unavailable' : 'Mark this category available'">
-            <input
-              type="checkbox"
-              [checked]="isCategoryFullyAvailable(category)"
-              (change)="toggleCategoryAvailability(category)" />
-            <span class="mn-track"></span>
-          </label>
+          <div class="mn-cat-av-actions">
+            <button type="button" class="mn-btn-cat-shift"
+              (click)="openCategoryShiftModal(category)"
+              title="Set shift hours for this category">
+              <i class="fas fa-clock"></i>
+              Shift Hours
+            </button>
+            <label
+              class="mn-toggle mn-toggle--category"
+              [title]="isCategoryFullyAvailable(category) ? 'Mark this category unavailable' : 'Mark this category available'">
+              <input
+                type="checkbox"
+                [checked]="isCategoryFullyAvailable(category)"
+                (change)="toggleCategoryAvailability(category)" />
+              <span class="mn-track"></span>
+            </label>
+          </div>
         </div>
       </div>
     </div>
@@ -246,6 +254,51 @@
         <button type="button" class="mn-btn-save" (click)="applyPriceHike()" [disabled]="applyingPriceHike">
           <span *ngIf="!applyingPriceHike">Apply Hike</span>
           <span *ngIf="applyingPriceHike"><i class="fas fa-spinner fa-spin"></i> Applying…</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     Category Shift Modal
+════════════════════════════════════════════════════════════════════════ -->
+<div class="mn-modal-bg" *ngIf="showCategoryShiftModal" (click)="closeCategoryShiftModal()">
+  <div class="mn-modal mn-modal--lg" (click)="$event.stopPropagation()">
+    <div class="mn-modal-accent"></div>
+    <div class="mn-modal-head">
+      <div class="mn-modal-head-left">
+        <span class="mn-modal-icon">
+          <i class="fas fa-clock"></i>
+        </span>
+        <div>
+          <h2 class="mn-modal-title">Shift Hours — {{ selectedCategoryForShifts }}</h2>
+          <p class="mn-modal-subtitle">Set operating time windows for all items in this category</p>
+        </div>
+      </div>
+      <button class="mn-modal-close" (click)="closeCategoryShiftModal()" aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="mn-form">
+      <div class="mn-form-section mn-section-bottom">
+        <app-shift-editor
+          [shifts]="categoryShiftTimings"
+          (shiftsChange)="onCategoryShiftTimingsChange($event)">
+        </app-shift-editor>
+        <p class="mn-field-hint" style="margin-top:0.75rem;">
+          These shift hours will be applied to every item in <strong>{{ selectedCategoryForShifts }}</strong>. Leave empty to let items be available whenever the category is enabled.
+        </p>
+      </div>
+
+      <div class="mn-form-footer">
+        <button type="button" class="mn-btn-cancel" (click)="closeCategoryShiftModal()" [disabled]="savingCategoryShifts">Cancel</button>
+        <button type="button" class="mn-btn-save" (click)="saveCategoryShifts()" [disabled]="savingCategoryShifts">
+          <span *ngIf="!savingCategoryShifts">
+            <i class="fas fa-save" style="margin-right:6px;"></i>Save Shifts
+          </span>
+          <span *ngIf="savingCategoryShifts"><i class="fas fa-spinner fa-spin"></i> Saving…</span>
         </button>
       </div>
     </div>
@@ -479,6 +532,28 @@
               <input type="checkbox" [(ngModel)]="newItem.isAvailable" name="available" />
               <span class="mn-track"></span>
             </label>
+          </div>
+
+          <!-- Item shift editor -->
+          <div class="mn-shift-row">
+            <div class="mn-shift-row-head" (click)="toggleItemShiftEditor()">
+              <div class="mn-avail-text">
+                <span class="mn-avail-title">
+                  <i class="fas fa-clock" style="margin-right:6px;color:#E83A3A"></i>
+                  Shift Hours
+                </span>
+                <span class="mn-avail-desc">Set time windows when this item is available (optional)</span>
+              </div>
+              <span class="mn-shift-chevron" [class.open]="showItemShiftEditor">
+                <i class="fas fa-chevron-down"></i>
+              </span>
+            </div>
+            <div class="mn-shift-editor-wrap" *ngIf="showItemShiftEditor">
+              <app-shift-editor
+                [shifts]="newItem.shiftTimings || []"
+                (shiftsChange)="onItemShiftTimingsChange($event)">
+              </app-shift-editor>
+            </div>
           </div>
         </div>
 

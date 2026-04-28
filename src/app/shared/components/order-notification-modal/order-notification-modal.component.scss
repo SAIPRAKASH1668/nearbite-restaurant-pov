@@ -494,3 +494,162 @@
     flex-direction: column;
   }
 }
+
+
+// --- Prep Time Picker --------------------------------------------------------
+.prep-time-picker {
+  padding: 16px 20px 4px;
+  background: rgba($bg-secondary, 0.6);
+  border-top: 1px solid $border-primary;
+
+  .prep-picker-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: $font-family;
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: $text-primary;
+    margin-bottom: 12px;
+
+    i { color: $primary-orange; font-size: 0.95rem; }
+  }
+
+  .prep-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .prep-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid $border-primary;
+    background: white;
+    font-family: $font-family;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $text-secondary;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      border-color: $primary-orange;
+      color: $primary-orange;
+    }
+
+    &--active {
+      background: $primary-orange;
+      border-color: $primary-orange;
+      color: white;
+    }
+  }
+
+  .prep-custom-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+
+    .prep-custom-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1.5px solid $border-primary;
+      border-radius: 8px;
+      font-family: $font-family;
+      font-size: 0.875rem;
+      color: $text-primary;
+      background: white;
+      outline: none;
+      transition: border-color 0.15s;
+
+      &:focus { border-color: $primary-orange; }
+
+      // hide browser number spinners
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+      -moz-appearance: textfield;
+    }
+
+    .prep-custom-unit {
+      font-family: $font-family;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: $text-secondary;
+    }
+  }
+}
+
+.back-btn {
+  background: white;
+  color: $text-secondary;
+  border: 1.5px solid $border-primary;
+
+  &:hover:not(:disabled) {
+    border-color: $text-secondary;
+    color: $text-primary;
+  }
+}
+
+
+// --- Prep Time Stepper ------------------------------------------------------
+.prep-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 8px 0 16px;
+}
+
+.prep-step-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid $border-primary;
+  background: white;
+  color: $text-secondary;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    border-color: $primary-orange;
+    color: $primary-orange;
+    background: rgba($primary-orange, 0.06);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.prep-value-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 72px;
+
+  .prep-value-num {
+    font-family: $font-family;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: $primary-orange;
+    line-height: 1;
+  }
+
+  .prep-value-unit {
+    font-family: $font-family;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: $text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+}

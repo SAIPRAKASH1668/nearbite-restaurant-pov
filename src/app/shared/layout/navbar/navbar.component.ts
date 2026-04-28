@@ -6,6 +6,7 @@ import { Subscription, filter, distinctUntilChanged } from 'rxjs';
 import { AuthService, User } from '../../../core/auth/auth.service';
 import { RestaurantContextService } from '../../../core/services/restaurant-context.service';
 import { RestaurantOnlineService } from '../../../core/services/restaurant-online.service';
+import { SoundService } from '../../../core/services/sound.service';
 import { environment } from '../../../../environments/environment';
 import { RestaurantStatusToggleComponent } from '../../components/restaurant-status-toggle/restaurant-status-toggle.component';
 
@@ -27,15 +28,21 @@ export class NavbarComponent implements OnInit, OnDestroy {
   isRestaurantOpen: boolean = false;
   currentPageTitle = 'Dashboard';
 
+  isAlarmRinging = false;
+  isAlarmMuted = false;
+
   private onlineSub!: Subscription;
   private navSub!: Subscription;
   private restaurantIdSub!: Subscription;
+  private ringSub!: Subscription;
+  private muteSub!: Subscription;
 
   constructor(
     private authService: AuthService,
     private http: HttpClient,
     private restaurantContext: RestaurantContextService,
     private onlineService: RestaurantOnlineService,
+    private soundService: SoundService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     private elementRef: ElementRef<HTMLElement>
@@ -67,6 +74,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.restaurantIdSub = this.restaurantContext.restaurantId$
       .pipe(distinctUntilChanged(), filter(id => !!id))
       .subscribe(() => this.fetchRestaurantName());
+
+    this.ringSub = this.soundService.ringing$.subscribe(ringing => {
+      this.isAlarmRinging = ringing;
+      this.cdr.markForCheck();
+    });
+    this.muteSub = this.soundService.muted$.subscribe(muted => {
+      this.isAlarmMuted = muted;
+      this.cdr.markForCheck();
+    });
   }
 
   fetchRestaurantName(): void {
@@ -149,9 +165,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
     });
   }
 
+  muteAlarm(): void {
+    this.soundService.muteAlarm();
+  }
+
   ngOnDestroy(): void {
     this.onlineSub?.unsubscribe();
     this.navSub?.unsubscribe();
     this.restaurantIdSub?.unsubscribe();
+    this.ringSub?.unsubscribe();
+    this.muteSub?.unsubscribe();
   }
 }

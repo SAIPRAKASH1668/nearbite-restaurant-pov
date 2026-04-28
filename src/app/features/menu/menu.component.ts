@@ -7,12 +7,14 @@ import { RestaurantContextService } from '../../core/services/restaurant-context
 import { NotificationService } from '../../shared/components/notification/notification.service';
 import { ConfigService } from '../../core/services/config.service';
 import { FoodCategoryService } from '../../core/services/food-category.service';
+import { ShiftEditorComponent } from '../../shared/components/shift-editor/shift-editor.component';
+import { ShiftSchedule } from '../../core/models/shift.model';
 import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-menu',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ShiftEditorComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
@@ -32,6 +34,15 @@ export class MenuComponent implements OnInit, OnDestroy {
   showPriceHikeModal = false;
   priceHikePercentage: number | null = null;
   applyingPriceHike = false;
+
+  // ── Category Shift state ──────────────────────────────────────────────────
+  showCategoryShiftModal = false;
+  selectedCategoryForShifts: string | null = null;
+  categoryShiftTimings: ShiftSchedule[] = [];
+  savingCategoryShifts = false;
+
+  // ── Item-level shift editor state ─────────────────────────────────────────
+  showItemShiftEditor = false;
 
   // ── Add-on options state ──────────────────────────────────────────────────
   /** Working copy of addon options for the open form */
@@ -60,7 +71,7 @@ export class MenuComponent implements OnInit, OnDestroy {
     );
   }
 
-  newItem: Partial<MenuItem> = {
+  newItem: Partial<MenuItem> & { shiftTimings?: ShiftSchedule[] } = {
     itemName: '',
     category: '',
     subCategory: '',
@@ -70,7 +81,8 @@ export class MenuComponent implements OnInit, OnDestroy {
     description: '',
     isVeg: true,
     image: [],
-    addOnOptions: []
+    addOnOptions: [],
+    shiftTimings: []
   };
 
   /** Customer-facing display price computed from restaurantPrice + hikePercentage (nearest 0.5). */
@@ -265,6 +277,53 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.priceHikePercentage = null;
   }
 
+  // ── Category Shift methods ────────────────────────────────────────────────
+  openCategoryShiftModal(category: string): void {
+    this.selectedCategoryForShifts = category;
+    // Pre-populate with any shifts from the first item in the category
+    const firstItem = this.menuItems.find(i => i.category.toLowerCase() === category.toLowerCase());
+    this.categoryShiftTimings = firstItem?.shiftTimings ? [...firstItem.shiftTimings] : [];
+    this.showCategoryShiftModal = true;
+  }
+
+  closeCategoryShiftModal(): void {
+    this.showCategoryShiftModal = false;
+    this.selectedCategoryForShifts = null;
+    this.categoryShiftTimings = [];
+  }
+
+  onCategoryShiftTimingsChange(shifts: ShiftSchedule[]): void {
+    this.categoryShiftTimings = shifts;
+  }
+
+  saveCategoryShifts(): void {
+    if (!this.selectedCategoryForShifts) return;
+    this.savingCategoryShifts = true;
+    this.menuService.bulkCategoryShiftTimings(this.selectedCategoryForShifts, this.categoryShiftTimings).subscribe({
+      next: (res) => {
+        this.notificationService.success(`Shift hours applied to ${this.selectedCategoryForShifts}`);
+        this.closeCategoryShiftModal();
+        this.savingCategoryShifts = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('❌ Error saving category shifts:', err);
+        this.notificationService.error('Failed to save category shifts');
+        this.savingCategoryShifts = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // ── Item shift methods ────────────────────────────────────────────────────
+  onItemShiftTimingsChange(shifts: ShiftSchedule[]): void {
+    this.newItem.shiftTimings = shifts;
+  }
+
+  toggleItemShiftEditor(): void {
+    this.showItemShiftEditor = !this.showItemShiftEditor;
+  }
+
   applyPriceHike(): void {
     const pct = this.priceHikePercentage;
     if (pct === null || pct === undefined || isNaN(pct) || pct <= 0) {
@@ -307,10 +366,13 @@ export class MenuComponent implements OnInit, OnDestroy {
       description: item.description,
       isVeg: item.isVeg,
       image: item.image,
-      addOnOptions: item.addOnOptions ? [...item.addOnOptions] : []
+      addOnOptions: item.addOnOptions ? [...item.addOnOptions] : [],
+      shiftTimings: item.shiftTimings ? [...item.shiftTimings] : []
     };
     // Mirror addon options into the working array
     this.addonOptions = this.newItem.addOnOptions ? [...this.newItem.addOnOptions] : [];
+    // Pre-populate shift editor state
+    this.showItemShiftEditor = !!(item.shiftTimings && item.shiftTimings.length > 0);
     // Clear any pending uploads from a previous open
     this.pendingImageFiles = [];
     this.pendingImagePreviews = [];
@@ -347,9 +409,11 @@ export class MenuComponent implements OnInit, OnDestroy {
       description: '',
       isVeg: true,
       image: [],
-      addOnOptions: []
+      addOnOptions: [],
+      shiftTimings: []
     };
     this.addonOptions = [];
+    this.showItemShiftEditor = false;
     this.pendingImageFiles = [];
     this.pendingImagePreviews = [];
   }

@@ -1679,3 +1679,187 @@
     min-height: 44px;
   }
 }
+
+// ─── Prep Time Modal ─────────────────────────────────────────────────────────
+.ord-prep-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.18s ease-out;
+}
+
+.ord-prep-modal {
+  background: v.$bg-primary;
+  border-radius: 16px;
+  padding: 24px;
+  width: min(400px, calc(100% - 40px));
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  animation: slideUp 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+
+  .ord-prep-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: v.$font-family;
+    font-size: 1rem;
+    font-weight: 700;
+    color: v.$text-primary;
+    margin-bottom: 4px;
+
+    i { color: v.$primary-orange; font-size: 1.05rem; }
+  }
+
+  .ord-prep-sub {
+    font-family: v.$font-family;
+    font-size: 0.8125rem;
+    color: v.$text-secondary;
+    margin: 0 0 16px;
+  }
+
+  .ord-prep-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .ord-prep-chip {
+    padding: 8px 16px;
+    border-radius: 22px;
+    border: 1.5px solid #D4CBB8;
+    background: white;
+    font-family: v.$font-family;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: v.$text-secondary;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      border-color: v.$primary-orange;
+      color: v.$primary-orange;
+    }
+
+    &--active {
+      background: v.$primary-orange;
+      border-color: v.$primary-orange;
+      color: white;
+    }
+  }
+
+  .ord-prep-custom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+
+    .ord-prep-custom-input {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1.5px solid #D4CBB8;
+      border-radius: 8px;
+      font-family: v.$font-family;
+      font-size: 0.875rem;
+      color: v.$text-primary;
+      background: white;
+      outline: none;
+      transition: border-color 0.15s;
+
+      &:focus { border-color: v.$primary-orange; }
+
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+      -moz-appearance: textfield;
+    }
+
+    .ord-prep-custom-unit {
+      font-family: v.$font-family;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: v.$text-secondary;
+    }
+  }
+
+  .ord-prep-actions {
+    display: flex;
+    gap: 10px;
+
+    .ord-btn { flex: 1; justify-content: center; }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+
+// ─── Prep Time Stepper (inside ord-prep-modal) ───────────────────────────────
+.ord-prep-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px 0 20px;
+}
+
+.ord-prep-step-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid #D4CBB8;
+  background: white;
+  color: v.$text-secondary;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    border-color: v.$primary-orange;
+    color: v.$primary-orange;
+    background: rgba(232, 58, 58, 0.06);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.ord-prep-value-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+
+  .ord-prep-value-num {
+    font-family: v.$font-family;
+    font-size: 2.75rem;
+    font-weight: 800;
+    color: v.$primary-orange;
+    line-height: 1;
+  }
+
+  .ord-prep-value-unit {
+    font-family: v.$font-family;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: v.$text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+}

@@ -1,0 +1,254 @@
+
+
+@use '../../../../styles/variables' as v;
+@use '../../../../styles/_mixins.scss' as *;
+
+.se-input-label {
+  min-width: 0;
+  width: 100%;
+  font-size: 0.92rem;
+  color: v.$text-primary;
+  background: #fff;
+  border: 1px solid #E8E5E2;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 4px;
+  box-sizing: border-box;
+  @include mobile { font-size: 1rem; }
+}
+
+.se-root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.se-empty {
+  font-size: 0.82rem;
+  color: v.$text-muted;
+  font-style: italic;
+  margin: 0;
+}
+
+// ── Schedule group ────────────────────────────────────────────────────────────
+.se-schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.se-schedule {
+  border: 1.5px solid #E8DFC8;
+  border-radius: 10px;
+  padding: 14px 16px 12px;
+  background: v.$bg-secondary;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// ── Day selector ──────────────────────────────────────────────────────────────
+.se-schedule-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.se-days-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.se-days-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: v.$text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.se-days-row {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.se-day-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid #D4CBB8;
+  background: white;
+  color: v.$text-secondary;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  font-family: v.$font-family;
+
+  &.active {
+    background: v.$primary-orange;
+    border-color: v.$primary-orange;
+    color: white;
+  }
+
+  &:hover:not(.active) {
+    border-color: v.$primary-orange;
+    color: v.$primary-orange;
+  }
+}
+
+.se-days-hint {
+  font-size: 0.72rem;
+  color: v.$text-muted;
+  font-style: italic;
+}
+
+.se-remove-schedule {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: v.$text-muted;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+
+  &:hover {
+    color: v.$primary-orange;
+    background: rgba(232, 58, 58, 0.07);
+  }
+}
+
+// ── Time rows ─────────────────────────────────────────────────────────────────
+.se-col-headers {
+  display: grid;
+  grid-template-columns: 1fr 100px 12px 100px 28px;
+  gap: 6px;
+  padding: 0 2px;
+  align-items: center;
+}
+
+.se-col-lbl,
+.se-col-time,
+.se-col-sep,
+.se-col-del {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: v.$text-muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.se-shift-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.se-shift-row {
+  display: grid;
+  grid-template-columns: 1fr 100px 12px 100px 28px;
+  gap: 6px;
+  align-items: center;
+}
+
+.se-input {
+  font-family: v.$font-family;
+  font-size: 0.85rem;
+  border: 1.5px solid #D4CBB8;
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: white;
+  color: v.$text-primary;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: v.$primary-orange;
+  }
+
+  &::placeholder {
+    color: v.$text-muted;
+  }
+}
+
+.se-input-time {
+  padding: 7px 6px;
+}
+
+.se-sep {
+  text-align: center;
+  color: v.$text-muted;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.se-remove-shift {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: v.$text-muted;
+  padding: 4px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+
+  &:hover {
+    color: v.$primary-orange;
+  }
+}
+
+// ── Add buttons ───────────────────────────────────────────────────────────────
+.se-add-shift {
+  background: none;
+  border: 1.5px dashed #C8BFA8;
+  border-radius: 7px;
+  color: v.$text-secondary;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: v.$font-family;
+  cursor: pointer;
+  padding: 7px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color 0.15s, color 0.15s;
+  align-self: flex-start;
+
+  &:hover {
+    border-color: v.$primary-orange;
+    color: v.$primary-orange;
+  }
+}
+
+.se-add-schedule {
+  background: none;
+  border: 1.5px dashed #C8BFA8;
+  border-radius: 9px;
+  color: v.$text-secondary;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: v.$font-family;
+  cursor: pointer;
+  padding: 9px 16px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: border-color 0.15s, color 0.15s;
+  align-self: flex-start;
+
+  &:hover {
+    border-color: v.$primary-orange;
+    color: v.$primary-orange;
+  }
+}

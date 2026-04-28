@@ -140,6 +140,59 @@
   }
 }
 
+// ── Bell alarm indicator ──────────────────────────────────────────────────────
+@keyframes bell-ring {
+  0%, 100% { transform: rotate(0deg);    }
+  10%       { transform: rotate(-18deg); }
+  20%       { transform: rotate(18deg);  }
+  30%       { transform: rotate(-14deg); }
+  40%       { transform: rotate(14deg);  }
+  50%       { transform: rotate(-10deg); }
+  60%       { transform: rotate(10deg);  }
+  70%       { transform: rotate(-6deg);  }
+  80%       { transform: rotate(6deg);   }
+}
+
+.bell-alarm-btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-md;
+  border: 2px solid $primary-orange;
+  background: rgba(232, 58, 58, 0.08);
+  color: $primary-orange;
+  font-size: 1.1rem;
+  cursor: pointer;
+  @include flex-center;
+  flex-shrink: 0;
+  transition: background $transition-fast, border-color $transition-fast, color $transition-fast;
+
+  i {
+    animation: bell-ring 0.9s ease-in-out infinite;
+    transform-origin: top center;
+  }
+
+  &:hover {
+    background: rgba(232, 58, 58, 0.16);
+  }
+
+  // Muted state — grey, no animation
+  &--muted {
+    border-color: $border-primary;
+    background: $bg-tertiary;
+    color: $text-muted;
+
+    i {
+      animation: none;
+    }
+
+    &:hover {
+      background: $bg-tertiary;
+      border-color: $text-muted;
+    }
+  }
+}
+
 .user-menu {
   position: relative;
   display: flex;

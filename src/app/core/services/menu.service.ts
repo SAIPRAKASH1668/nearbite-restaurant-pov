@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { RestaurantContextService } from './restaurant-context.service';
 import { environment } from '../../../environments/environment';
+import { ShiftSchedule } from '../models/shift.model';
 
 export interface AddOnOption {
   optionId: string;
@@ -28,6 +29,11 @@ export interface MenuItem {
   description: string;
   image: string[];
   addOnOptions?: AddOnOption[];
+  shiftTimings?: ShiftSchedule[];
+  // Server-computed availability fields
+  shiftAvailable?: boolean;
+  effectivelyAvailable?: boolean;
+  nextAvailableAt?: string | null;
 }
 
 export interface MenuResponse {
@@ -125,7 +131,8 @@ export class MenuService {
         isAvailable: itemData.isAvailable,
         description: itemData.description,
         image: itemData.image,
-        addOnOptions: itemData.addOnOptions ?? []
+        addOnOptions: itemData.addOnOptions ?? [],
+        shiftTimings: itemData.shiftTimings ?? []
       }
     ).pipe(
       catchError(error => {
@@ -152,7 +159,8 @@ export class MenuService {
         isAvailable: itemData.isAvailable,
         description: itemData.description,
         image: itemData.image,
-        addOnOptions: itemData.addOnOptions ?? []
+        addOnOptions: itemData.addOnOptions ?? [],
+        shiftTimings: itemData.shiftTimings ?? []
       }
     ).pipe(
       tap(() => {
@@ -164,8 +172,21 @@ export class MenuService {
     );
   }
 
-  /**
-   * Apply a bulk price hike (%) to all menu items of this restaurant.
+  /**   * Apply shift timings to all items in a category in bulk.
+   * Pass shiftTimings: [] to clear restrictions for the category.
+   */
+  bulkCategoryShiftTimings(category: string, shiftTimings: ShiftSchedule[]): Observable<any> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    return this.http.post(
+      `${this.API_BASE_URL}/restaurants/${restaurantId}/menu/category-shifts`,
+      { category, shiftTimings }
+    ).pipe(
+      tap(() => { this.fetchMenuItems(); }),
+      catchError(error => { throw error; })
+    );
+  }
+
+  /**   * Apply bulk price hike (%) to all menu items of this restaurant.
    */
   bulkPriceHike(percentage: number): Observable<{ restaurantId: string; percentage: number; updatedCount: number; items: any[] }> {
     const restaurantId = this.restaurantContext.getRestaurantId();
@@ -200,7 +221,8 @@ export class MenuService {
         isAvailable: itemData.isAvailable,
         description: itemData.description,
         image: itemData.image,
-        addOnOptions: itemData.addOnOptions ?? []
+        addOnOptions: itemData.addOnOptions ?? [],
+        shiftTimings: itemData.shiftTimings ?? []
       }
     ).pipe(
       tap(() => {

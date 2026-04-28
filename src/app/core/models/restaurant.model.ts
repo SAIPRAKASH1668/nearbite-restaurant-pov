@@ -1,3 +1,5 @@
+import { ShiftSchedule } from './shift.model';
+
 /**
  * Restaurant Model - Synced with AWS Restaurant model
  * Location-based restaurant model with geohash indexing
@@ -27,6 +29,10 @@ export interface Restaurant {
   
   // Operational status
   isOpen: boolean;
+
+  // Shift timings (optional — if absent, isOpen is the only gate)
+  timezone?: string;           // IANA e.g. "Asia/Kolkata"
+  shiftTimings?: ShiftSchedule[];
 
   // Operating hours (HH:mm 24-hour format, e.g. "09:00")
   opensAt?: string;   // Opening time — when the restaurant starts accepting orders

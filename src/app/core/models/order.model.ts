@@ -51,6 +51,7 @@ export enum OrderStatus {
 export interface Order {
   orderId: string;
   customerPhone: string;
+  receiverPhone?: string;
   restaurantId: string;
   items: OrderItem[];
   foodTotal: number;
@@ -67,6 +68,7 @@ export interface Order {
   addressId: string;
   cancellationReason?: string;
   acceptedAt?: string;
+  preparationTime?: number; // minutes, set by restaurant when accepting
   pickupOtp?: string; // 4-digit OTP for restaurant to verify with rider during pickup
   deliveryOtp?: string; // 4-digit OTP for customer to verify with rider during delivery
   /** Revenue breakdown — present once the order has been processed by the revenue calculator */
@@ -81,6 +83,7 @@ export interface OrdersResponse {
 export interface UpdateOrderStatusRequest {
   status: OrderStatus;
   cancellationReason?: string;
+  preparationTime?: number; // minutes
 }
 
 export interface UpdateOrderStatusResponse extends Order {}

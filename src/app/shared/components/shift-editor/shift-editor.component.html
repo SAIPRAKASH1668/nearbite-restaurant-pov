@@ -1,0 +1,94 @@
+<div class="se-root">
+
+  <!-- Empty state -->
+  <p class="se-empty" *ngIf="shifts.length === 0">
+    No shifts set &mdash; {{ emptyLabel }}
+  </p>
+
+  <!-- Schedule groups -->
+  <div class="se-schedule-list">
+    <div class="se-schedule" *ngFor="let schedule of shifts; let si = index; trackBy: trackByIndex">
+
+      <!-- Day selector row -->
+      <div class="se-schedule-head">
+        <div class="se-days-wrap">
+          <span class="se-days-label">Days</span>
+          <div class="se-days-row">
+            <button
+              *ngFor="let day of allDays"
+              type="button"
+              class="se-day-btn"
+              [class.active]="isDaySelected(si, day)"
+              (click)="toggleDay(si, day)">
+              {{ dayLabels[day] }}
+            </button>
+          </div>
+          <span class="se-days-hint" *ngIf="!schedule.days?.length">(all days)</span>
+        </div>
+        <button type="button" class="se-remove-schedule" (click)="removeSchedule(si)" title="Remove this day group">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Shift time windows -->
+      <div class="se-shift-rows">
+        <div class="se-col-headers">
+          <span class="se-col-lbl">Label</span>
+          <span class="se-col-time">Start</span>
+          <span class="se-col-sep"></span>
+          <span class="se-col-time">End</span>
+          <span class="se-col-del"></span>
+        </div>
+        <div class="se-shift-row" *ngFor="let shift of schedule.shifts; let ki = index; trackBy: trackByIndex">
+          <input
+            type="text"
+            class="se-input se-input-label"
+            [(ngModel)]="shift.label"
+            [name]="'se_lbl_' + si + '_' + ki"
+            placeholder="e.g. Lunch"
+            maxlength="30"
+            (ngModelChange)="onFieldChange()" />
+          <input
+            type="time"
+            class="se-input se-input-time"
+            [(ngModel)]="shift.start"
+            [name]="'se_start_' + si + '_' + ki"
+            (ngModelChange)="onFieldChange()" />
+          <span class="se-sep">&ndash;</span>
+          <input
+            type="time"
+            class="se-input se-input-time"
+            [(ngModel)]="shift.end"
+            [name]="'se_end_' + si + '_' + ki"
+            (ngModelChange)="onFieldChange()" />
+          <button
+            type="button"
+            class="se-remove-shift"
+            (click)="removeShift(si, ki)"
+            title="Remove this time window">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="se-add-shift" (click)="addShift(si)">
+        <svg width="10" height="10" viewBox="0 0 13 13" fill="none">
+          <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Add time window
+      </button>
+    </div>
+  </div>
+
+  <button type="button" class="se-add-schedule" (click)="addSchedule()">
+    <svg width="12" height="12" viewBox="0 0 13 13" fill="none">
+      <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    Add day group
+  </button>
+
+</div>

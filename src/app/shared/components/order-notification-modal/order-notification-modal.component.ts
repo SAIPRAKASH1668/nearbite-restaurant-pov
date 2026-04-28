@@ -46,6 +46,9 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
   currentOrder: IncomingOrder | null = null;
   showModal = false;
   isProcessing = false;
+  showPrepTimePicker = false;
+  prepTime = 6;
+  prepTimeOptions = [5, 10, 15, 20, 30, 45];
   private subscription?: Subscription;
   private orderQueue: IncomingOrder[] = [];
 
@@ -100,14 +103,37 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Accept the order — update status, print KOT + Bill, then dismiss
+   * Accept the order — show prep time picker first
    */
-  acceptOrder(): void {
+  initiateAccept(): void {
     if (!this.currentOrder || this.isProcessing) return;
-    
+    this.prepTime = 6;
+    this.showPrepTimePicker = true;
+  }
+
+  incrementPrepTime(): void {
+    if (this.prepTime < 120) this.prepTime++;
+  }
+
+  decrementPrepTime(): void {
+    if (this.prepTime > 1) this.prepTime--;
+  }
+
+  getEffectivePrepTime(): number {
+    return this.prepTime;
+  }
+
+  /**
+   * Confirm accept with chosen prep time — update status, print KOT + Bill, then dismiss
+   */
+  confirmAccept(): void {
+    if (!this.currentOrder || this.isProcessing) return;
+    const prepTime = this.getEffectivePrepTime();
+    if (!prepTime) return;
+
     this.isProcessing = true;
     const orderId = this.currentOrder.orderId;
-    console.log('✅ Order accepted:', orderId);
+    console.log('✅ Order accepted:', orderId, 'prepTime:', prepTime);
     
     this.soundService.stopAlarm();
 
@@ -119,8 +145,8 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Update order status to PREPARING
-    this.orderService.updateOrderStatus(orderId, OrderStatus.PREPARING).subscribe({
+    // Update order status to PREPARING with prep time
+    this.orderService.updateOrderStatus(orderId, OrderStatus.PREPARING, { preparationTime: prepTime }).subscribe({
       next: () => {
         this.notificationService.notifyOrderAccepted(orderId);
         this.orderService.fetchOrders();
@@ -134,7 +160,7 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
     // Remove from queue and show next
     this.orderQueue.shift();
     
-    // Close modal after short delay
+    // Close modal/picker after short delay
     setTimeout(() => {
       this.closeModal();
       
@@ -205,9 +231,11 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
    */
   closeModal(): void {
     this.showModal = false;
+    this.showPrepTimePicker = false;
     setTimeout(() => {
       this.currentOrder = null;
       this.isProcessing = false;
+      this.prepTime = 6;
     }, 300);
   }
 

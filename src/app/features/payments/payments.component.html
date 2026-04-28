@@ -135,28 +135,8 @@
       </div>
     </div>
 
-    <!-- Action Buttons -->
-    <div class="actions-row">
-      <div class="action-note" *ngIf="!settled">
-        <i class="fas fa-info-circle"></i>
-        Clicking <strong>Confirm &amp; Download</strong> will mark these
-        {{ preview.totalOrders }} orders as settled and generate your XLSX report.
-      </div>
-      <div class="action-note success" *ngIf="settled">
-        <i class="fas fa-check-circle"></i>
-        Settlement <strong>{{ settlementId }}</strong> confirmed.
-        Your report has been downloaded.
-      </div>
 
-      <button
-        class="btn-confirm"
-        (click)="confirmAndDownload()"
-        [disabled]="confirming || settled"
-      >
-        <i class="fas" [ngClass]="confirming ? 'fa-spinner fa-spin' : (settled ? 'fa-check' : 'fa-file-excel')"></i>
-        {{ confirming ? 'Processing…' : settled ? 'Settled' : 'Confirm & Download Report' }}
-      </button>
-    </div>
+    <!-- No settlement actions: view-only mode for restaurants -->
 
   </ng-container>
 

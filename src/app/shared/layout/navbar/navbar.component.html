@@ -17,6 +17,18 @@
 
     <!-- Right Section -->
     <div class="navbar-actions">
+
+      <!-- Bell alarm indicator — visible only when an order is ringing/muted -->
+      <button
+        *ngIf="isAlarmRinging"
+        class="bell-alarm-btn"
+        [class.bell-alarm-btn--muted]="isAlarmMuted"
+        (click)="muteAlarm()"
+        [title]="isAlarmMuted ? 'Sound muted for this session' : 'Mute alarm'"
+        aria-label="Mute order alarm">
+        <i class="fas" [class.fa-bell]="!isAlarmMuted" [class.fa-bell-slash]="isAlarmMuted"></i>
+      </button>
+
       <!-- Restaurant Status Toggle -->
       <app-restaurant-status-toggle
         [isOpen]="isRestaurantOpen"

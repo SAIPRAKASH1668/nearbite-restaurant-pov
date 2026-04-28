@@ -54,6 +54,12 @@ export class OrdersComponent implements OnInit, OnDestroy {
   // Rejection modal state
   showRejectionModal = false;
   selectedOrderForRejection: Order | null = null;
+
+  // Prep time modal state
+  showPrepTimeModal = false;
+  orderPendingAccept: Order | null = null;
+  prepTime = 6;
+  prepTimeOptions = [5, 10, 15, 20, 30, 45];
   
   // Status enum for template
   OrderStatus = OrderStatus;
@@ -280,12 +286,38 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Accept order (CONFIRMED → PREPARING, backend starts 5-min timer for rider notification)
+   * Initiate accept — open prep time picker modal
    */
-  acceptOrder(order: Order): void {
+  initiateAccept(order: Order): void {
+    this.orderPendingAccept = order;
+    this.prepTime = 6;
+    this.showPrepTimeModal = true;
+  }
+
+  incrementPrepTime(): void {
+    if (this.prepTime < 120) this.prepTime++;
+  }
+
+  decrementPrepTime(): void {
+    if (this.prepTime > 1) this.prepTime--;
+  }
+
+  getEffectivePrepTime(): number {
+    return this.prepTime;
+  }
+
+  /**
+   * Confirm accept with chosen prep time
+   */
+  confirmAccept(): void {
+    const order = this.orderPendingAccept;
+    const prepTime = this.getEffectivePrepTime();
+    if (!order || !prepTime) return;
+    this.showPrepTimeModal = false;
+    this.orderPendingAccept = null;
     this.soundService.stopAlarm();
-    this.printerService.printOrderAccepted(order);   // auto-print KOT + Bill
-    this.orderService.updateOrderStatus(order.orderId, OrderStatus.PREPARING).subscribe({
+    this.printerService.printOrderAccepted(order);
+    this.orderService.updateOrderStatus(order.orderId, OrderStatus.PREPARING, { preparationTime: prepTime }).subscribe({
       next: () => {
         this.orderNotificationService.notifyOrderAccepted(order.orderId);
         this.orderService.fetchOrders();
@@ -294,6 +326,12 @@ export class OrdersComponent implements OnInit, OnDestroy {
         alert('Failed to accept order. Please try again.');
       }
     });
+  }
+
+  cancelPrepTimeModal(): void {
+    this.showPrepTimeModal = false;
+    this.orderPendingAccept = null;
+    this.prepTime = 6;
   }
 
   /**

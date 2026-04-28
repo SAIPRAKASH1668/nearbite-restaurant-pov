@@ -9,6 +9,8 @@ import { RestaurantContextService } from '../../core/services/restaurant-context
 import { RestaurantOnlineService } from '../../core/services/restaurant-online.service';
 import { PushNotificationService } from '../../core/services/push-notification.service';
 import { NotificationService } from '../../shared/components/notification/notification.service';
+import { ShiftEditorComponent } from '../../shared/components/shift-editor/shift-editor.component';
+import { ShiftSchedule } from '../../core/models/shift.model';
 
 interface PendingFile {
   file: File;
@@ -19,7 +21,7 @@ interface PendingFile {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ShiftEditorComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss'
 })
@@ -58,7 +60,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
   prepTimeLoaded = false;
   readonly minPrepTime = 5;
   readonly maxPrepTime = 120;
-
+  // ── Shift Timings ───────────────────────────────────────────────────
+  shiftTimings: ShiftSchedule[] = [];
+  _savedShiftTimings: ShiftSchedule[] = [];
+  timezone: string = 'Asia/Kolkata';
+  _savedTimezone: string = 'Asia/Kolkata';
+  savingShifts = false;
+  shiftsLoaded = false;
   // ── In-flight subscription tracking ────────────────────────────────────────
   private galleryLoadSub?: Subscription;
 
@@ -85,6 +93,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.loadGallery();
     this.loadOperatingHours();
     this.loadAvgPreparationTime();
+    this.loadShiftTimings();
     this.checkNotificationDisplacement();
   }
 
@@ -217,6 +226,53 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   resetAvgPreparationTime(): void {
     this.avgPreparationTime = this._savedAvgPreparationTime;
+  }
+
+  // ── Shift Timings ─────────────────────────────────────────────────────
+
+  get shiftsUnsaved(): boolean {
+    return JSON.stringify(this.shiftTimings) !== JSON.stringify(this._savedShiftTimings)
+        || this.timezone !== this._savedTimezone;
+  }
+
+  loadShiftTimings(): void {
+    this.shiftsLoaded = false;
+    this.restaurantOnlineService.fetchShiftTimings().subscribe({
+      next: ({ shiftTimings, timezone }) => {
+        this.shiftTimings = shiftTimings;
+        this._savedShiftTimings = JSON.parse(JSON.stringify(shiftTimings));
+        this.timezone = timezone || 'Asia/Kolkata';
+        this._savedTimezone = this.timezone;
+        this.shiftsLoaded = true;
+        this.cdr.markForCheck();
+      },
+      error: () => { this.shiftsLoaded = true; this.cdr.markForCheck(); }
+    });
+  }
+
+  onShiftsChange(shifts: ShiftSchedule[]): void {
+    this.shiftTimings = shifts;
+  }
+
+  saveShiftTimings(): void {
+    if (this.savingShifts) return;
+    this.savingShifts = true;
+    this.restaurantOnlineService
+      .updateShiftTimings(this.shiftTimings, this.timezone)
+      .pipe(finalize(() => { this.savingShifts = false; this.cdr.markForCheck(); }))
+      .subscribe({
+        next: () => {
+          this._savedShiftTimings = JSON.parse(JSON.stringify(this.shiftTimings));
+          this._savedTimezone = this.timezone;
+          this.notificationService.success('Shift timings saved successfully');
+        },
+        error: () => this.notificationService.error('Failed to save shift timings. Please try again.')
+      });
+  }
+
+  resetShiftTimings(): void {
+    this.shiftTimings = JSON.parse(JSON.stringify(this._savedShiftTimings));
+    this.timezone = this._savedTimezone;
   }
 
   private normalizePrepTime(value: number): number {

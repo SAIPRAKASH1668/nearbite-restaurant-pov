@@ -72,7 +72,7 @@
         </div>
         <div class="ord-meta">
           <span class="ord-phone">
-            <i class="fas fa-phone"></i>{{ order.customerPhone }}
+            <i class="fas fa-phone"></i>{{ order.receiverPhone || order.customerPhone }}
           </span>
           <span class="ord-time">
             <i class="fas fa-clock"></i>{{ getRelativeTime(order.createdAt) }}
@@ -142,7 +142,7 @@
           <button
             *ngIf="order.status === OrderStatus.CONFIRMED"
             class="ord-btn ord-btn-accept"
-            (click)="acceptOrder(order); $event.stopPropagation()">
+            (click)="initiateAccept(order); $event.stopPropagation()">
             <i class="fas fa-check"></i> Accept
           </button>
           <button
@@ -251,7 +251,7 @@
         <div class="ord-modal-meta-cell">
           <span class="ord-modal-meta-lbl">Customer</span>
           <span class="ord-modal-meta-val">
-            <i class="fas fa-phone"></i> {{ expandedOrder.customerPhone }}
+            <i class="fas fa-phone"></i> {{ expandedOrder.receiverPhone || expandedOrder.customerPhone }}
           </span>
         </div>
         <div class="ord-modal-meta-divider" *ngIf="expandedOrder.riderId"></div>
@@ -395,7 +395,7 @@
         <button
           *ngIf="expandedOrder.status === OrderStatus.CONFIRMED"
           class="ord-btn ord-btn-accept ord-modal-act-btn primary"
-          (click)="acceptOrder(expandedOrder); closeExpandedOrder()">
+          (click)="initiateAccept(expandedOrder); closeExpandedOrder()">
           <i class="fas fa-check-circle"></i> Accept Order
         </button>
         <button
@@ -427,3 +427,45 @@
   (reject)="onRejectConfirm($event)"
   (cancel)="onRejectCancel()"
 ></app-order-rejection-modal>
+
+<!-- ── Prep Time Modal ────────────────────────────────────────────────────── -->
+<div class="ord-prep-bg" *ngIf="showPrepTimeModal" (click)="cancelPrepTimeModal()">
+  <div class="ord-prep-modal" (click)="$event.stopPropagation()">
+    <div class="ord-prep-header">
+      <i class="fas fa-clock"></i>
+      <span>Set Preparation Time</span>
+    </div>
+    <p class="ord-prep-sub">How long will this order take?</p>
+    <div class="ord-prep-chips">
+      <button
+        *ngFor="let opt of prepTimeOptions"
+        class="ord-prep-chip"
+        [class.active]="prepTime === opt"
+        (click)="prepTime = opt">
+        {{ opt }} min
+      </button>
+    </div>
+    <div class="ord-prep-stepper">
+      <button class="ord-prep-step-btn" (click)="decrementPrepTime()" [disabled]="prepTime <= 1">
+        <i class="fas fa-minus"></i>
+      </button>
+      <div class="ord-prep-value-box">
+        <span class="ord-prep-value-num">{{ prepTime }}</span>
+        <span class="ord-prep-value-unit">min</span>
+      </div>
+      <button class="ord-prep-step-btn" (click)="incrementPrepTime()" [disabled]="prepTime >= 120">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+    <div class="ord-prep-actions">
+      <button class="ord-btn ord-btn-reject" (click)="cancelPrepTimeModal()">
+        Cancel
+      </button>
+      <button
+        class="ord-btn ord-btn-accept"
+        (click)="confirmAccept()">
+        <i class="fas fa-check"></i> Confirm Accept
+      </button>
+    </div>
+  </div>
+</div>

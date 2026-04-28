@@ -419,9 +419,85 @@
     </ng-container>
   </div>
 
+  <!-- ── Shift Timings Card _________________________________________________ -->
+  <div class="st-card st-hours-card">
+
+    <div class="st-card-head">
+      <div class="st-card-head-info">
+        <div class="st-card-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="st-card-title">Operating Shifts</h2>
+          <p class="st-card-desc">Define when your restaurant accepts orders by time of day. If no shifts are set, your restaurant is open whenever the main toggle is on.</p>
+        </div>
+      </div>
+      <span class="st-unsaved-pill" *ngIf="shiftsUnsaved && shiftsLoaded">Unsaved changes</span>
+    </div>
+
+    <div class="st-hours-skeleton" *ngIf="!shiftsLoaded">
+      <div class="st-skeleton-bar"></div>
+      <span>Loading shifts...</span>
+    </div>
+
+    <ng-container *ngIf="shiftsLoaded">
+
+      <!-- Timezone row -->
+      <div class="st-hours-grid" style="margin-bottom: 16px;">
+        <div class="st-hours-field" style="grid-column: 1 / -1;">
+          <label class="st-hours-label">
+            <span class="st-hours-dot st-hours-dot--open"></span>
+            Timezone
+          </label>
+          <select
+            class="st-timezone-select"
+            [(ngModel)]="timezone"
+            name="timezone"
+            [disabled]="savingShifts">
+            <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+            <option value="Asia/Dubai">Asia/Dubai (GST)</option>
+            <option value="Asia/Singapore">Asia/Singapore (SGT)</option>
+            <option value="UTC">UTC</option>
+          </select>
+          <p class="st-hours-hint">All shift times are in this timezone</p>
+        </div>
+      </div>
+
+      <!-- Shift editor -->
+      <app-shift-editor
+        [shifts]="shiftTimings"
+        emptyLabel="restaurant is open whenever the 'Open' toggle is on"
+        (shiftsChange)="onShiftsChange($event)">
+      </app-shift-editor>
+
+      <div class="st-hours-actions">
+        <button
+          class="st-btn-save-hours"
+          [class.saving]="savingShifts"
+          [disabled]="savingShifts"
+          (click)="saveShiftTimings()">
+          <span class="st-spinner" *ngIf="savingShifts"></span>
+          <svg *ngIf="!savingShifts" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          {{ savingShifts ? 'Saving...' : 'Save Shifts' }}
+        </button>
+        <button
+          class="st-btn-discard-hours"
+          *ngIf="shiftsUnsaved"
+          [disabled]="savingShifts"
+          (click)="resetShiftTimings()">
+          Discard
+        </button>
+      </div>
+
+    </ng-container>
+  </div>
+
   <!-- __ Order Notifications Card (view-only mode) __________________________ -->
   <div class="st-card st-notif-card" *ngIf="isViewOnlyMode">
-
     <div class="st-card-head">
       <div class="st-card-head-info">
         <div class="st-card-icon st-card-icon--warn">

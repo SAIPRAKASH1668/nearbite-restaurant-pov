@@ -74,8 +74,36 @@
 
   </div>
 
-  <!-- Ticket Footer - Actions -->
-  <div class="ticket-footer">
+  <!-- Prep Time Picker — shown after tapping Accept -->
+  <div class="prep-time-picker" *ngIf="currentOrder && showPrepTimePicker" [@fadeIn]>
+    <div class="prep-picker-title">
+      <i class="fas fa-clock"></i> How long to prepare?
+    </div>
+    <div class="prep-chips">
+      <button
+        *ngFor="let opt of prepTimeOptions"
+        class="prep-chip"
+        [class.active]="prepTime === opt"
+        (click)="prepTime = opt">
+        {{ opt }} min
+      </button>
+    </div>
+    <div class="prep-stepper">
+      <button class="prep-step-btn" (click)="decrementPrepTime()" [disabled]="prepTime <= 1">
+        <i class="fas fa-minus"></i>
+      </button>
+      <div class="prep-value-box">
+        <span class="prep-value-num">{{ prepTime }}</span>
+        <span class="prep-value-unit">min</span>
+      </div>
+      <button class="prep-step-btn" (click)="incrementPrepTime()" [disabled]="prepTime >= 120">
+        <i class="fas fa-plus"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Ticket Footer - Initial Actions -->
+  <div class="ticket-footer" *ngIf="!showPrepTimePicker">
     <button 
       class="ticket-action-btn decline-btn" 
       (click)="rejectOrder()"
@@ -87,11 +115,31 @@
     
     <button 
       class="ticket-action-btn accept-btn" 
-      (click)="acceptOrder()"
+      (click)="initiateAccept()"
       [disabled]="isProcessing"
     >
       <i class="fas fa-check-circle"></i>
-      <span>{{ isProcessing ? 'Accepting...' : 'Accept Order' }}</span>
+      <span>Accept Order</span>
+    </button>
+  </div>
+
+  <!-- Ticket Footer - Prep Time Confirm Actions -->
+  <div class="ticket-footer" *ngIf="showPrepTimePicker">
+    <button
+      class="ticket-action-btn back-btn"
+      (click)="showPrepTimePicker = false"
+      [disabled]="isProcessing"
+    >
+      <i class="fas fa-arrow-left"></i>
+      <span>Back</span>
+    </button>
+    <button
+      class="ticket-action-btn accept-btn"
+      (click)="confirmAccept()"
+      [disabled]="isProcessing || !getEffectivePrepTime()"
+    >
+      <i class="fas fa-check-circle"></i>
+      <span>{{ isProcessing ? 'Accepting...' : 'Confirm & Accept' }}</span>
     </button>
   </div>
 

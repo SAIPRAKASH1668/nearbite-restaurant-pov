@@ -229,6 +229,33 @@
   @include mobile { margin-bottom: 0.625rem; }
 }
 
+// Timezone dropdown in Operating Shifts card
+.st-timezone-select {
+  font-family: v.$font-family;
+  font-size: 0.875rem;
+  border: 1.5px solid v.$border-primary;
+  border-radius: v.$radius-md;
+  padding: 9px 14px;
+  background: v.$bg-primary;
+  color: v.$text-primary;
+  width: 100%;
+  max-width: 280px;
+  cursor: pointer;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  appearance: auto;
+
+  &:focus {
+    outline: none;
+    border-color: v.$primary-orange;
+    box-shadow: 0 0 0 3px rgba(v.$primary-orange, 0.12);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
 .st-hours-label {
   display: flex;
   align-items: center;

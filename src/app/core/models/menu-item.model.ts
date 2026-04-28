@@ -2,6 +2,7 @@
  * MenuItem Model - Synced with AWS MenuItem model
  * Restaurant menu items with pricing
  */
+import { ShiftSchedule } from './shift.model';
 
 /**
  * A single add-on option that can be attached to a menu item
@@ -31,6 +32,9 @@ export interface MenuItem {
   // Availability
   isAvailable: boolean;
   isVeg?: boolean;
+
+  // Shift timings (optional — if absent, isAvailable is the only gate)
+  shiftTimings?: ShiftSchedule[];
 
   // Add-on options
   addOnOptions?: AddOnOption[];

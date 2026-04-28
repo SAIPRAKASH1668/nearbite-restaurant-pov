@@ -19,7 +19,7 @@ import { SoundService } from './sound.service';
 })
 export class OrderService {
   private readonly API_BASE_URL = environment.apiUrl;
-  private readonly POLLING_INTERVAL = 30000;
+  private readonly POLLING_INTERVAL = 20000;
 
   private ordersSubject = new BehaviorSubject<Order[]>([]);
   public orders$: Observable<Order[]> = this.ordersSubject.asObservable();
@@ -63,17 +63,19 @@ export class OrderService {
 
           if (!options?.suppressNewOrderEffects) {
             if (isInitialFetch) {
-              // On startup: ring immediately if CONFIRMED orders are already waiting
+              // On startup: ring only for CONFIRMED orders placed today
               const pendingConfirmed = visibleOrders.filter(
-                (order) => order.status === OrderStatus.CONFIRMED
+                (order) => order.status === OrderStatus.CONFIRMED && this.isToday(order.createdAt)
               );
               if (pendingConfirmed.length > 0) {
                 this.soundService.playNewOrderAlarm();
               }
             } else {
-              // On subsequent fetches: detect brand-new CONFIRMED orders
+              // On subsequent fetches: detect brand-new CONFIRMED orders placed today
               const newConfirmedOrders = visibleOrders.filter((order) =>
-                !existingIds.has(order.orderId) && order.status === OrderStatus.CONFIRMED
+                !existingIds.has(order.orderId) &&
+                order.status === OrderStatus.CONFIRMED &&
+                this.isToday(order.createdAt)
               );
               if (newConfirmedOrders.length > 0) {
                 this.soundService.playNewOrderAlarm();
@@ -85,6 +87,16 @@ export class OrderService {
                 });
               }
             }
+          }
+
+          // Fix: stop the alarm on this device if no CONFIRMED orders from today remain.
+          // This handles the case where another device already accepted the order —
+          // the next poll will see zero CONFIRMED orders and kill the ring here too.
+          const hasConfirmedToday = visibleOrders.some(
+            (order) => order.status === OrderStatus.CONFIRMED && this.isToday(order.createdAt)
+          );
+          if (!hasConfirmedToday && this.soundService.isAlarmPlaying()) {
+            this.soundService.stopAlarm();
           }
 
           this.ordersSubject.next(visibleOrders);
@@ -104,6 +116,17 @@ export class OrderService {
 
   private filterRestaurantVisibleOrders(orders: Order[]): Order[] {
     return orders.filter((order) => order.status !== OrderStatus.INITIATED);
+  }
+
+  /** Returns true if the ISO timestamp belongs to today (local time). */
+  private isToday(timestamp: string): boolean {
+    const orderDate = new Date(timestamp);
+    const today = new Date();
+    return (
+      orderDate.getFullYear() === today.getFullYear() &&
+      orderDate.getMonth() === today.getMonth() &&
+      orderDate.getDate() === today.getDate()
+    );
   }
 
   private mapIncomingOrder(order: Order): IncomingOrder {
