@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DashboardService, DashboardStats, RecentOrder } from './dashboard.service';
 import { FinancialDashboardModalComponent } from '../payments/financial-dashboard-modal.component';
+import { OrderIdHighlightPipe } from '../../shared/pipes/order-id-highlight.pipe';
 import { forkJoin } from 'rxjs';
 import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, FinancialDashboardModalComponent],
+  imports: [CommonModule, RouterLink, FinancialDashboardModalComponent, OrderIdHighlightPipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })

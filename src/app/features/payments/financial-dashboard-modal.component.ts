@@ -15,11 +15,12 @@ import {
 import { PaymentService } from '../../core/services/payment.service';
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 import { NotificationService } from '../../shared/components/notification/notification.service';
+import { OrderIdHighlightPipe } from '../../shared/pipes/order-id-highlight.pipe';
 
 @Component({
   selector: 'app-financial-dashboard-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OrderIdHighlightPipe],
   templateUrl: './financial-dashboard-modal.component.html',
   styleUrl: './financial-dashboard-modal.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

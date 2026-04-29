@@ -82,6 +82,7 @@ export interface OrdersResponse {
 
 export interface UpdateOrderStatusRequest {
   status: OrderStatus;
+  expectedCurrentStatus?: OrderStatus;
   cancellationReason?: string;
   preparationTime?: number; // minutes
 }

@@ -162,6 +162,7 @@ export class PushNotificationService {
     }
 
     const resolvedRestaurantId = restaurantId || this.restaurantContext.getRestaurantId();
+    const token = localStorage.getItem(this.TOKEN_STORAGE_KEY) || undefined;
 
     PushNotifications.unregister().catch(() => undefined);
     localStorage.removeItem(this.TOKEN_STORAGE_KEY);
@@ -172,7 +173,9 @@ export class PushNotificationService {
       return;
     }
 
-    this.http.delete(`${this.API_BASE_URL}/restaurants/${resolvedRestaurantId}/fcm-token`)
+    this.http.delete(`${this.API_BASE_URL}/restaurants/${resolvedRestaurantId}/fcm-token`, {
+      body: token ? { fcmToken: token } : {}
+    })
       .subscribe({
         error: (error) => {
           console.error('Failed to clear restaurant FCM token', error);

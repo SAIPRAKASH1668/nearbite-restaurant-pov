@@ -9,11 +9,12 @@ import {
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 import { NotificationService } from '../../shared/components/notification/notification.service';
 import { NotificationType } from '../../shared/components/notification/notification.model';
+import { OrderIdHighlightPipe } from '../../shared/pipes/order-id-highlight.pipe';
 
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OrderIdHighlightPipe],
   templateUrl: './payments.component.html',
   styleUrl: './payments.component.scss',
 })

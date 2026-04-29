@@ -8,6 +8,12 @@ import { RestaurantContextService } from '../../core/services/restaurant-context
 
 export interface DashboardStats {
   todayOrders: number;
+  acceptedOrders: number;
+  cancelledOrders: number;
+  newOrders: number;
+  preparingOrders: number;
+  readyOrders: number;
+  doneTodayOrders: number;
   todayRevenue: number;
   todayPayout: number;
   avgOrderValue: number;
@@ -70,32 +76,50 @@ export class DashboardService {
           return orderDate.getTime() === yesterday.getTime();
         });
 
-        const todayRevenue = todayOrders
-          .filter((order) => order.status !== OrderStatus.CANCELLED)
+        const todayNonCancelledOrders = todayOrders.filter((order) => order.status !== OrderStatus.CANCELLED);
+        const yesterdayNonCancelledOrders = yesterdayOrders.filter((order) => order.status !== OrderStatus.CANCELLED);
+
+        const todayRevenue = todayNonCancelledOrders
           .reduce((sum, order) => sum + order.foodTotal, 0);
 
-        const todayPayout = todayOrders
-          .filter((order) => order.status !== OrderStatus.CANCELLED)
+        const todayPayout = todayNonCancelledOrders
           .reduce((sum, order) => {
             const fp = order.revenue?.restaurantRevenue?.finalPayout;
             return sum + (fp != null ? fp : order.foodTotal);
           }, 0);
 
-        const yesterdayRevenue = yesterdayOrders
-          .filter((order) => order.status !== OrderStatus.CANCELLED)
+        const yesterdayRevenue = yesterdayNonCancelledOrders
           .reduce((sum, order) => sum + order.foodTotal, 0);
 
-        const avgOrderValue = todayOrders.length > 0 ? todayRevenue / todayOrders.length : 0;
-        const yesterdayAvgOrderValue = yesterdayOrders.length > 0
-          ? yesterdayRevenue / yesterdayOrders.length
+        const avgOrderValue = todayNonCancelledOrders.length > 0 ? todayRevenue / todayNonCancelledOrders.length : 0;
+        const yesterdayAvgOrderValue = yesterdayNonCancelledOrders.length > 0
+          ? yesterdayRevenue / yesterdayNonCancelledOrders.length
           : 0;
 
-        const pendingOrders = orders.filter((order) =>
+        const pendingOrders = todayOrders.filter((order) =>
           order.status === OrderStatus.PENDING || order.status === OrderStatus.CONFIRMED
         ).length;
+        const preparingOrders = todayOrders.filter((order) =>
+          order.status === OrderStatus.ACCEPTED || order.status === OrderStatus.PREPARING
+        ).length;
+        const readyOrders = todayOrders.filter((order) =>
+          order.status === OrderStatus.READY_FOR_PICKUP ||
+          order.status === OrderStatus.AWAITING_RIDER_ASSIGNMENT ||
+          order.status === OrderStatus.OFFERED_TO_RIDER ||
+          order.status === OrderStatus.RIDER_ASSIGNED ||
+          order.status === OrderStatus.PICKED_UP ||
+          order.status === OrderStatus.OUT_FOR_DELIVERY
+        ).length;
+        const doneTodayOrders = todayOrders.filter((order) => order.status === OrderStatus.DELIVERED).length;
 
         return {
           todayOrders: todayOrders.length,
+          acceptedOrders: todayNonCancelledOrders.length,
+          cancelledOrders: todayOrders.length - todayNonCancelledOrders.length,
+          newOrders: pendingOrders,
+          preparingOrders,
+          readyOrders,
+          doneTodayOrders,
           todayRevenue: Math.round(todayRevenue),
           todayPayout: Math.round(todayPayout),
           avgOrderValue: Math.round(avgOrderValue),
@@ -109,6 +133,12 @@ export class DashboardService {
         console.error('DashboardService.getStats: Error fetching dashboard stats:', error);
         return of({
           todayOrders: 0,
+          acceptedOrders: 0,
+          cancelledOrders: 0,
+          newOrders: 0,
+          preparingOrders: 0,
+          readyOrders: 0,
+          doneTodayOrders: 0,
           todayRevenue: 0,
           todayPayout: 0,
           avgOrderValue: 0,

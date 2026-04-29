@@ -36,6 +36,10 @@
         </div>
       </div>
       <div class="db-stat-value">{{ stats.todayOrders }}</div>
+      <div class="db-stat-payout">
+        <i class="fas fa-circle-check"></i>
+        <span>Accepted: {{ stats.acceptedOrders }} – Cancelled: {{ stats.cancelledOrders }}</span>
+      </div>
       <div class="db-stat-change"
            [class.db-stat-change--up]="stats.ordersChangePercent > 0"
            [class.db-stat-change--down]="stats.ordersChangePercent < 0"
@@ -146,22 +150,22 @@
       </div>
       <div class="db-pipeline">
         <div class="db-pipe-stage db-pipe-stage--new">
-          <div class="db-pipe-count">{{ stats?.pendingOrders ?? 0 }}</div>
+          <div class="db-pipe-count">{{ stats?.newOrders ?? 0 }}</div>
           <div class="db-pipe-bar"></div>
           <div class="db-pipe-label">New</div>
         </div>
         <div class="db-pipe-stage db-pipe-stage--prep">
-          <div class="db-pipe-count">—</div>
+          <div class="db-pipe-count">{{ stats?.preparingOrders ?? 0 }}</div>
           <div class="db-pipe-bar"></div>
           <div class="db-pipe-label">Preparing</div>
         </div>
         <div class="db-pipe-stage db-pipe-stage--ready">
-          <div class="db-pipe-count">—</div>
+          <div class="db-pipe-count">{{ stats?.readyOrders ?? 0 }}</div>
           <div class="db-pipe-bar"></div>
           <div class="db-pipe-label">Ready</div>
         </div>
         <div class="db-pipe-stage db-pipe-stage--done">
-          <div class="db-pipe-count">{{ stats?.todayOrders ?? 0 }}</div>
+          <div class="db-pipe-count">{{ stats?.doneTodayOrders ?? 0 }}</div>
           <div class="db-pipe-bar"></div>
           <div class="db-pipe-label">Done Today</div>
         </div>
@@ -223,7 +227,11 @@
         </thead>
         <tbody>
           <tr *ngFor="let order of recentOrders">
-            <td class="db-td-order">{{ order.orderNumber }}</td>
+            <td class="db-td-order">
+              <ng-container *ngIf="order.orderNumber | orderIdHighlight as oid">
+                {{ oid.prefix }}<span class="ord-id-last4">{{ oid.suffix }}</span>
+              </ng-container>
+            </td>
             <td class="db-td-customer">{{ order.customerName }}</td>
             <td class="db-td-meta">{{ order.items }} items</td>
             <td class="db-td-meta">{{ order.time }}</td>
@@ -250,7 +258,11 @@
            (click)="toggleAccordion(order.orderNumber)">
         <div class="db-acc-header">
           <div class="db-acc-left">
-            <span class="db-acc-order">{{ order.orderNumber }}</span>
+            <span class="db-acc-order">
+              <ng-container *ngIf="order.orderNumber | orderIdHighlight as oid">
+                {{ oid.prefix }}<span class="ord-id-last4">{{ oid.suffix }}</span>
+              </ng-container>
+            </span>
             <span class="db-acc-customer">{{ order.customerName }}</span>
           </div>
           <div class="db-acc-right">
@@ -288,3 +300,7 @@
   <app-financial-dashboard-modal></app-financial-dashboard-modal>
 
 </div>
+
+
+
+

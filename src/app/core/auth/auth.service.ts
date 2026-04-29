@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, from, map, of, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, of, switchMap } from 'rxjs';
 import { RestaurantContextService } from '../services/restaurant-context.service';
 import { PushNotificationService } from '../services/push-notification.service';
 import { RuntimeEnvironmentService } from '../services/runtime-environment.service';
@@ -71,21 +71,15 @@ export class AuthService {
         this.restaurantContext.setRestaurantId(response.restaurantId);
         this.currentUserSubject.next(user);
 
-        // This device was previously the active notifier — re-sync without prompting
+        // Re-sync this device token on every login so multiple devices can receive notifications.
         if (this.pushNotificationService.isDeviceRegistered()) {
           void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId);
           return of({ success: true as const });
         }
 
-        // Check whether another device already has the FCM token for this restaurant
-        return from(this.pushNotificationService.checkRemoteTokenExists(response.restaurantId)).pipe(
-          map((hasConflict) => {
-            if (!hasConflict) {
-              void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId);
-            }
-            return { success: true as const, fcmConflict: hasConflict };
-          })
-        );
+        // No takeover conflict flow: always best-effort sync unless user explicitly enabled view-only mode.
+        void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId);
+        return of({ success: true as const, fcmConflict: false });
       }),
       catchError((error: HttpErrorResponse) => {
         const message = error.status === 401

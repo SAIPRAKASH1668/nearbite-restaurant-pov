@@ -8,6 +8,7 @@ import { PrinterService } from '../../../core/services/printer.service';
 import { SoundService } from '../../../core/services/sound.service';
 import { OrderStatus } from '../../../core/models/order.model';
 import { Subscription, take } from 'rxjs';
+import { NotificationService } from '../notification/notification.service';
 
 /**
  * Global Order Notification Modal
@@ -57,10 +58,15 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
     private orderService: OrderService,
     private printerService: PrinterService,
     private soundService: SoundService,
+    private appNotificationService: NotificationService,
     private router: Router,
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef
   ) {}
+
+  private isConflictError(error: any): boolean {
+    return error?.status === 409;
+  }
 
   ngOnInit(): void {
     this.subscription = this.notificationService.getNewOrders().subscribe(
@@ -146,13 +152,23 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
     });
 
     // Update order status to PREPARING with prep time
-    this.orderService.updateOrderStatus(orderId, OrderStatus.PREPARING, { preparationTime: prepTime }).subscribe({
+    this.orderService.updateOrderStatus(orderId, OrderStatus.PREPARING, {
+      preparationTime: prepTime,
+      expectedCurrentStatus: OrderStatus.CONFIRMED
+    }).subscribe({
       next: () => {
         this.notificationService.notifyOrderAccepted(orderId);
         this.orderService.fetchOrders();
       },
-      error: () => {
-        alert('Failed to accept order. Please try again.');
+      error: (error) => {
+        this.orderService.fetchOrders();
+        if (this.isConflictError(error)) {
+          const message = 'Order already handled on another device.';
+          this.appNotificationService.warning(message);
+          alert(message);
+        } else {
+          this.appNotificationService.error('Failed to accept order. Please try again.');
+        }
         this.isProcessing = false;
       }
     });
@@ -189,18 +205,33 @@ export class OrderNotificationModalComponent implements OnInit, OnDestroy {
     if (confirmed) {
       this.isProcessing = true;
       console.log('❌ Order rejected:', this.currentOrder.orderId);
-      
-      // Notify service
-      this.notificationService.notifyOrderRejected(this.currentOrder.orderId);
-      
-      // Remove from queue and show next
+
+      const orderId = this.currentOrder.orderId;
+      this.soundService.stopAlarm();
+      this.orderService.updateOrderStatus(orderId, OrderStatus.CANCELLED, {
+        cancellationReason: 'Rejected by restaurant',
+        expectedCurrentStatus: OrderStatus.CONFIRMED
+      }).subscribe({
+        next: () => {
+          this.notificationService.notifyOrderRejected(orderId);
+          this.orderService.fetchOrders();
+        },
+        error: (error) => {
+          this.orderService.fetchOrders();
+          if (this.isConflictError(error)) {
+            const message = 'Order already handled on another device.';
+            this.appNotificationService.warning(message);
+            alert(message);
+          } else {
+            this.appNotificationService.error('Failed to reject order. Please try again.');
+          }
+        }
+      });
+
+      // Remove from local queue and close regardless; server is source of truth on next fetch.
       this.orderQueue.shift();
-      
-      // Close modal
       setTimeout(() => {
         this.closeModal();
-        
-        // Show next order if any
         if (this.orderQueue.length > 0) {
           setTimeout(() => this.displayNextOrder(), 300);
         }

@@ -175,13 +175,11 @@ $dude-red:   hsl(0,  79%,  55%);
 @keyframes dbSpin { to { transform: rotate(360deg); } }
 
 // ── Stats grid ───────────────────────────────────────────────────────────────
-.db-stats {
+ .db-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1.25rem;
   margin-bottom: 1.5rem;
-
-  @media (max-width: 1100px) { grid-template-columns: repeat(2, 1fr); }
 
   // Tablet: clean 2×2
   @media (max-width: $breakpoint-tablet) {
@@ -894,3 +892,7 @@ $dude-red:   hsl(0,  79%,  55%);
     border: 1px solid rgba($status-success, 0.3);
   }
 }
+
+.ord-id-last4 { font-weight: 800; font-size: 1.08em; letter-spacing: 0.02em; }
+
+

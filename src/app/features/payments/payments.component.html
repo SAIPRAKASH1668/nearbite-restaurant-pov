@@ -106,7 +106,11 @@
           <tbody>
             <tr *ngFor="let row of preview.orders; let i = index">
               <td class="idx">{{ i + 1 }}</td>
-              <td class="order-id">{{ row.orderId }}</td>
+              <td class="order-id">
+                <ng-container *ngIf="row.orderId | orderIdHighlight as oid">
+                  {{ oid.prefix }}<span class="ord-id-last4">{{ oid.suffix }}</span>
+                </ng-container>
+              </td>
               <td class="date">{{ formatDate(row.createdAt) }}</td>
               <td class="num">{{ formatCurrency(row.foodTotal) }}</td>
               <td class="num deduction">

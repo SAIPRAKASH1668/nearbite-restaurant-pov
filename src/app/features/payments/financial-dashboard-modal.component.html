@@ -230,7 +230,11 @@
             <tbody>
               <tr *ngFor="let payment of displayedPayments">
                 <td class="date">{{ formatDate(payment.createdAt) }}</td>
-                <td class="order-id">{{ payment.orderId }}</td>
+                <td class="order-id">
+                  <ng-container *ngIf="payment.orderId | orderIdHighlight as oid">
+                    {{ oid.prefix }}<span class="ord-id-last4">{{ oid.suffix }}</span>
+                  </ng-container>
+                </td>
                 <td class="amount">{{ formatCurrency(payment.grossAmount) }}</td>
                 <td class="amount negative">{{ formatCurrency(payment.commissionAmount) }}</td>
                 <td class="amount strong">{{ formatCurrency(payment.netPayoutAmount) }}</td>

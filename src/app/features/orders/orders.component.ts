@@ -9,11 +9,13 @@ import { Subscription } from 'rxjs';
 import { OrderRejectionModalComponent } from '../../shared/components/order-rejection-modal/order-rejection-modal.component';
 import { SoundService } from '../../core/services/sound.service';
 import { PrinterService, PrintStatus } from '../../core/services/printer.service';
+import { NotificationService } from '../../shared/components/notification/notification.service';
+import { OrderIdHighlightPipe } from '../../shared/pipes/order-id-highlight.pipe';
 
 @Component({
   selector: 'app-orders',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, OrderRejectionModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, OrderRejectionModalComponent, OrderIdHighlightPipe],
   templateUrl: './orders.component.html',
   styleUrl: './orders.component.scss'
 })
@@ -69,8 +71,18 @@ export class OrdersComponent implements OnInit, OnDestroy {
     private orderNotificationService: OrderNotificationService,
     private cdr: ChangeDetectorRef,
     private soundService: SoundService,
-    private printerService: PrinterService
+    private printerService: PrinterService,
+    private notificationService: NotificationService
   ) {}
+
+  private isConflictError(error: any): boolean {
+    return error?.status === 409;
+  }
+
+  private notifyOrderAlreadyHandled(defaultMessage: string): void {
+    this.notificationService.warning(defaultMessage);
+    alert(defaultMessage);
+  }
 
   ngOnInit(): void {
     this.printerStatusSub = this.printerService.status$.subscribe(s => {
@@ -317,13 +329,22 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.orderPendingAccept = null;
     this.soundService.stopAlarm();
     this.printerService.printOrderAccepted(order);
-    this.orderService.updateOrderStatus(order.orderId, OrderStatus.PREPARING, { preparationTime: prepTime }).subscribe({
+    this.orderService.updateOrderStatus(order.orderId, OrderStatus.PREPARING, {
+      preparationTime: prepTime,
+      expectedCurrentStatus: OrderStatus.CONFIRMED
+    }).subscribe({
       next: () => {
         this.orderNotificationService.notifyOrderAccepted(order.orderId);
         this.orderService.fetchOrders();
       },
-      error: () => {
-        alert('Failed to accept order. Please try again.');
+      error: (error) => {
+        this.orderService.fetchOrders();
+        if (this.isConflictError(error)) {
+          this.cancelPrepTimeModal();
+          this.notifyOrderAlreadyHandled('Order already handled on another device.');
+          return;
+        }
+        this.notificationService.error('Failed to accept order. Please refresh and try again.');
       }
     });
   }
@@ -351,7 +372,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.orderService.updateOrderStatus(
       this.selectedOrderForRejection.orderId, 
       OrderStatus.CANCELLED,
-      { cancellationReason: reason }
+      { cancellationReason: reason, expectedCurrentStatus: OrderStatus.CONFIRMED }
     ).subscribe({
       next: () => {
         this.orderNotificationService.notifyOrderRejected(this.selectedOrderForRejection!.orderId);
@@ -359,8 +380,15 @@ export class OrdersComponent implements OnInit, OnDestroy {
         this.showRejectionModal = false;
         this.selectedOrderForRejection = null;
       },
-      error: () => {
-        alert('Failed to reject order. Please try again.');
+      error: (error) => {
+        this.orderService.fetchOrders();
+        if (this.isConflictError(error)) {
+          this.showRejectionModal = false;
+          this.selectedOrderForRejection = null;
+          this.notifyOrderAlreadyHandled('Order already handled on another device.');
+          return;
+        }
+        this.notificationService.error('Failed to reject order. Please try again.');
       }
     });
   }
@@ -377,7 +405,9 @@ export class OrdersComponent implements OnInit, OnDestroy {
    * Mark order as preparing
    */
   markPreparing(order: Order): void {
-    this.orderService.updateOrderStatus(order.orderId, OrderStatus.PREPARING).subscribe({
+    this.orderService.updateOrderStatus(order.orderId, OrderStatus.PREPARING, {
+      expectedCurrentStatus: OrderStatus.CONFIRMED
+    }).subscribe({
       next: (updatedOrder) => {
         const index = this.allOrders.findIndex(o => o.orderId === order.orderId);
         if (index !== -1) {
@@ -385,8 +415,13 @@ export class OrdersComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
         }
       },
-      error: () => {
-        alert('Failed to update order. Please try again.');
+      error: (error) => {
+        this.orderService.fetchOrders();
+        this.notificationService.error(
+          this.isConflictError(error)
+            ? 'Order already handled on another device.'
+            : 'Failed to update order. Please try again.'
+        );
       }
     });
   }
@@ -395,12 +430,22 @@ export class OrdersComponent implements OnInit, OnDestroy {
    * Mark order as ready
    */
   markReady(order: Order): void {
-    this.orderService.updateOrderStatus(order.orderId, OrderStatus.READY_FOR_PICKUP).subscribe({
+    this.orderService.updateOrderStatus(order.orderId, OrderStatus.READY_FOR_PICKUP, {
+      expectedCurrentStatus: OrderStatus.PREPARING
+    }).subscribe({
       next: () => {
         this.orderService.fetchOrders();
       },
-      error: () => {
-        alert('Failed to update order. Please try again.');
+      error: (error) => {
+        this.orderService.fetchOrders();
+        if (this.isConflictError(error)) {
+          if (this.expandedOrder?.orderId === order.orderId) {
+            this.closeExpandedOrder();
+          }
+          this.notifyOrderAlreadyHandled('Order already moved by another device.');
+          return;
+        }
+        this.notificationService.error('Failed to update order. Please try again.');
       }
     });
   }
