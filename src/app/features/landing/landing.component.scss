@@ -422,6 +422,49 @@ section[id] {
   color: $yum-yellow;
 }
 
+.hero-store-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  margin-bottom: 2rem;
+}
+
+.hero-store-label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba($foreground, 0.7);
+}
+
+.hero-store-btns {
+  justify-content: center;
+  margin-top: 0;
+
+  .store-btn {
+    background: hsla(0, 0%, 100%, 0.84);
+    color: $foreground;
+    border-color: hsla(0, 0%, 100%, 0.7);
+    box-shadow: $shadow-card;
+
+    .store-btn-sub {
+      color: rgba($foreground, 0.65);
+      opacity: 1;
+    }
+
+    .store-btn-title {
+      color: $foreground;
+    }
+
+    &:hover {
+      background: white;
+      transform: translateY(-2px);
+      box-shadow: $shadow-elevated;
+    }
+  }
+}
+
 .hero-h1 {
   font-size: clamp(2.5rem, 8vw, 4.5rem);
   font-weight: 800; // extrabold
