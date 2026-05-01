@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, firstValueFrom } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { RestaurantContextService } from './restaurant-context.service';
 import { environment } from '../../../environments/environment';
@@ -62,6 +62,34 @@ export class MenuService {
   /** Synchronous snapshot of the current cached menu items. */
   get currentItems(): MenuItem[] {
     return this.menuItemsSubject.getValue();
+  }
+
+  /**
+   * Ensures the menu cache is populated before returning.
+   * Resolves immediately if the cache is already warm.
+   * Safe to call multiple times — only one in-flight fetch runs at a time.
+   */
+  private menuLoadPromise: Promise<void> | null = null;
+
+  ensureMenuLoaded(): Promise<void> {
+    if (this.currentItems.length > 0) return Promise.resolve();
+    if (this.menuLoadPromise) return this.menuLoadPromise;
+    this.menuLoadPromise = firstValueFrom(
+      this.http
+        .get<MenuResponse>(`${this.API_BASE_URL}/restaurants/${this.restaurantContext.getRestaurantId()}/menu`)
+        .pipe(
+          tap(response => {
+            this.menuItemsSubject.next(response.items);
+            this.loadingSubject.next(false);
+          }),
+          catchError(error => {
+            this.loadingSubject.next(false);
+            throw error;
+          }),
+        ),
+    ).then(() => { this.menuLoadPromise = null; })
+     .catch(() => { this.menuLoadPromise = null; });
+    return this.menuLoadPromise;
   }
 
   /**

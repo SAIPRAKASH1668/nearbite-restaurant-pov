@@ -363,9 +363,11 @@ export class PrinterService {
     const bill    = this.escpos.formatBill(order, this.getGstNumber() || undefined);
     const fullKot = this.escpos.formatKOT(order);
     const isCustomized = this.getPrinterMode() === 'customized';
-    // Warm menu cache for category routing — fire-and-forget, next print will benefit
-    if (isCustomized && this.menuService.currentItems.length === 0) {
-      this.menuService.fetchMenuItems();
+    // Ensure menu cache is populated before category filtering.
+    // ensureMenuLoaded() resolves instantly when cache is already warm,
+    // so there is zero overhead on the second and subsequent prints.
+    if (isCustomized) {
+      await this.menuService.ensureMenuLoaded();
     }
 
     /** Returns KOT bytes for one printer; null = skip (no matching items or unconfigured). */
@@ -522,8 +524,11 @@ export class PrinterService {
    */
   private filterItemsByCategories(items: OrderItem[], categoryIds: string[]): OrderItem[] {
     const menuItems = this.menuService.currentItems;
-    // If cache is empty (e.g. menu never loaded this session) fall back to printing all items
-    // so no print jobs are silently dropped. The cache is warmed by printOrderAccepted.
+    // Cache should always be warm here because printOrderAccepted() awaits
+    // ensureMenuLoaded() before calling this function. The fallback below is
+    // a last-resort safety net for direct calls (e.g. manual reprint) where
+    // the menu somehow never loaded — prefer printing everything over silently
+    // dropping items.
     if (!menuItems.length) return items;
     const catMap = new Map<string, string>();
     for (const mi of menuItems) {
