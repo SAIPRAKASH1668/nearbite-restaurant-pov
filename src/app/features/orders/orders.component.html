@@ -127,10 +127,10 @@
             <span>Gross Menu Value: ₹{{ order.foodTotal }}</span>
           </div>
           <div class="ord-total">₹{{ order.foodTotal }}</div>
-          <div class="ord-payout-line" *ngIf="order.revenue?.restaurantRevenue?.finalPayout != null">
+          <!-- <div class="ord-payout-line" *ngIf="order.revenue?.restaurantRevenue?.finalPayout != null">
             <span class="ord-payout-lbl">Your Payout:</span>
             <span class="ord-payout-amt">₹{{ order.revenue!.restaurantRevenue!.finalPayout!.toFixed(2) }}</span>
-          </div>
+          </div> -->
         </div>
 
         <div class="ord-actions">
