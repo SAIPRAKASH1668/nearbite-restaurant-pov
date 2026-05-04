@@ -104,7 +104,7 @@
     </button>
   </div>
 
-  <!-- ── Menu table ─────────────────────────────────────────────────────────── -->
+  <!-- ── Menu table (desktop / tablet) ───────────────────────────────────────── -->
   <div class="mn-table-wrap" *ngIf="!loading && getFilteredItems().length > 0">
     <table class="mn-table">
       <thead>
@@ -191,6 +191,43 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- ── Menu cards (mobile only) ──────────────────────────────────────────────── -->
+  <div class="mn-cards" *ngIf="!loading && getFilteredItems().length > 0">
+    <div class="mn-card" *ngFor="let item of getFilteredItems()">
+
+      <!-- Left column: name + category + addons -->
+      <div class="mn-card-left">
+        <div class="mn-card-name-wrap">
+          <span class="mn-veg-dot" [class.non-veg]="!item.isVeg" [title]="item.isVeg ? 'Veg' : 'Non-Veg'"></span>
+          <span class="mn-card-name">{{ item.itemName }}</span>
+        </div>
+        <div class="mn-card-meta">
+          <span class="mn-cat-tag mn-card-cat">{{ item.category }}</span>
+          <span class="mn-card-addons" [class.mn-card-addons--active]="item.addOnOptions?.length"
+            (click)="openEditItemForm(item)">
+            <i class="fas fa-plus-circle"></i>
+            {{ item.addOnOptions?.length ? item.addOnOptions!.length + ' add-on' + (item.addOnOptions!.length !== 1 ? 's' : '') : 'Add-ons' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Right column: price on top, toggle + edit directly below -->
+      <div class="mn-card-right">
+        <span class="mn-card-price">₹{{ item.price }}</span>
+        <div class="mn-card-controls">
+          <label class="mn-toggle" [title]="item.isAvailable ? 'Mark unavailable' : 'Mark available'">
+            <input type="checkbox" [checked]="item.isAvailable" (change)="toggleAvailability(item.itemId)" />
+            <span class="mn-track"></span>
+          </label>
+          <button class="mn-btn-edit" (click)="openEditItemForm(item)" title="Edit item">
+            <i class="fas fa-pen"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
   </div>
 
   <!-- ── No results in selected category ──────────────────────────────────── -->

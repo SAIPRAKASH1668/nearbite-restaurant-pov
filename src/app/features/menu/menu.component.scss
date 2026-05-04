@@ -446,12 +446,7 @@
   .mn-th-hike,     .mn-td-hike { display: none; }
 }
 
-@include mobile {
-  .mn-th-cat,      .mn-td-cat,
-  .mn-th-menprice, .mn-td-menprice,
-  .mn-th-hike,     .mn-td-hike,
-  .mn-th-disprice, .mn-td-price { display: none; }
-}
+// Mobile: table is replaced entirely by the card list — no column hiding needed.
 
 // ── Item info ─────────────────────────────────────────────────────────────────
 .mn-info {
@@ -765,6 +760,129 @@
   border: 1.5px dashed #E8E5E2;
   border-radius: 3px;
   margin-top: 0.5rem;
+}
+
+// ── Mobile card list (shown only on mobile, hidden on desktop/tablet) ─────────
+.mn-cards {
+  display: none; // hidden everywhere by default
+
+  @include mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+// Table: hidden on mobile (card list takes over)
+.mn-table-wrap {
+  @include mobile { display: none; }
+}
+
+.mn-card {
+  background: #FFFFFF;
+  border: 1px solid #EDE9E0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 12px;
+}
+
+// Left column — grows to fill remaining space
+.mn-card-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mn-card-name-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.mn-card-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: v.$text-primary;
+  line-height: 1.3;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.mn-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mn-card-cat {
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Right column — fixed width, price on top, controls directly below
+.mn-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.mn-card-price {
+  font-size: 1rem;
+  font-weight: 700;
+  color: v.$text-primary;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+// Toggle + edit sit right-aligned, directly below price
+.mn-card-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Single unified addons pill — consistent size regardless of content
+.mn-card-addons {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 72px;       // keeps toggle+edit pinned at the same x-pos always
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  // Default: no addons — muted gray
+  background: #F5F3F0;
+  border: 1px solid #E8E5E2;
+  color: v.$text-muted;
+
+  // Has addons — red tint
+  &--active {
+    background: rgba(232, 53, 42, 0.08);
+    border-color: rgba(232, 53, 42, 0.22);
+    color: v.$primary-orange;
+  }
+}
+
+.mn-card-addons-none {
+  // kept for any legacy references — redirect to unified class
+  @extend .mn-card-addons;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
