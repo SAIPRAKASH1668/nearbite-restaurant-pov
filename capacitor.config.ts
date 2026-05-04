@@ -7,6 +7,7 @@ const config: CapacitorConfig = {
   appName: 'YumDude Partner',
   webDir: 'dist/yumdude-restaurant/browser',
   server: {
+    url: 'https://www.yumdude.com',
     androidScheme: 'https'
   },
   plugins: {

@@ -220,16 +220,20 @@ export class PushNotificationService {
 
     await PushNotifications.deleteChannel({ id: this.CHANNEL_ID }).catch(() => undefined);
 
+    // Importance 3 = DEFAULT (shows notification silently in shade).
+    // The native OrderPollingService foreground service owns alarming — it launches
+    // OrderAlarmActivity directly and rings telephone_ring.mp3 in a loop.
+    // FCM is kept only as a data trigger (causes an order refresh) not as the alarm.
     await PushNotifications.createChannel({
       id: this.CHANNEL_ID,
       name: 'New Orders',
-      description: 'Urgent alerts for newly confirmed restaurant orders',
-      importance: 5,
+      description: 'Incoming order alerts (sound handled by YumDude Partner service)',
+      importance: 3,
       visibility: 1,
-      vibration: true,
+      vibration: false,
       lights: true,
       lightColor: '#F97316',
-      sound: 'telephone_ring'
+      sound: 'default'
     });
   }
 

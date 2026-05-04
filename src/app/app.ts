@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { NewOrderToastService } from './core/services/new-order-toast.service';
@@ -17,6 +17,7 @@ export class App implements OnInit {
   protected readonly title = signal('restaurant-dashboard');
 
   constructor(
+    private router: Router,
     private newOrderToastService: NewOrderToastService,
     private orderNotificationService: OrderNotificationService,
     private pushNotificationService: PushNotificationService
@@ -31,6 +32,19 @@ export class App implements OnInit {
       this.pushNotificationService.initialize().catch((error) => {
         console.error('PushNotificationService initialization failed', error);
       });
+
+      // Register the global hook that MainActivity calls via evaluateJavascript
+      // when the restaurant owner unlocks the phone from the alarm screen.
+      // Also handle the case where MainActivity fired the JS call before Angular
+      // had fully bootstrapped (pending flag set by the native side).
+      (window as any)['__yumdude_open_orders'] = () => {
+        void this.router.navigateByUrl('/dashboard/orders');
+      };
+      if ((window as any)['__yumdude_open_orders_pending']) {
+        delete (window as any)['__yumdude_open_orders_pending'];
+        void this.router.navigateByUrl('/dashboard/orders');
+      }
+
       return;
     }
 

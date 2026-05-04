@@ -1673,3 +1673,66 @@
   color: #C4BEBC;
   font-size: 0.8rem;
 }
+
+// ── Price-locked field state ──────────────────────────────────────────────────
+.mn-field-locked {
+  input:disabled {
+    background: #F5F3F0 !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+    border-color: #E0DBD7 !important;
+  }
+
+  .mn-price-prefix,
+  .mn-price-suffix {
+    color: #BBADA7 !important;
+  }
+
+  .mn-lock-icon {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #BBADA7;
+    font-size: 0.7rem;
+    pointer-events: none;
+  }
+
+  // Shift right padding to make room for lock icon alongside suffix
+  &:has(.mn-price-suffix) input {
+    padding-right: 3rem !important;
+  }
+}
+
+// lock icon sits to the right of the ₹ suffix on hike % field
+.mn-price-input-wrap .mn-lock-icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #BBADA7;
+  font-size: 0.7rem;
+  pointer-events: none;
+}
+
+// ── Price-locked info note ────────────────────────────────────────────────────
+.mn-price-locked-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: -0.25rem 0 0.875rem 0;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 197, 46, 0.12);
+  border: 1px solid rgba(255, 197, 46, 0.35);
+  border-radius: 8px;
+  color: #8A6800;
+  font-size: 0.775rem;
+  font-weight: 500;
+  line-height: 1.4;
+
+  i {
+    color: #FFC52E;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+}

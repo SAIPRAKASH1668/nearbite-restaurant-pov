@@ -2,9 +2,16 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, of, switchMap } from 'rxjs';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { RestaurantContextService } from '../services/restaurant-context.service';
 import { PushNotificationService } from '../services/push-notification.service';
 import { RuntimeEnvironmentService } from '../services/runtime-environment.service';
+
+interface OrderPollingPlugin {
+  startPolling(options: { restaurantId: string; authToken: string; apiBaseUrl: string }): Promise<void>;
+  stopPolling(): Promise<void>;
+}
+const OrderPolling = registerPlugin<OrderPollingPlugin>('OrderPolling');
 
 export interface User {
   token: string;
@@ -44,6 +51,19 @@ export class AuthService {
 
     if (this.currentUserSubject.value?.restaurantId) {
       this.restaurantContext.setRestaurantId(this.currentUserSubject.value.restaurantId);
+
+      // Resume native polling for persisted sessions (app restarted while logged in).
+      // Safe to call on web — registerPlugin returns a no-op proxy when plugin is absent.
+      if (Capacitor.isNativePlatform()) {
+        const token = localStorage.getItem(this.TOKEN_STORAGE_KEY);
+        if (token) {
+          void OrderPolling.startPolling({
+            restaurantId: this.currentUserSubject.value.restaurantId,
+            authToken:    token,
+            apiBaseUrl:   this.runtimeEnvironmentService.getApiBaseUrl(),
+          });
+        }
+      }
     }
   }
 
@@ -71,6 +91,16 @@ export class AuthService {
         this.restaurantContext.setRestaurantId(response.restaurantId);
         this.currentUserSubject.next(user);
 
+        // Start native background polling service (Android foreground service).
+        // This is a no-op on platforms without the OrderPolling plugin (web/iOS).
+        if (Capacitor.isNativePlatform()) {
+          void OrderPolling.startPolling({
+            restaurantId: response.restaurantId,
+            authToken:    response.token,
+            apiBaseUrl:   this.runtimeEnvironmentService.getApiBaseUrl(),
+          });
+        }
+
         // Re-sync this device token on every login so multiple devices can receive notifications.
         if (this.pushNotificationService.isDeviceRegistered()) {
           void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId);
@@ -97,6 +127,12 @@ export class AuthService {
   logout(): void {
     const restaurantId = this.currentUserSubject.value?.restaurantId;
     this.pushNotificationService.clearTokenForRestaurant(restaurantId);
+
+    // Stop the native background polling service so it doesn't ring after logout.
+    if (Capacitor.isNativePlatform()) {
+      void OrderPolling.stopPolling();
+    }
+
     localStorage.removeItem(this.STORAGE_KEY);
     localStorage.removeItem(this.TOKEN_STORAGE_KEY);
     this.runtimeEnvironmentService.resetToDefault();

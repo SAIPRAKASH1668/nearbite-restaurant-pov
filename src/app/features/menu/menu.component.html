@@ -7,12 +7,6 @@
       <p class="mn-subtitle">Manage your restaurant menu items</p>
     </div>
     <div class="mn-header-actions">
-      <button class="mn-btn-hike" (click)="openPriceHikeModal()" title="Increase all menu prices by a percentage">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-          <path d="M1 10L5 6l3 3 4-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Price Hike
-      </button>
       <button class="mn-btn-add" (click)="openAddItemForm()">
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
           <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -393,13 +387,20 @@
           <div class="mn-form-row">
             <div class="mn-fg">
               <label>Menu Price (₹) <span class="mn-req">*</span></label>
-              <div class="mn-price-input-wrap">
+              <div class="mn-price-input-wrap" [class.mn-field-locked]="isEditMode">
                 <span class="mn-price-prefix">₹</span>
                 <input type="number" [(ngModel)]="newItem.restaurantPrice" name="restaurantPrice"
                   placeholder="0" min="0" required
+                  [disabled]="isEditMode"
                   (ngModelChange)="onRestaurantPriceChange()" />
+                <span class="mn-lock-icon" *ngIf="isEditMode" title="Managed by YumDude"><i class="fas fa-lock"></i></span>
               </div>
             </div>
+          </div>
+
+          <div class="mn-price-locked-note" *ngIf="isEditMode">
+            <i class="fas fa-shield-alt"></i>
+            Pricing &amp; hike are managed by YumDude. Contact support to request changes.
           </div>
 
           <!-- Hike % + Customer Price preview -->
@@ -407,13 +408,15 @@
             <div class="mn-fg">
               <label>
                 Hike %
-                <span class="mn-hike-max-hint" *ngIf="maxHikePercentage > 0">(max {{ maxHikePercentage }}%)</span>
+                <span class="mn-hike-max-hint" *ngIf="maxHikePercentage > 0 && !isEditMode">(max {{ maxHikePercentage }}%)</span>
               </label>
-              <div class="mn-price-input-wrap">
+              <div class="mn-price-input-wrap" [class.mn-field-locked]="isEditMode">
                 <input type="number" [(ngModel)]="newItem.hikePercentage" name="hikePercentage"
                   placeholder="0" min="0" [max]="maxHikePercentage" step="0.5"
+                  [disabled]="isEditMode"
                   (ngModelChange)="onHikePercentageChange()" />
                 <span class="mn-price-suffix">%</span>
+                <span class="mn-lock-icon" *ngIf="isEditMode" title="Managed by YumDude"><i class="fas fa-lock"></i></span>
               </div>
             </div>
             <div class="mn-fg">
