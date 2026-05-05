@@ -249,16 +249,17 @@ export class EscPosService {
     });
 
     // ── Totals ────────────────────────────────────────────────────────────────
-    text('='.repeat(CHARS)); line();
-    text(this.twoCol('Item Total',   `Rs.${order.foodTotal.toFixed(2)}`,   CHARS)); line();
-    text(this.twoCol('Delivery Fee', `Rs.${order.deliveryFee.toFixed(2)}`, CHARS)); line();
-    if (order.platformFee > 0) {
-      text(this.twoCol('Platform Fee', `Rs.${order.platformFee.toFixed(2)}`, CHARS)); line();
-    }
+    // Compute total from item prices only — no delivery fee, no coupon discount
+    const itemsTotal = order.items.reduce((sum, item) => {
+      const addonsPrice = (item.addOns ?? item.addOnOptions ?? [])
+        .reduce((a, ao) => a + ao.extraPrice, 0);
+      return sum + (item.price + addonsPrice) * item.quantity;
+    }, 0);
+
     text('='.repeat(CHARS)); line();
 
     append(CMD.BOLD_ON, CMD.SIZE_DOUBLE_H);
-    text(this.twoCol('TOTAL', `Rs.${order.grandTotal.toFixed(2)}`, CHARS)); line();
+    text(this.twoCol('TOTAL', `Rs.${itemsTotal.toFixed(2)}`, CHARS)); line();
     append(CMD.SIZE_NORMAL, CMD.BOLD_OFF);
 
     text('-'.repeat(CHARS)); line();
