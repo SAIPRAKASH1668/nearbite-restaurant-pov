@@ -233,41 +233,51 @@ export class MenuComponent implements OnInit, OnDestroy {
     this.pendingCategoryOffName = null;
   }
 
-  private executeCategoryAvailabilityChange(category: string, shouldEnable: boolean): void {
+  private async executeCategoryAvailabilityChange(category: string, shouldEnable: boolean): Promise<void> {
     const normalized = category.toLowerCase();
     const categoryItems = this.menuItems.filter(item => item.category.toLowerCase() === normalized);
     if (!categoryItems.length) return;
 
     this.loading = true;
+    const BATCH_SIZE = 5;
+    let failedCount = 0;
 
-    const updateCalls = categoryItems.map(item => {
-      const updatedItemData: Partial<MenuItem> = {
-        itemName: item.itemName,
-        category: item.category,
-        subCategory: item.subCategory,
-        restaurantPrice: item.restaurantPrice,
-        hikePercentage: item.hikePercentage,
-        isVeg: item.isVeg,
-        isAvailable: shouldEnable,
-        description: item.description,
-        image: item.image,
-        addOnOptions: item.addOnOptions ?? [],
-        shiftTimings: item.shiftTimings ?? []
-      };
-      return this.menuService.updateMenuItem(item.itemId, updatedItemData).toPromise();
-    });
+    // Process in sequential batches to avoid API throttling (62 items → ~13 batches of 5)
+    for (let i = 0; i < categoryItems.length; i += BATCH_SIZE) {
+      const batch = categoryItems.slice(i, i + BATCH_SIZE);
+      const results = await Promise.allSettled(
+        batch.map(item => {
+          const updatedItemData: Partial<MenuItem> = {
+            itemName: item.itemName,
+            category: item.category,
+            subCategory: item.subCategory,
+            restaurantPrice: item.restaurantPrice,
+            hikePercentage: item.hikePercentage,
+            isVeg: item.isVeg,
+            isAvailable: shouldEnable,
+            description: item.description,
+            image: item.image,
+            addOnOptions: item.addOnOptions ?? [],
+            shiftTimings: item.shiftTimings ?? []
+          };
+          // Silent update — no per-item menu refresh; we do one refresh at the end
+          return this.menuService.updateMenuItemSilent(item.itemId, updatedItemData).toPromise();
+        })
+      );
+      failedCount += results.filter(r => r.status === 'rejected').length;
+    }
 
-    Promise.all(updateCalls)
-      .then(() => {
-        const statusText = shouldEnable ? 'available' : 'unavailable';
-        this.notificationService.success(`${category} items marked as ${statusText}`);
-      })
-      .catch(err => {
-        console.error('❌ Error updating category availability:', err);
-        this.notificationService.error('Failed to update category availability');
-        this.loading = false;
-        this.cdr.detectChanges();
-      });
+    // Single refresh after the entire batch completes
+    this.menuService.fetchMenuItems();
+
+    if (failedCount === 0) {
+      const statusText = shouldEnable ? 'available' : 'unavailable';
+      this.notificationService.success(`${category} items marked as ${statusText}`);
+    } else {
+      const total = categoryItems.length;
+      const succeeded = total - failedCount;
+      this.notificationService.error(`${succeeded}/${total} items updated. ${failedCount} failed — please try again.`);
+    }
   }
 
   toggleAvailability(itemId: string): void {

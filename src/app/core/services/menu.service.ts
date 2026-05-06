@@ -233,25 +233,13 @@ export class MenuService {
   }
 
   /**
-   * Update existing menu item
+   * Update existing menu item (triggers a full menu refresh on success).
    */
   updateMenuItem(itemId: string, itemData: Partial<MenuItem>): Observable<MenuItem> {
     const restaurantId = this.restaurantContext.getRestaurantId();
     return this.http.put<MenuItem>(
       `${this.API_BASE_URL}/restaurants/${restaurantId}/menu/${itemId}`,
-      {
-        name: itemData.itemName,
-        restaurantPrice: itemData.restaurantPrice,
-        hikePercentage: itemData.hikePercentage,
-        category: itemData.category,
-        subCategory: itemData.subCategory,
-        isVeg: itemData.isVeg,
-        isAvailable: itemData.isAvailable,
-        description: itemData.description,
-        image: itemData.image,
-        addOnOptions: itemData.addOnOptions ?? [],
-        shiftTimings: itemData.shiftTimings ?? []
-      }
+      this._buildItemPayload(itemData)
     ).pipe(
       tap(() => {
         this.fetchMenuItems();
@@ -260,5 +248,37 @@ export class MenuService {
         throw error;
       })
     );
+  }
+
+  /**
+   * Update a menu item WITHOUT triggering an automatic menu refresh.
+   * Use this for batch operations where a single refresh will be done at the end.
+   */
+  updateMenuItemSilent(itemId: string, itemData: Partial<MenuItem>): Observable<MenuItem> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    return this.http.put<MenuItem>(
+      `${this.API_BASE_URL}/restaurants/${restaurantId}/menu/${itemId}`,
+      this._buildItemPayload(itemData)
+    ).pipe(
+      catchError(error => {
+        throw error;
+      })
+    );
+  }
+
+  private _buildItemPayload(itemData: Partial<MenuItem>): object {
+    return {
+      name: itemData.itemName,
+      restaurantPrice: itemData.restaurantPrice,
+      hikePercentage: itemData.hikePercentage,
+      category: itemData.category,
+      subCategory: itemData.subCategory,
+      isVeg: itemData.isVeg,
+      isAvailable: itemData.isAvailable,
+      description: itemData.description,
+      image: itemData.image,
+      addOnOptions: itemData.addOnOptions ?? [],
+      shiftTimings: itemData.shiftTimings ?? []
+    };
   }
 }
