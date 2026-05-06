@@ -59,8 +59,11 @@
         <div class="mn-cat-av-item" *ngFor="let category of availabilityCategories">
           <div class="mn-cat-av-text">
             <span class="mn-cat-av-name">{{ category }}</span>
-            <span class="mn-cat-av-state" [class.on]="isCategoryFullyAvailable(category)">
-              {{ isCategoryFullyAvailable(category) ? 'Available' : 'Paused' }}
+            <span class="mn-cat-av-state" [class.on]="isCategoryAnyAvailable(category)">
+              <ng-container *ngIf="isCategoryAnyAvailable(category)">
+                {{ getCategoryOnCount(category) }}/{{ getCategoryTotalCount(category) }} on
+              </ng-container>
+              <ng-container *ngIf="!isCategoryAnyAvailable(category)">All Off</ng-container>
             </span>
           </div>
           <div class="mn-cat-av-actions">
@@ -72,11 +75,11 @@
             </button>
             <label
               class="mn-toggle mn-toggle--category"
-              [title]="isCategoryFullyAvailable(category) ? 'Mark this category unavailable' : 'Mark this category available'">
+              [title]="isCategoryAnyAvailable(category) ? 'Turn off all items in this category' : 'Turn on all items in this category'">
               <input
                 type="checkbox"
-                [checked]="isCategoryFullyAvailable(category)"
-                (change)="toggleCategoryAvailability(category)" />
+                [checked]="isCategoryAnyAvailable(category)"
+                (change)="onCategoryToggleChange(category, $event)" />
               <span class="mn-track"></span>
             </label>
           </div>
@@ -235,6 +238,32 @@
     <p>No items in this category</p>
   </div>
 
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════════
+     Category OFF Confirmation Popup
+════════════════════════════════════════════════════════════════════════ -->
+<div class="mn-cat-confirm-bg" *ngIf="showCategoryOffConfirm" (click)="cancelCategoryOff()">
+  <div class="mn-cat-confirm-modal" (click)="$event.stopPropagation()">
+    <div class="mn-cat-confirm-icon-wrap">
+      <i class="fas fa-pause-circle"></i>
+    </div>
+    <h3 class="mn-cat-confirm-title">Turn Off Entire Category?</h3>
+    <p class="mn-cat-confirm-body">
+      This will mark <strong>all items</strong> in
+      <span class="mn-cat-confirm-name">{{ pendingCategoryOffName }}</span>
+      as unavailable.<br>
+      To pause a specific item only, use the item-level toggle instead.
+    </p>
+    <div class="mn-cat-confirm-actions">
+      <button type="button" class="mn-cat-confirm-btn mn-cat-confirm-btn--cancel" (click)="cancelCategoryOff()">
+        Cancel
+      </button>
+      <button type="button" class="mn-cat-confirm-btn mn-cat-confirm-btn--confirm" (click)="confirmCategoryOff()">
+        <i class="fas fa-power-off"></i> Turn Off All
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- ════════════════════════════════════════════════════════════════════════

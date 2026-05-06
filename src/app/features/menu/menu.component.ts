@@ -35,6 +35,10 @@ export class MenuComponent implements OnInit, OnDestroy {
   priceHikePercentage: number | null = null;
   applyingPriceHike = false;
 
+  // ── Category OFF confirm state ─────────────────────────────────────────────
+  showCategoryOffConfirm = false;
+  pendingCategoryOffName: string | null = null;
+
   // ── Category Shift state ──────────────────────────────────────────────────
   showCategoryShiftModal = false;
   selectedCategoryForShifts: string | null = null;
@@ -184,19 +188,56 @@ export class MenuComponent implements OnInit, OnDestroy {
     return this.menuItems.some(item => item.category.toLowerCase() === normalized);
   }
 
-  isCategoryFullyAvailable(category: string): boolean {
+  /** True if ANY item in the category is available — drives the toggle ON state. */
+  isCategoryAnyAvailable(category: string): boolean {
     const normalized = category.toLowerCase();
     const categoryItems = this.menuItems.filter(item => item.category.toLowerCase() === normalized);
     if (!categoryItems.length) return false;
-    return categoryItems.every(item => item.isAvailable);
+    return categoryItems.some(item => item.isAvailable);
   }
 
-  toggleCategoryAvailability(category: string): void {
+  getCategoryOnCount(category: string): number {
+    const normalized = category.toLowerCase();
+    return this.menuItems.filter(item => item.category.toLowerCase() === normalized && item.isAvailable).length;
+  }
+
+  getCategoryTotalCount(category: string): number {
+    const normalized = category.toLowerCase();
+    return this.menuItems.filter(item => item.category.toLowerCase() === normalized).length;
+  }
+
+  /** Called by the category toggle change event. Turning ON is immediate; turning OFF shows a confirm popup. */
+  onCategoryToggleChange(category: string, event: Event): void {
+    const checkbox = event.target as HTMLInputElement;
+    if (!checkbox.checked) {
+      // User is trying to turn OFF — revert checkbox and show confirmation
+      checkbox.checked = true;
+      this.pendingCategoryOffName = category;
+      this.showCategoryOffConfirm = true;
+      return;
+    }
+    // Turning ON — enable all immediately
+    this.executeCategoryAvailabilityChange(category, true);
+  }
+
+  confirmCategoryOff(): void {
+    if (this.pendingCategoryOffName) {
+      this.executeCategoryAvailabilityChange(this.pendingCategoryOffName, false);
+    }
+    this.showCategoryOffConfirm = false;
+    this.pendingCategoryOffName = null;
+  }
+
+  cancelCategoryOff(): void {
+    this.showCategoryOffConfirm = false;
+    this.pendingCategoryOffName = null;
+  }
+
+  private executeCategoryAvailabilityChange(category: string, shouldEnable: boolean): void {
     const normalized = category.toLowerCase();
     const categoryItems = this.menuItems.filter(item => item.category.toLowerCase() === normalized);
     if (!categoryItems.length) return;
 
-    const shouldEnable = !categoryItems.every(item => item.isAvailable);
     this.loading = true;
 
     const updateCalls = categoryItems.map(item => {
@@ -210,7 +251,8 @@ export class MenuComponent implements OnInit, OnDestroy {
         isAvailable: shouldEnable,
         description: item.description,
         image: item.image,
-        addOnOptions: item.addOnOptions
+        addOnOptions: item.addOnOptions ?? [],
+        shiftTimings: item.shiftTimings ?? []
       };
       return this.menuService.updateMenuItem(item.itemId, updatedItemData).toPromise();
     });
@@ -241,7 +283,9 @@ export class MenuComponent implements OnInit, OnDestroy {
         isVeg: item.isVeg,
         isAvailable: newStatus,
         description: item.description,
-        image: item.image
+        image: item.image,
+        addOnOptions: item.addOnOptions ?? [],
+        shiftTimings: item.shiftTimings ?? []
       };
 
       this.loading = true;
