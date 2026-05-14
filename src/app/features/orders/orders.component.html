@@ -395,12 +395,7 @@
           (click)="markOutForDelivery(expandedOrder); closeExpandedOrder()">
           <i class="fas fa-motorcycle"></i> Out for Delivery
         </button>
-        <button
-          *ngIf="expandedOrder.status === OrderStatus.OUT_FOR_DELIVERY"
-          class="ord-btn ord-btn-complete ord-modal-act-btn primary"
-          (click)="markDelivered(expandedOrder); closeExpandedOrder()">
-          <i class="fas fa-check-circle"></i> Mark Delivered
-        </button>
+
       </div>
 
     </div>
