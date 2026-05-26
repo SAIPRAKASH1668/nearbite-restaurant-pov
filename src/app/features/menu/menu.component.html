@@ -217,15 +217,19 @@
             </div>
           </td>
 
-          <!-- Theater mode + inventory (theater-enabled restaurants only) -->
+          <!-- Theater column (theater-enabled restaurants only) -->
+          <!-- Restaurant Menu tab → toggle to convert an item INTO a theater item -->
+          <!-- Theater Menu tab    → just stock controls + a discrete "Move back" link -->
           <td class="mn-td mn-td-theater" *ngIf="isTheaterEnabled">
             <div class="mn-theater-cell">
-              <label class="mn-toggle"
-                [title]="item.theaterMode ? 'Move back to Restaurant Menu' : 'Move to Theater Menu'">
-                <input type="checkbox" [checked]="!!item.theaterMode" (change)="toggleTheaterMode(item.itemId)" />
-                <span class="mn-track"></span>
-              </label>
-              <ng-container *ngIf="item.theaterMode">
+              <ng-container *ngIf="activeMenuTab === 'restaurant'">
+                <label class="mn-toggle" title="Move to Theater Menu">
+                  <input type="checkbox" [checked]="!!item.theaterMode" (change)="toggleTheaterMode(item.itemId)" />
+                  <span class="mn-track"></span>
+                </label>
+                <span class="mn-theater-off">Off</span>
+              </ng-container>
+              <ng-container *ngIf="activeMenuTab === 'theater'">
                 <input
                   type="number"
                   min="0"
@@ -236,8 +240,12 @@
                 />
                 <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 5)" title="Restock +5">+5</button>
                 <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 10)" title="Restock +10">+10</button>
+                <button type="button" class="mn-move-back-btn"
+                        (click)="toggleTheaterMode(item.itemId)"
+                        title="Move back to Restaurant Menu">
+                  <i class="fas fa-arrow-left"></i>
+                </button>
               </ng-container>
-              <span class="mn-theater-off" *ngIf="!item.theaterMode">Off</span>
             </div>
           </td>
 
@@ -282,9 +290,10 @@
             <input type="checkbox" [checked]="item.isAvailable" (change)="toggleAvailability(item.itemId)" />
             <span class="mn-track"></span>
           </label>
+          <!-- Restaurant Menu tab: theater toggle (convert to theater item) -->
           <label class="mn-toggle mn-toggle-theater"
-            *ngIf="isTheaterEnabled"
-            [title]="item.theaterMode ? 'Move back to Restaurant Menu' : 'Move to Theater Menu'">
+            *ngIf="isTheaterEnabled && activeMenuTab === 'restaurant'"
+            title="Move to Theater Menu">
             <input type="checkbox" [checked]="!!item.theaterMode" (change)="toggleTheaterMode(item.itemId)" />
             <span class="mn-track"></span>
           </label>
@@ -292,7 +301,8 @@
             <i class="fas fa-pen"></i>
           </button>
         </div>
-        <div class="mn-card-theater" *ngIf="isTheaterEnabled && item.theaterMode">
+        <!-- Theater Menu tab: stock controls + discrete "Move back" link -->
+        <div class="mn-card-theater" *ngIf="isTheaterEnabled && activeMenuTab === 'theater'">
           <span class="mn-card-theater-label">Stock</span>
           <input
             type="number"
@@ -303,6 +313,11 @@
           />
           <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 5)">+5</button>
           <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 10)">+10</button>
+          <button type="button" class="mn-move-back-btn"
+                  (click)="toggleTheaterMode(item.itemId)"
+                  title="Move back to Restaurant Menu">
+            <i class="fas fa-arrow-left"></i>
+          </button>
         </div>
       </div>
 

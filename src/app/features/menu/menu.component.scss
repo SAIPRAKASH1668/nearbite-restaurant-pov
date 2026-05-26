@@ -704,6 +704,30 @@
   background: #E8352A;
   color: #FFFDF7;
 }
+// "Move back to Restaurant Menu" — discreet icon-only button, sits at the
+// far right of the cell so it doesn't compete with stock controls.
+.mn-move-back-btn {
+  margin-left: 4px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #DCCDB7;
+  background: #FFFDF7;
+  color: #7A6B5A;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
+}
+.mn-move-back-btn:hover {
+  background: #F7F1E6;
+  color: #2E241B;
+  border-color: #B8A689;
+}
+.mn-move-back-btn i {
+  font-size: 11px;
+}
 .mn-card-theater {
   margin-top: 6px;
   display: flex;

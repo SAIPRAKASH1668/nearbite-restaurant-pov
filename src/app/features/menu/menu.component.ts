@@ -383,7 +383,8 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
   }
 
-  /** Flip the theaterMode flag for an item (per-item, in-venue inventory tracking). */
+  /** Flip the theaterMode flag for an item — i.e., move it between the
+   *  Restaurant Menu and Theater Menu tabs. */
   toggleTheaterMode(itemId: string): void {
     const item = this.menuItems.find(i => i.itemId === itemId);
     if (!item) return;
@@ -392,8 +393,13 @@ export class MenuComponent implements OnInit, OnDestroy {
       next: () => {
         item.theaterMode = next;
         this.notificationService.success(
-          `${item.itemName} ${next ? 'enabled' : 'disabled'} for theater orders`
+          next
+            ? `${item.itemName} moved to Theater Menu`
+            : `${item.itemName} moved to Restaurant Menu`
         );
+        // The active tab's filter will now hide this item — refresh the
+        // category chips so empty categories don't linger.
+        this.updateCategoryTabs(this.menuItems);
         this.cdr.detectChanges();
       },
       error: (err) => {
