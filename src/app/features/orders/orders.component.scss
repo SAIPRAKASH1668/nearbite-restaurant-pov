@@ -29,6 +29,30 @@
   to   { opacity: 1; }
 }
 
+// ── Page heading (theater orders page only) ─────────────────────────────
+.ord-page-head {
+  padding: 0 4px 12px;
+  margin-bottom: 6px;
+}
+.ord-page-title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f2937;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  i {
+    color: #c75300;
+    font-size: 20px;
+  }
+}
+.ord-page-sub {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
 // ── Tab Bar ───────────────────────────────────────────────────────────────────
 .ord-tabs {
   display: flex;

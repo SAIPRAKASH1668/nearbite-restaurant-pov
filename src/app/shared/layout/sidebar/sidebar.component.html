@@ -47,6 +47,39 @@
           <span class="badge" *ngIf="item.badge && !isCollapsed">{{ item.badge }}</span>
         </a>
       </li>
+
+      <!-- Collapsible groups (e.g. Theater) — rendered only when visible. -->
+      <ng-container *ngFor="let group of navGroups">
+        <ng-container *ngIf="group.visible">
+          <li class="nav-item nav-group-head">
+            <button
+              type="button"
+              class="nav-link nav-group-btn"
+              (click)="toggleGroup(group)"
+              [title]="isCollapsed ? group.label : ''"
+            >
+              <i class="fas {{ group.icon }} nav-icon"></i>
+              <span class="nav-label" *ngIf="!isCollapsed">{{ group.label }}</span>
+              <i class="fas fa-chevron-down nav-group-caret"
+                 *ngIf="!isCollapsed"
+                 [class.open]="group.expanded"></i>
+            </button>
+          </li>
+          <ng-container *ngIf="group.expanded || isCollapsed">
+            <li *ngFor="let child of group.children" class="nav-item nav-child-item">
+              <a
+                [routerLink]="child.route"
+                routerLinkActive="active"
+                class="nav-link nav-child-link"
+                [title]="isCollapsed ? group.label + ' \u2192 ' + child.label : ''"
+              >
+                <i class="fas {{ child.icon }} nav-icon nav-child-icon"></i>
+                <span class="nav-label" *ngIf="!isCollapsed">{{ child.label }}</span>
+              </a>
+            </li>
+          </ng-container>
+        </ng-container>
+      </ng-container>
     </ul>
   </nav>
 

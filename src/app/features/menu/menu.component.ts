@@ -1,16 +1,16 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
 import { MenuService, MenuItem, AddOnOption } from '../../core/services/menu.service';
 import { ImageUploadService } from '../../core/services/image-upload.service';
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 import { NotificationService } from '../../shared/components/notification/notification.service';
 import { ConfigService } from '../../core/services/config.service';
 import { FoodCategoryService } from '../../core/services/food-category.service';
+import { RestaurantInfoService } from '../../core/services/restaurant-info.service';
 import { ShiftEditorComponent } from '../../shared/components/shift-editor/shift-editor.component';
 import { ShiftSchedule } from '../../core/models/shift.model';
-import { environment } from '../../../environments/environment';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -66,11 +66,16 @@ export class MenuComponent implements OnInit, OnDestroy {
   /** Category filter tabs — derived from actual items in menu (not config) */
   categories: string[] = ['All'];
 
-  // ── Restaurant Menu / Theater Menu tabs ───────────────────────────────────
-  /** Active top-level tab on the Menu page. */
-  activeMenuTab: 'restaurant' | 'theater' = 'restaurant';
+  // ── Menu mode (driven by route data) ─────────────────────────────────────
+  /** 'restaurant' for the regular delivery menu page (/dashboard/menu),
+   *  'theater' for the theater menu page (/dashboard/theater/menu). */
+  mode: 'restaurant' | 'theater' = 'restaurant';
   /** True when the restaurant has opted into theater (in-venue) ordering. */
   isTheaterEnabled = false;
+
+  get isTheaterMode(): boolean {
+    return this.mode === 'theater';
+  }
 
   /** Category options for the form — sourced from food-categories API */
   get formCategories(): string[] {
@@ -113,7 +118,8 @@ export class MenuComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private configService: ConfigService,
     private foodCategoryService: FoodCategoryService,
-    private http: HttpClient,
+    private restaurantInfo: RestaurantInfoService,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -140,29 +146,30 @@ export class MenuComponent implements OnInit, OnDestroy {
     // Fetch menu items
     this.menuService.fetchMenuItems();
 
-    // Fetch the restaurant once to learn whether the Theater Menu tab should
-    // be visible. We hit the same /restaurants/{id} endpoint the navbar uses,
-    // so this is a cheap second call (cached by the browser).
-    const restaurantId = this.restaurantContext.getRestaurantId();
-    if (restaurantId) {
-      this.http
-        .get<{ theaterMode?: string }>(`${environment.apiUrl}/restaurants/${restaurantId}`)
-        .subscribe({
-          next: (res) => {
-            const flag = String(res?.theaterMode || '').toUpperCase();
-            this.isTheaterEnabled = flag === 'AVAILABLE';
-            // Defensive: if the tab was somehow left on 'theater' and the flag
-            // got turned off server-side, fall back to the regular tab.
-            if (!this.isTheaterEnabled && this.activeMenuTab === 'theater') {
-              this.activeMenuTab = 'restaurant';
-            }
-            this.cdr.detectChanges();
-          },
-          error: (err) => {
-            console.warn('Failed to load restaurant theaterMode flag:', err);
-          },
-        });
-    }
+    // Page mode comes from the route's `data: { mode: 'theater' | 'restaurant' }`.
+    // Re-subscribing keeps us in sync if the user navigates between the two
+    // sibling routes without remounting the component.
+    this.route.data.subscribe((data) => {
+      const next = (data['mode'] as 'restaurant' | 'theater') || 'restaurant';
+      if (next !== this.mode) {
+        this.mode = next;
+        // Reset filters so a stale "category=Drinks" doesn't carry over to a
+        // page where Drinks doesn't exist.
+        this.selectedCategory = 'all';
+        this.searchQuery = '';
+        this.updateCategoryTabs(this.menuItems);
+        this.cdr.detectChanges();
+      }
+    });
+
+    // The Theater Menu route is only reachable for theater-enabled
+    // restaurants. We still cache the flag because some downstream logic
+    // (e.g. confirming a sidebar regression) wants it.
+    this.restaurantInfo.load().subscribe();
+    this.restaurantInfo.info$.subscribe(() => {
+      this.isTheaterEnabled = this.restaurantInfo.isTheaterEnabled;
+      this.cdr.detectChanges();
+    });
 
     // Load global config (hike thresholds) and food categories in parallel
     this.configService.loadConfig().subscribe();
@@ -182,15 +189,17 @@ export class MenuComponent implements OnInit, OnDestroy {
   }
 
   updateCategoryTabs(items: MenuItem[]): void {
-    // Only consider items that belong to the current top-level tab so the
-    // category chips don't list categories that have zero items in the
-    // currently-selected view.
-    const scoped = items.filter(it => {
-      if (!this.isTheaterEnabled) return !it.theaterMode;
-      return this.activeMenuTab === 'theater' ? !!it.theaterMode : !it.theaterMode;
-    });
+    // Only consider items that belong to the current page mode so the
+    // category chips don't list categories that have zero items here.
+    const scoped = items.filter(it => this.itemMatchesMode(it));
     const unique = [...new Set(scoped.map(item => item.category).filter(Boolean))].sort();
     this.categories = ['All', ...unique];
+  }
+
+  /** True when `item` should appear in the current page (mode-aware). */
+  private itemMatchesMode(item: MenuItem): boolean {
+    if (this.mode === 'theater') return !!item.theaterMode;
+    return !item.theaterMode;
   }
 
   selectCategory(category: string): void {
@@ -204,17 +213,10 @@ export class MenuComponent implements OnInit, OnDestroy {
   getFilteredItems(): MenuItem[] {
     const query = this.searchQuery.trim().toLowerCase();
     return this.menuItems.filter(item => {
-      // Top-level tab filter: Restaurant Menu hides theater items, Theater
-      // Menu shows only theater items.
-      if (this.isTheaterEnabled) {
-        if (this.activeMenuTab === 'theater' && !item.theaterMode) return false;
-        if (this.activeMenuTab === 'restaurant' && item.theaterMode) return false;
-      } else if (item.theaterMode) {
-        // Restaurant has theater turned OFF globally — never surface theater
-        // items in the regular table (defence-in-depth; backend filter also
-        // hides them, but local state can lag).
-        return false;
-      }
+      // Mode filter: regular Menu hides theater items; Theater Menu hides
+      // non-theater items. The two pages share this component but are wired
+      // to different routes with `data: { mode }`.
+      if (!this.itemMatchesMode(item)) return false;
 
       const categoryMatch =
         this.selectedCategory === 'all' || item.category.toLowerCase() === this.selectedCategory;
@@ -232,24 +234,6 @@ export class MenuComponent implements OnInit, OnDestroy {
         subCategory.includes(query)
       );
     });
-  }
-
-  /** Switch between the "Restaurant Menu" and "Theater Menu" top-level tabs. */
-  setActiveMenuTab(tab: 'restaurant' | 'theater'): void {
-    if (tab === this.activeMenuTab) return;
-    if (tab === 'theater' && !this.isTheaterEnabled) return;
-    this.activeMenuTab = tab;
-    // Reset category + search so the new tab doesn't filter to an empty view
-    // when the previous tab's selection isn't represented here.
-    this.selectedCategory = 'all';
-    this.updateCategoryTabs(this.menuItems);
-  }
-
-  /** Live count of items in a given top-level tab (drives the "(N)" badge). */
-  countItemsInTab(tab: 'restaurant' | 'theater'): number {
-    return this.menuItems.filter(it =>
-      tab === 'theater' ? !!it.theaterMode : !it.theaterMode
-    ).length;
   }
 
   hasCategoryItems(category: string): boolean {
@@ -594,7 +578,12 @@ export class MenuComponent implements OnInit, OnDestroy {
       isVeg: true,
       image: [],
       addOnOptions: [],
-      shiftTimings: []
+      shiftTimings: [],
+      // When the operator hits "Add Item" on the Theater Menu page, default
+      // the new row to a theater item with zero stock — otherwise they'd
+      // create a regular menu item that never shows up in this page.
+      theaterMode: this.mode === 'theater' ? true : false,
+      inventoryCount: this.mode === 'theater' ? 0 : undefined,
     };
     this.addonOptions = [];
     this.showItemShiftEditor = false;

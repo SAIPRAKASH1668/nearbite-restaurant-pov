@@ -154,21 +154,26 @@ export class MenuService {
    */
   addMenuItemRaw(itemData: Partial<MenuItem>): Observable<MenuItem> {
     const restaurantId = this.restaurantContext.getRestaurantId();
+    const body: Record<string, any> = {
+      name: itemData.itemName,
+      restaurantPrice: itemData.restaurantPrice,
+      hikePercentage: itemData.hikePercentage ?? 0,
+      category: itemData.category,
+      subCategory: itemData.subCategory,
+      isVeg: itemData.isVeg,
+      isAvailable: itemData.isAvailable,
+      description: itemData.description,
+      image: itemData.image,
+      addOnOptions: itemData.addOnOptions ?? [],
+      shiftTimings: itemData.shiftTimings ?? []
+    };
+    // Theater fields are only included when explicitly set so a regular
+    // create path stays unchanged (no inadvertent `theaterMode: false` writes).
+    if (typeof itemData.theaterMode === 'boolean') body['theaterMode'] = itemData.theaterMode;
+    if (typeof itemData.inventoryCount === 'number') body['inventoryCount'] = itemData.inventoryCount;
     return this.http.post<MenuItem>(
       `${this.API_BASE_URL}/restaurants/${restaurantId}/menu`,
-      {
-        name: itemData.itemName,
-        restaurantPrice: itemData.restaurantPrice,
-        hikePercentage: itemData.hikePercentage ?? 0,
-        category: itemData.category,
-        subCategory: itemData.subCategory,
-        isVeg: itemData.isVeg,
-        isAvailable: itemData.isAvailable,
-        description: itemData.description,
-        image: itemData.image,
-        addOnOptions: itemData.addOnOptions ?? [],
-        shiftTimings: itemData.shiftTimings ?? []
-      }
+      body
     ).pipe(
       catchError(error => {
         console.error('❌ Error adding menu item (raw):', error);

@@ -209,6 +209,42 @@ $dude-red:            hsl(0,  79%,  55%);
     padding: 0 $spacing-md;
   }
 
+  // ── Collapsible group (e.g. Theater) ─────────────────────────────────────
+  .nav-group-head {
+    margin-top: $spacing-sm;
+  }
+  .nav-group-btn {
+    background: transparent;
+    border: 0;
+    width: 100%;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+  }
+  .nav-group-caret {
+    margin-left: auto;
+    font-size: 10px;
+    color: inherit;
+    opacity: 0.6;
+    transition: transform 0.15s ease;
+    &.open {
+      transform: rotate(180deg);
+    }
+  }
+  .nav-child-item {
+    padding-left: calc(#{$spacing-md} + 18px);
+  }
+  .nav-child-link {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    font-size: calc(#{$font-size-base} - 1px);
+    opacity: 0.92;
+  }
+  .nav-child-icon {
+    font-size: calc(#{$font-size-lg} - 2px) !important;
+    width: 18px !important;
+  }
+
   .nav-link {
     display: flex;
     align-items: center;

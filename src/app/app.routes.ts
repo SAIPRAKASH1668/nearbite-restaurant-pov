@@ -69,11 +69,27 @@ export const routes: Routes = [
       },
       {
         path: 'orders',
-        component: OrdersComponent
+        component: OrdersComponent,
+        data: { mode: 'delivery' }
       },
       {
         path: 'menu',
-        component: MenuComponent
+        component: MenuComponent,
+        data: { mode: 'restaurant' }
+      },
+      // ── Theater section (sidebar > Theater dropdown) ───────────────────
+      // Same components, different `mode` — keeps logic in one place but
+      // surfaces a dedicated UX so theater-mode operators don't have to
+      // mentally filter through delivery items/orders.
+      {
+        path: 'theater/menu',
+        component: MenuComponent,
+        data: { mode: 'theater' }
+      },
+      {
+        path: 'theater/orders',
+        component: OrdersComponent,
+        data: { mode: 'theater' }
       },
       {
         path: 'reports',

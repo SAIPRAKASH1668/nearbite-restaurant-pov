@@ -1,5 +1,13 @@
 ﻿<div class="ord-root" [class.ord-root--no-printer]="!hasPrinter">
 
+  <!-- Page heading: makes it unmistakable which orders queue you're in. -->
+  <div class="ord-page-head" *ngIf="isTheaterMode">
+    <h1 class="ord-page-title">
+      <i class="fas fa-couch"></i> Theater Orders
+    </h1>
+    <p class="ord-page-sub">In-venue pickup orders &mdash; no rider, served at the customer's seat.</p>
+  </div>
+
   <!-- ── Tab Bar ──────────────────────────────────────────────────────────── -->
   <div class="ord-tabs">
     <button class="ord-tab" [class.active]="activeTab === 'new'" (click)="setActiveTab('new')">

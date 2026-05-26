@@ -3,15 +3,13 @@
   <!-- ── Page Header ──────────────────────────────────────────────────────── -->
   <div class="mn-header">
     <div class="mn-header-left">
-      <h1 class="mn-title">Menu Management</h1>
+      <h1 class="mn-title">
+        <ng-container *ngIf="!isTheaterMode">Menu Management</ng-container>
+        <ng-container *ngIf="isTheaterMode">Theater Menu</ng-container>
+      </h1>
       <p class="mn-subtitle">
-        <ng-container *ngIf="!isTheaterEnabled">Manage your restaurant menu items</ng-container>
-        <ng-container *ngIf="isTheaterEnabled && activeMenuTab === 'restaurant'">
-          Manage your regular delivery menu items
-        </ng-container>
-        <ng-container *ngIf="isTheaterEnabled && activeMenuTab === 'theater'">
-          Manage in-venue theater items and inventory
-        </ng-container>
+        <ng-container *ngIf="!isTheaterMode">Manage your restaurant menu items</ng-container>
+        <ng-container *ngIf="isTheaterMode">Manage in-venue theater items and inventory</ng-container>
       </p>
     </div>
     <div class="mn-header-actions">
@@ -19,31 +17,9 @@
         <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
           <path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        Add Item
+        {{ isTheaterMode ? 'Add Theater Item' : 'Add Item' }}
       </button>
     </div>
-  </div>
-
-  <!-- ── Top-level tabs (only for theater-enabled restaurants) ────────────── -->
-  <div class="mn-toptabs" *ngIf="isTheaterEnabled">
-    <button
-      type="button"
-      class="mn-toptab"
-      [class.active]="activeMenuTab === 'restaurant'"
-      (click)="setActiveMenuTab('restaurant')">
-      <i class="fas fa-utensils"></i>
-      Restaurant Menu
-      <span class="mn-toptab-count">{{ countItemsInTab('restaurant') }}</span>
-    </button>
-    <button
-      type="button"
-      class="mn-toptab"
-      [class.active]="activeMenuTab === 'theater'"
-      (click)="setActiveMenuTab('theater')">
-      <i class="fas fa-couch"></i>
-      Theater Menu
-      <span class="mn-toptab-count">{{ countItemsInTab('theater') }}</span>
-    </button>
   </div>
 
   <div class="mn-search-wrap" *ngIf="!loading">
@@ -149,10 +125,7 @@
           <th class="mn-th mn-th-disprice">Cust. Price</th>
           <th class="mn-th mn-th-addons">Add-ons</th>
           <th class="mn-th mn-th-avail">Available</th>
-          <th class="mn-th mn-th-theater" *ngIf="isTheaterEnabled">
-            <ng-container *ngIf="activeMenuTab === 'theater'">Stock</ng-container>
-            <ng-container *ngIf="activeMenuTab !== 'theater'">Theater</ng-container>
-          </th>
+          <th class="mn-th mn-th-theater" *ngIf="isTheaterMode">Stock</th>
           <th class="mn-th mn-th-act">Edit</th>
         </tr>
       </thead>
@@ -217,35 +190,20 @@
             </div>
           </td>
 
-          <!-- Theater column (theater-enabled restaurants only) -->
-          <!-- Restaurant Menu tab → toggle to convert an item INTO a theater item -->
-          <!-- Theater Menu tab    → just stock controls + a discrete "Move back" link -->
-          <td class="mn-td mn-td-theater" *ngIf="isTheaterEnabled">
+          <!-- Stock column — theater page only. Lives in its own dedicated
+               sidebar entry, so we don't need a "move back" affordance here. -->
+          <td class="mn-td mn-td-theater" *ngIf="isTheaterMode">
             <div class="mn-theater-cell">
-              <ng-container *ngIf="activeMenuTab === 'restaurant'">
-                <label class="mn-toggle" title="Move to Theater Menu">
-                  <input type="checkbox" [checked]="!!item.theaterMode" (change)="toggleTheaterMode(item.itemId)" />
-                  <span class="mn-track"></span>
-                </label>
-                <span class="mn-theater-off">Off</span>
-              </ng-container>
-              <ng-container *ngIf="activeMenuTab === 'theater'">
-                <input
-                  type="number"
-                  min="0"
-                  class="mn-inv-input"
-                  [value]="item.inventoryCount ?? 0"
-                  (blur)="setInventoryCount(item.itemId, $any($event.target).value)"
-                  title="Remaining stock"
-                />
-                <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 5)" title="Restock +5">+5</button>
-                <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 10)" title="Restock +10">+10</button>
-                <button type="button" class="mn-move-back-btn"
-                        (click)="toggleTheaterMode(item.itemId)"
-                        title="Move back to Restaurant Menu">
-                  <i class="fas fa-arrow-left"></i>
-                </button>
-              </ng-container>
+              <input
+                type="number"
+                min="0"
+                class="mn-inv-input"
+                [value]="item.inventoryCount ?? 0"
+                (blur)="setInventoryCount(item.itemId, $any($event.target).value)"
+                title="Remaining stock"
+              />
+              <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 5)" title="Restock +5">+5</button>
+              <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 10)" title="Restock +10">+10</button>
             </div>
           </td>
 
@@ -291,18 +249,12 @@
             <span class="mn-track"></span>
           </label>
           <!-- Restaurant Menu tab: theater toggle (convert to theater item) -->
-          <label class="mn-toggle mn-toggle-theater"
-            *ngIf="isTheaterEnabled && activeMenuTab === 'restaurant'"
-            title="Move to Theater Menu">
-            <input type="checkbox" [checked]="!!item.theaterMode" (change)="toggleTheaterMode(item.itemId)" />
-            <span class="mn-track"></span>
-          </label>
           <button class="mn-btn-edit" (click)="openEditItemForm(item)" title="Edit item">
             <i class="fas fa-pen"></i>
           </button>
         </div>
-        <!-- Theater Menu tab: stock controls + discrete "Move back" link -->
-        <div class="mn-card-theater" *ngIf="isTheaterEnabled && activeMenuTab === 'theater'">
+        <!-- Theater Menu page: stock controls only -->
+        <div class="mn-card-theater" *ngIf="isTheaterMode">
           <span class="mn-card-theater-label">Stock</span>
           <input
             type="number"
@@ -313,30 +265,19 @@
           />
           <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 5)">+5</button>
           <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 10)">+10</button>
-          <button type="button" class="mn-move-back-btn"
-                  (click)="toggleTheaterMode(item.itemId)"
-                  title="Move back to Restaurant Menu">
-            <i class="fas fa-arrow-left"></i>
-          </button>
         </div>
       </div>
 
     </div>
   </div>
 
-  <!-- ── No results in selected tab / category ────────────────────────────── -->
+  <!-- ── Empty state ─────────────────────────────────────────────────────── -->
   <div class="mn-no-results" *ngIf="!loading && menuItems.length > 0 && getFilteredItems().length === 0">
-    <p *ngIf="isTheaterEnabled && activeMenuTab === 'theater' && countItemsInTab('theater') === 0">
-      <i class="fas fa-couch"></i> No theater items yet. Flip the Theater toggle
-      on any item in the <strong>Restaurant Menu</strong> tab to move it here, then set its stock.
+    <p *ngIf="isTheaterMode">
+      <i class="fas fa-couch"></i> No theater items yet. Click
+      <strong>Add Theater Item</strong> above to add one, and set its remaining stock.
     </p>
-    <p *ngIf="isTheaterEnabled && activeMenuTab === 'restaurant' && countItemsInTab('restaurant') === 0">
-      No delivery items right now &mdash; every item is currently a theater item.
-    </p>
-    <p *ngIf="!(isTheaterEnabled && activeMenuTab === 'theater' && countItemsInTab('theater') === 0)
-             && !(isTheaterEnabled && activeMenuTab === 'restaurant' && countItemsInTab('restaurant') === 0)">
-      No items in this category
-    </p>
+    <p *ngIf="!isTheaterMode">No items in this category</p>
   </div>
 
 </div>

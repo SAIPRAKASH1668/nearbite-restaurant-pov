@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { OrderNotificationService } from '../../core/services/order-notification.service';
 import { OrderService } from '../../core/services/order.service';
 import { Order, OrderStatus } from '../../core/models/order.model';
@@ -66,13 +66,24 @@ export class OrdersComponent implements OnInit, OnDestroy {
   // Status enum for template
   OrderStatus = OrderStatus;
 
+  /** Page mode (driven by route data):
+   *   - 'delivery' for /dashboard/orders   → DELIVERY orders only
+   *   - 'theater'  for /dashboard/theater/orders → PICKUP (theater) orders only
+   */
+  mode: 'delivery' | 'theater' = 'delivery';
+
+  get isTheaterMode(): boolean {
+    return this.mode === 'theater';
+  }
+
   constructor(
     private orderService: OrderService,
     private orderNotificationService: OrderNotificationService,
     private cdr: ChangeDetectorRef,
     private soundService: SoundService,
     private printerService: PrinterService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private route: ActivatedRoute
   ) {}
 
   private isConflictError(error: any): boolean {
@@ -87,6 +98,14 @@ export class OrdersComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.printerStatusSub = this.printerService.status$.subscribe(s => {
       this.printStatus = s;
+      this.cdr.detectChanges();
+    });
+
+    // Page mode comes from route data. Subscribing (vs. snapshot) keeps us
+    // in sync if the user clicks between Orders ↔ Theater Orders without
+    // remounting the component.
+    this.route.data.subscribe((data) => {
+      this.mode = (data['mode'] as 'delivery' | 'theater') || 'delivery';
       this.cdr.detectChanges();
     });
 
@@ -177,10 +196,14 @@ export class OrdersComponent implements OnInit, OnDestroy {
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     return orders.filter(order => {
       const orderDate = new Date(order.createdAt);
-      return orderDate >= today && orderDate < tomorrow;
+      if (!(orderDate >= today && orderDate < tomorrow)) return false;
+      // Mode-aware split: /dashboard/orders shows DELIVERY only,
+      //                  /dashboard/theater/orders shows PICKUP only.
+      const isPickup = this.isPickupOrder(order);
+      return this.isTheaterMode ? isPickup : !isPickup;
     });
   }
 

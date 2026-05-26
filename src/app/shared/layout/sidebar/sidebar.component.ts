@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { OrderNotificationService } from '../../../core/services/order-notification.service';
+import { RestaurantInfoService } from '../../../core/services/restaurant-info.service';
 import { Subscription } from 'rxjs';
 
 interface NavItem {
@@ -10,6 +11,20 @@ interface NavItem {
   icon: string;
   route: string;
   badge?: number;
+}
+
+/**
+ * Top-level nav entries that expand into a sub-list (e.g. Theater → Menu / Orders).
+ * `children` are rendered as indented routes when the parent is expanded.
+ * `visible` lets us conditionally hide the whole group at runtime (e.g. when
+ * the restaurant hasn't opted into theater mode).
+ */
+interface NavGroup {
+  label: string;
+  icon: string;
+  children: NavItem[];
+  visible: boolean;
+  expanded: boolean;
 }
 
 @Component({
@@ -41,10 +56,28 @@ export class SidebarComponent implements OnInit, OnDestroy {
     { label: 'Support', icon: 'fa-headset', route: '/dashboard/support' }
   ];
 
+  /** Sub-grouped nav (e.g. Theater → Menu / Orders). Rendered as a collapsible
+   *  section in the sidebar, only when `visible` is true. */
+  navGroups: NavGroup[] = [
+    {
+      label: 'Theater',
+      icon: 'fa-couch',
+      visible: false,         // flipped on once we learn the restaurant has theaterMode='AVAILABLE'
+      expanded: true,         // default expanded so the children are discoverable
+      children: [
+        { label: 'Menu',   icon: 'fa-utensils',      route: '/dashboard/theater/menu' },
+        { label: 'Orders', icon: 'fa-shopping-cart', route: '/dashboard/theater/orders' },
+      ],
+    },
+  ];
+
+  private restaurantInfoSub?: Subscription;
+
   constructor(
     private authService: AuthService,
     private router: Router,
     private orderNotificationService: OrderNotificationService,
+    private restaurantInfo: RestaurantInfoService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -63,12 +96,32 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }, 0);
     });
+
+    // Reveal the Theater group only when the backend says this restaurant has
+    // opted in. The service caches the response so this is essentially free
+    // for the menu/orders pages that read it later.
+    this.restaurantInfo.load().subscribe();
+    this.restaurantInfoSub = this.restaurantInfo.info$.subscribe(() => {
+      const isEnabled = this.restaurantInfo.isTheaterEnabled;
+      this.navGroups.forEach((g) => {
+        if (g.label === 'Theater') g.visible = isEnabled;
+      });
+      this.cdr.detectChanges();
+    });
   }
 
   ngOnDestroy(): void {
     if (this.newOrderSubscription) {
       this.newOrderSubscription.unsubscribe();
     }
+    if (this.restaurantInfoSub) {
+      this.restaurantInfoSub.unsubscribe();
+    }
+  }
+
+  /** Expand/collapse a sidebar group (e.g. Theater). */
+  toggleGroup(group: NavGroup): void {
+    group.expanded = !group.expanded;
   }
 
   /** Re-evaluate viewport on resize — collapse sidebar when entering tablet range */

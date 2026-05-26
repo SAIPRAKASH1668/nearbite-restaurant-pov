@@ -170,62 +170,8 @@
   }
 }
 
-// ── Top-level tabs (Restaurant Menu / Theater Menu) ──────────────────────────
-.mn-toptabs {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.25rem;
-  margin: 0 0 0.75rem;
-  background: #F7F1E6;
-  border: 1px solid #E8D9C2;
-  border-radius: 12px;
-  width: fit-content;
-  max-width: 100%;
-}
-.mn-toptab {
-  flex: 0 1 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.55rem 1rem;
-  background: transparent;
-  border: 0;
-  color: #7A6B5A;
-  font-size: 0.875rem;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
-  white-space: nowrap;
-}
-.mn-toptab:hover {
-  color: #2E241B;
-}
-.mn-toptab.active {
-  background: #FFFFFF;
-  color: #E8352A;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-}
-.mn-toptab i {
-  font-size: 0.8rem;
-}
-.mn-toptab-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 22px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  background: #EDE2D1;
-  color: #6B5A47;
-}
-.mn-toptab.active .mn-toptab-count {
-  background: rgba(232, 53, 42, 0.12);
-  color: #E8352A;
-}
+// (Restaurant Menu / Theater Menu top-level tabs were removed: Theater Menu
+//  now has its own dedicated route under the sidebar's Theater dropdown.)
 
 // ── Category Tabs ─────────────────────────────────────────────────────────────
 .mn-cats {
@@ -703,30 +649,6 @@
 .mn-restock-btn:hover {
   background: #E8352A;
   color: #FFFDF7;
-}
-// "Move back to Restaurant Menu" — discreet icon-only button, sits at the
-// far right of the cell so it doesn't compete with stock controls.
-.mn-move-back-btn {
-  margin-left: 4px;
-  width: 26px;
-  height: 26px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #DCCDB7;
-  background: #FFFDF7;
-  color: #7A6B5A;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.1s ease, color 0.1s ease, border-color 0.1s ease;
-}
-.mn-move-back-btn:hover {
-  background: #F7F1E6;
-  color: #2E241B;
-  border-color: #B8A689;
-}
-.mn-move-back-btn i {
-  font-size: 11px;
 }
 .mn-card-theater {
   margin-top: 6px;
