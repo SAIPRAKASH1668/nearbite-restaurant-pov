@@ -45,7 +45,13 @@ export enum OrderStatus {
   PICKED_UP = 'PICKED_UP',
   OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
   DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
+  FAILED_INVENTORY = 'FAILED_INVENTORY'
+}
+
+export enum OrderType {
+  DELIVERY = 'DELIVERY',
+  PICKUP = 'PICKUP'
 }
 
 export interface Order {
@@ -73,6 +79,12 @@ export interface Order {
   deliveryOtp?: string; // 4-digit OTP for customer to verify with rider during delivery
   /** Revenue breakdown — present once the order has been processed by the revenue calculator */
   revenue?: OrderRevenue;
+  /** Theater (in-venue) order. PICKUP orders skip rider/delivery entirely. */
+  orderType?: OrderType;
+  /** Daily-rolling pickup token shown at the F&B counter (e.g. "A042"). */
+  pickupToken?: string | null;
+  /** True once the theater stock has been restocked after a cancellation. */
+  inventoryReverted?: boolean;
 }
 
 export interface OrdersResponse {

@@ -139,7 +139,10 @@ export class OrdersComponent implements OnInit, OnDestroy {
         filteredOrders = todayOrders.filter(o => o.status === OrderStatus.DELIVERED);
         break;
       case 'cancelled':
-        filteredOrders = todayOrders.filter(o => o.status === OrderStatus.CANCELLED);
+        filteredOrders = todayOrders.filter(o =>
+          o.status === OrderStatus.CANCELLED ||
+          o.status === OrderStatus.FAILED_INVENTORY
+        );
         break;
       default:
         filteredOrders = [];
@@ -204,7 +207,10 @@ export class OrdersComponent implements OnInit, OnDestroy {
       case 'completed':
         return todayOrders.filter(o => o.status === OrderStatus.DELIVERED).length;
       case 'cancelled':
-        return todayOrders.filter(o => o.status === OrderStatus.CANCELLED).length;
+        return todayOrders.filter(o =>
+          o.status === OrderStatus.CANCELLED ||
+          o.status === OrderStatus.FAILED_INVENTORY
+        ).length;
       default:
         return 0;
     }
@@ -246,7 +252,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
       [OrderStatus.PICKED_UP]: 'Picked Up',
       [OrderStatus.OUT_FOR_DELIVERY]: 'Out for Delivery',
       [OrderStatus.DELIVERED]: 'Delivered',
-      [OrderStatus.CANCELLED]: 'Cancelled'
+      [OrderStatus.CANCELLED]: 'Cancelled',
+      [OrderStatus.FAILED_INVENTORY]: 'Sold Out (Refunded)'
     };
     return statusMap[status] || status;
   }
@@ -268,9 +275,57 @@ export class OrdersComponent implements OnInit, OnDestroy {
       [OrderStatus.PICKED_UP]: 'teal',
       [OrderStatus.OUT_FOR_DELIVERY]: 'teal',
       [OrderStatus.DELIVERED]: 'gray',
-      [OrderStatus.CANCELLED]: 'red'
+      [OrderStatus.CANCELLED]: 'red',
+      [OrderStatus.FAILED_INVENTORY]: 'red'
     };
     return colorMap[status] || 'gray';
+  }
+
+  /** True when an order is a theater (in-venue) PICKUP order. */
+  isPickupOrder(order: Order): boolean {
+    return order?.orderType === 'PICKUP' || /^THEATER#/i.test(order?.addressId || '');
+  }
+
+  /** Parse the stored "{venue} - {seat}" address into its two halves. */
+  parseTheaterAddress(order: Order): { venue: string; seat: string } {
+    const raw = String(order?.deliveryAddress || '');
+    const idx = raw.lastIndexOf(' - ');
+    if (idx === -1) return { venue: raw, seat: '' };
+    return { venue: raw.slice(0, idx).trim(), seat: raw.slice(idx + 3).trim() };
+  }
+
+  /** Mark a theater PICKUP order as ready for pickup (instead of OUT_FOR_DELIVERY). */
+  markReadyForPickup(order: Order, event?: Event): void {
+    event?.stopPropagation();
+    this.orderService.updateOrderStatus(order.orderId, OrderStatus.READY_FOR_PICKUP).subscribe({
+      next: (updatedOrder) => {
+        const index = this.allOrders.findIndex(o => o.orderId === order.orderId);
+        if (index !== -1) {
+          this.allOrders[index] = updatedOrder;
+          this.cdr.detectChanges();
+        }
+      },
+      error: () => {
+        alert('Failed to update order. Please try again.');
+      }
+    });
+  }
+
+  /** Mark a theater PICKUP order as picked up (terminal — uses DELIVERED status). */
+  markPickedUp(order: Order, event?: Event): void {
+    event?.stopPropagation();
+    this.orderService.updateOrderStatus(order.orderId, OrderStatus.DELIVERED).subscribe({
+      next: (updatedOrder) => {
+        const index = this.allOrders.findIndex(o => o.orderId === order.orderId);
+        if (index !== -1) {
+          this.allOrders[index] = updatedOrder;
+          this.cdr.detectChanges();
+        }
+      },
+      error: () => {
+        alert('Failed to update order. Please try again.');
+      }
+    });
   }
 
   /**

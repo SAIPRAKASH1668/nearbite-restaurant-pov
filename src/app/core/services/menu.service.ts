@@ -34,6 +34,9 @@ export interface MenuItem {
   shiftAvailable?: boolean;
   effectivelyAvailable?: boolean;
   nextAvailableAt?: string | null;
+  // Theater (in-venue) ordering
+  theaterMode?: boolean;
+  inventoryCount?: number;
 }
 
 export interface MenuResponse {
@@ -76,7 +79,9 @@ export class MenuService {
     if (this.menuLoadPromise) return this.menuLoadPromise;
     this.menuLoadPromise = firstValueFrom(
       this.http
-        .get<MenuResponse>(`${this.API_BASE_URL}/restaurants/${this.restaurantContext.getRestaurantId()}/menu`)
+        // mode=all so theater items show up in the restaurant management UI
+        // (the public-facing /menu endpoint hides them by default).
+        .get<MenuResponse>(`${this.API_BASE_URL}/restaurants/${this.restaurantContext.getRestaurantId()}/menu?mode=all`)
         .pipe(
           tap(response => {
             this.menuItemsSubject.next(response.items);
@@ -99,7 +104,9 @@ export class MenuService {
     const restaurantId = this.restaurantContext.getRestaurantId();
     this.loadingSubject.next(true);
     
-    this.http.get<MenuResponse>(`${this.API_BASE_URL}/restaurants/${restaurantId}/menu`)
+    // mode=all so theater items show up in the restaurant management UI
+    // (the public-facing /menu endpoint hides them by default).
+    this.http.get<MenuResponse>(`${this.API_BASE_URL}/restaurants/${restaurantId}/menu?mode=all`)
       .pipe(
         tap(response => {
           this.menuItemsSubject.next(response.items);
@@ -267,7 +274,7 @@ export class MenuService {
   }
 
   private _buildItemPayload(itemData: Partial<MenuItem>): object {
-    return {
+    const payload: Record<string, any> = {
       name: itemData.itemName,
       restaurantPrice: itemData.restaurantPrice,
       hikePercentage: itemData.hikePercentage,
@@ -280,5 +287,51 @@ export class MenuService {
       addOnOptions: itemData.addOnOptions ?? [],
       shiftTimings: itemData.shiftTimings ?? []
     };
+    // Pass theater fields through only when explicitly set, so partial updates
+    // (e.g. toggling availability) don't wipe stored values.
+    if (typeof itemData.theaterMode === 'boolean') payload['theaterMode'] = itemData.theaterMode;
+    if (typeof itemData.inventoryCount === 'number') payload['inventoryCount'] = itemData.inventoryCount;
+    return payload;
+  }
+
+  /** Toggle theaterMode (per-item flag for in-venue inventory tracking). */
+  updateTheaterMode(itemId: string, theaterMode: boolean): Observable<MenuItem> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    return this.http.put<MenuItem>(
+      `${this.API_BASE_URL}/restaurants/${restaurantId}/menu/${itemId}`,
+      { theaterMode }
+    ).pipe(
+      tap(() => {
+        const items = this.menuItemsSubject.value.map(it =>
+          it.itemId === itemId ? { ...it, theaterMode } : it
+        );
+        this.menuItemsSubject.next(items);
+      }),
+      catchError(error => { throw error; })
+    );
+  }
+
+  /** Set inventoryCount for a theater item (absolute set, not increment). */
+  setInventoryCount(itemId: string, inventoryCount: number): Observable<MenuItem> {
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    return this.http.put<MenuItem>(
+      `${this.API_BASE_URL}/restaurants/${restaurantId}/menu/${itemId}`,
+      { inventoryCount }
+    ).pipe(
+      tap(() => {
+        const items = this.menuItemsSubject.value.map(it =>
+          it.itemId === itemId ? { ...it, inventoryCount } : it
+        );
+        this.menuItemsSubject.next(items);
+      }),
+      catchError(error => { throw error; })
+    );
+  }
+
+  /** Restock by N (additive). Reads current count and PUTs new total. */
+  restockBy(itemId: string, addBy: number): Observable<MenuItem> {
+    const current = this.menuItemsSubject.value.find(it => it.itemId === itemId);
+    const nextCount = Math.max(0, (current?.inventoryCount ?? 0) + addBy);
+    return this.setInventoryCount(itemId, nextCount);
   }
 }

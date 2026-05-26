@@ -119,6 +119,7 @@
           <th class="mn-th mn-th-disprice">Cust. Price</th>
           <th class="mn-th mn-th-addons">Add-ons</th>
           <th class="mn-th mn-th-avail">Available</th>
+          <th class="mn-th mn-th-theater">Theater</th>
           <th class="mn-th mn-th-act">Edit</th>
         </tr>
       </thead>
@@ -183,6 +184,29 @@
             </div>
           </td>
 
+          <!-- Theater mode + inventory -->
+          <td class="mn-td mn-td-theater">
+            <div class="mn-theater-cell">
+              <label class="mn-toggle" [title]="item.theaterMode ? 'Disable theater item' : 'Mark as theater item'">
+                <input type="checkbox" [checked]="!!item.theaterMode" (change)="toggleTheaterMode(item.itemId)" />
+                <span class="mn-track"></span>
+              </label>
+              <ng-container *ngIf="item.theaterMode">
+                <input
+                  type="number"
+                  min="0"
+                  class="mn-inv-input"
+                  [value]="item.inventoryCount ?? 0"
+                  (blur)="setInventoryCount(item.itemId, $any($event.target).value)"
+                  title="Remaining stock"
+                />
+                <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 5)" title="Restock +5">+5</button>
+                <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 10)" title="Restock +10">+10</button>
+              </ng-container>
+              <span class="mn-theater-off" *ngIf="!item.theaterMode">Off</span>
+            </div>
+          </td>
+
           <!-- Edit -->
           <td class="mn-td mn-td-act">
             <div class="mn-act-cell">
@@ -224,9 +248,25 @@
             <input type="checkbox" [checked]="item.isAvailable" (change)="toggleAvailability(item.itemId)" />
             <span class="mn-track"></span>
           </label>
+          <label class="mn-toggle mn-toggle-theater" [title]="item.theaterMode ? 'Disable theater item' : 'Mark as theater item'">
+            <input type="checkbox" [checked]="!!item.theaterMode" (change)="toggleTheaterMode(item.itemId)" />
+            <span class="mn-track"></span>
+          </label>
           <button class="mn-btn-edit" (click)="openEditItemForm(item)" title="Edit item">
             <i class="fas fa-pen"></i>
           </button>
+        </div>
+        <div class="mn-card-theater" *ngIf="item.theaterMode">
+          <span class="mn-card-theater-label">Stock</span>
+          <input
+            type="number"
+            min="0"
+            class="mn-inv-input"
+            [value]="item.inventoryCount ?? 0"
+            (blur)="setInventoryCount(item.itemId, $any($event.target).value)"
+          />
+          <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 5)">+5</button>
+          <button type="button" class="mn-restock-btn" (click)="restockBy(item.itemId, 10)">+10</button>
         </div>
       </div>
 

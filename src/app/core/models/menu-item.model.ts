@@ -38,6 +38,10 @@ export interface MenuItem {
 
   // Add-on options
   addOnOptions?: AddOnOption[];
+
+  // Theater (in-venue) ordering
+  theaterMode?: boolean;
+  inventoryCount?: number;
 }
 
 /**

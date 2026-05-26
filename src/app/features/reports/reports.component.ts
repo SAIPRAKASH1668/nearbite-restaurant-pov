@@ -456,7 +456,8 @@ export class ReportsComponent implements OnInit {
       [OrderStatus.PICKED_UP]: 'Picked Up',
       [OrderStatus.OUT_FOR_DELIVERY]: 'Out for Delivery',
       [OrderStatus.DELIVERED]: 'Delivered',
-      [OrderStatus.CANCELLED]: 'Cancelled'
+      [OrderStatus.CANCELLED]: 'Cancelled',
+      [OrderStatus.FAILED_INVENTORY]: 'Sold Out (Refunded)'
     };
     return statusMap[status] || status;
   }
@@ -478,7 +479,8 @@ export class ReportsComponent implements OnInit {
       [OrderStatus.PICKED_UP]: 'status-teal',
       [OrderStatus.OUT_FOR_DELIVERY]: 'status-teal',
       [OrderStatus.DELIVERED]: 'status-success',
-      [OrderStatus.CANCELLED]: 'status-error'
+      [OrderStatus.CANCELLED]: 'status-error',
+      [OrderStatus.FAILED_INVENTORY]: 'status-error'
     };
     return colorMap[status] || 'status-gray';
   }

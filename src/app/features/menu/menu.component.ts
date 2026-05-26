@@ -314,6 +314,61 @@ export class MenuComponent implements OnInit, OnDestroy {
     }
   }
 
+  /** Flip the theaterMode flag for an item (per-item, in-venue inventory tracking). */
+  toggleTheaterMode(itemId: string): void {
+    const item = this.menuItems.find(i => i.itemId === itemId);
+    if (!item) return;
+    const next = !item.theaterMode;
+    this.menuService.updateTheaterMode(itemId, next).subscribe({
+      next: () => {
+        item.theaterMode = next;
+        this.notificationService.success(
+          `${item.itemName} ${next ? 'enabled' : 'disabled'} for theater orders`
+        );
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error toggling theaterMode:', err);
+        this.notificationService.error('Failed to update theater mode');
+      }
+    });
+  }
+
+  /** Set inventoryCount absolute (e.g. operator typed a fresh number). */
+  setInventoryCount(itemId: string, value: number | string): void {
+    const next = Math.max(0, Number(value) || 0);
+    const item = this.menuItems.find(i => i.itemId === itemId);
+    if (!item) return;
+    this.menuService.setInventoryCount(itemId, next).subscribe({
+      next: () => {
+        item.inventoryCount = next;
+        this.notificationService.success(`${item.itemName} stock set to ${next}`);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error setting inventoryCount:', err);
+        this.notificationService.error('Failed to update stock');
+      }
+    });
+  }
+
+  /** Increment stock by a small amount — e.g. "+5" / "+10" restock buttons. */
+  restockBy(itemId: string, addBy: number): void {
+    const item = this.menuItems.find(i => i.itemId === itemId);
+    if (!item) return;
+    this.menuService.restockBy(itemId, addBy).subscribe({
+      next: () => {
+        item.inventoryCount = (item.inventoryCount ?? 0) + addBy;
+        this.notificationService.success(`+${addBy} stock for ${item.itemName}`);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error restocking:', err);
+        this.notificationService.error('Failed to restock');
+      }
+    });
+  }
+
   openAddItemForm(): void {
     this.isEditMode = false;
     this.editingItemId = null;

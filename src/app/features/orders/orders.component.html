@@ -84,6 +84,12 @@
           <span class="ord-status-pill" [attr.data-status]="order.status">
             {{ getStatusLabel(order.status) }}
           </span>
+          <span class="ord-theater-pill" *ngIf="isPickupOrder(order)">
+            <i class="fas fa-couch"></i> Theater
+          </span>
+          <span class="ord-token-pill" *ngIf="isPickupOrder(order) && order.pickupToken">
+            Token {{ order.pickupToken }}
+          </span>
         </div>
       </div>
 
@@ -108,8 +114,8 @@
         </button>
       </div>
 
-      <!-- Delivery address + rider -->
-      <div class="ord-delivery">
+      <!-- Delivery address + rider (DELIVERY orders) -->
+      <div class="ord-delivery" *ngIf="!isPickupOrder(order)">
         <div class="ord-addr-row">
           <i class="fas fa-map-marker-alt"></i>
           <span>{{ order.deliveryAddress }}</span>
@@ -117,6 +123,18 @@
         <div class="ord-rider-row" *ngIf="order.riderId">
           <i class="fas fa-motorcycle"></i>
           <span>Rider: {{ order.riderId }}</span>
+        </div>
+      </div>
+
+      <!-- Theater venue + seat (PICKUP orders) -->
+      <div class="ord-delivery ord-delivery-theater" *ngIf="isPickupOrder(order)">
+        <div class="ord-addr-row">
+          <i class="fas fa-store"></i>
+          <span>{{ parseTheaterAddress(order).venue }}</span>
+        </div>
+        <div class="ord-seat-row">
+          <i class="fas fa-couch"></i>
+          <span><strong>Seat {{ parseTheaterAddress(order).seat || '—' }}</strong></span>
         </div>
       </div>
 
@@ -147,10 +165,22 @@
             <i class="fas fa-times"></i> Reject
           </button>
           <button
-            *ngIf="order.status === OrderStatus.ACCEPTED || order.status === OrderStatus.PREPARING"
+            *ngIf="(order.status === OrderStatus.ACCEPTED || order.status === OrderStatus.PREPARING) && !isPickupOrder(order)"
             class="ord-btn ord-btn-ready"
             (click)="markReady(order); $event.stopPropagation()">
             <i class="fas fa-check-double"></i> Mark Ready
+          </button>
+          <button
+            *ngIf="(order.status === OrderStatus.ACCEPTED || order.status === OrderStatus.PREPARING) && isPickupOrder(order)"
+            class="ord-btn ord-btn-ready"
+            (click)="markReadyForPickup(order, $event)">
+            <i class="fas fa-bell"></i> Ready for Pickup
+          </button>
+          <button
+            *ngIf="order.status === OrderStatus.READY_FOR_PICKUP && isPickupOrder(order)"
+            class="ord-btn ord-btn-delivery"
+            (click)="markPickedUp(order, $event)">
+            <i class="fas fa-check-double"></i> Mark Picked Up
           </button>
         </div>
 
@@ -297,14 +327,24 @@
         <!-- Delivery + OTP row -->
         <div class="ord-modal-two-col">
 
-          <!-- Delivery address -->
+          <!-- Delivery address / theater venue + seat -->
           <div class="ord-modal-sec ord-modal-sec-half">
-            <div class="ord-modal-sec-title">
+            <div class="ord-modal-sec-title" *ngIf="!isPickupOrder(expandedOrder)">
               <i class="fas fa-map-marker-alt"></i> Delivery Address
             </div>
-            <div class="ord-modal-addr-box">
+            <div class="ord-modal-sec-title" *ngIf="isPickupOrder(expandedOrder)">
+              <i class="fas fa-couch"></i> Theater Pickup
+            </div>
+            <div class="ord-modal-addr-box" *ngIf="!isPickupOrder(expandedOrder)">
               <p class="ord-modal-addr-main">{{ expandedOrder.deliveryAddress }}</p>
               <p class="ord-modal-addr-sub" *ngIf="expandedOrder.formattedAddress">{{ expandedOrder.formattedAddress }}</p>
+            </div>
+            <div class="ord-modal-addr-box ord-modal-addr-box--theater" *ngIf="isPickupOrder(expandedOrder)">
+              <p class="ord-modal-addr-main">{{ parseTheaterAddress(expandedOrder).venue }}</p>
+              <p class="ord-modal-addr-sub"><strong>Seat {{ parseTheaterAddress(expandedOrder).seat || '—' }}</strong></p>
+              <p class="ord-modal-addr-sub" *ngIf="expandedOrder.pickupToken">
+                Token: <strong>{{ expandedOrder.pickupToken }}</strong>
+              </p>
             </div>
           </div>
 
@@ -390,10 +430,16 @@
           <i class="fas fa-check-double"></i> Mark Ready for Pickup
         </button>
         <button
-          *ngIf="expandedOrder.status === OrderStatus.READY_FOR_PICKUP"
+          *ngIf="expandedOrder.status === OrderStatus.READY_FOR_PICKUP && !isPickupOrder(expandedOrder)"
           class="ord-btn ord-btn-delivery ord-modal-act-btn primary"
           (click)="markOutForDelivery(expandedOrder); closeExpandedOrder()">
           <i class="fas fa-motorcycle"></i> Out for Delivery
+        </button>
+        <button
+          *ngIf="expandedOrder.status === OrderStatus.READY_FOR_PICKUP && isPickupOrder(expandedOrder)"
+          class="ord-btn ord-btn-delivery ord-modal-act-btn primary"
+          (click)="markPickedUp(expandedOrder); closeExpandedOrder()">
+          <i class="fas fa-check-double"></i> Mark Picked Up
         </button>
 
       </div>
