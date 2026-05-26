@@ -4,7 +4,15 @@
   <div class="mn-header">
     <div class="mn-header-left">
       <h1 class="mn-title">Menu Management</h1>
-      <p class="mn-subtitle">Manage your restaurant menu items</p>
+      <p class="mn-subtitle">
+        <ng-container *ngIf="!isTheaterEnabled">Manage your restaurant menu items</ng-container>
+        <ng-container *ngIf="isTheaterEnabled && activeMenuTab === 'restaurant'">
+          Manage your regular delivery menu items
+        </ng-container>
+        <ng-container *ngIf="isTheaterEnabled && activeMenuTab === 'theater'">
+          Manage in-venue theater items and inventory
+        </ng-container>
+      </p>
     </div>
     <div class="mn-header-actions">
       <button class="mn-btn-add" (click)="openAddItemForm()">
@@ -14,6 +22,28 @@
         Add Item
       </button>
     </div>
+  </div>
+
+  <!-- ── Top-level tabs (only for theater-enabled restaurants) ────────────── -->
+  <div class="mn-toptabs" *ngIf="isTheaterEnabled">
+    <button
+      type="button"
+      class="mn-toptab"
+      [class.active]="activeMenuTab === 'restaurant'"
+      (click)="setActiveMenuTab('restaurant')">
+      <i class="fas fa-utensils"></i>
+      Restaurant Menu
+      <span class="mn-toptab-count">{{ countItemsInTab('restaurant') }}</span>
+    </button>
+    <button
+      type="button"
+      class="mn-toptab"
+      [class.active]="activeMenuTab === 'theater'"
+      (click)="setActiveMenuTab('theater')">
+      <i class="fas fa-couch"></i>
+      Theater Menu
+      <span class="mn-toptab-count">{{ countItemsInTab('theater') }}</span>
+    </button>
   </div>
 
   <div class="mn-search-wrap" *ngIf="!loading">
@@ -94,7 +124,7 @@
     <p>Loading menu items…</p>
   </div>
 
-  <!-- ── Empty State ───────────────────────────────────────────────────────── -->
+  <!-- ── Empty State (overall — no items at all) ──────────────────────────── -->
   <div class="mn-empty" *ngIf="!loading && menuItems.length === 0">
     <i class="fas fa-utensils"></i>
     <h3>No menu items yet</h3>
@@ -119,7 +149,10 @@
           <th class="mn-th mn-th-disprice">Cust. Price</th>
           <th class="mn-th mn-th-addons">Add-ons</th>
           <th class="mn-th mn-th-avail">Available</th>
-          <th class="mn-th mn-th-theater">Theater</th>
+          <th class="mn-th mn-th-theater" *ngIf="isTheaterEnabled">
+            <ng-container *ngIf="activeMenuTab === 'theater'">Stock</ng-container>
+            <ng-container *ngIf="activeMenuTab !== 'theater'">Theater</ng-container>
+          </th>
           <th class="mn-th mn-th-act">Edit</th>
         </tr>
       </thead>
@@ -184,10 +217,11 @@
             </div>
           </td>
 
-          <!-- Theater mode + inventory -->
-          <td class="mn-td mn-td-theater">
+          <!-- Theater mode + inventory (theater-enabled restaurants only) -->
+          <td class="mn-td mn-td-theater" *ngIf="isTheaterEnabled">
             <div class="mn-theater-cell">
-              <label class="mn-toggle" [title]="item.theaterMode ? 'Disable theater item' : 'Mark as theater item'">
+              <label class="mn-toggle"
+                [title]="item.theaterMode ? 'Move back to Restaurant Menu' : 'Move to Theater Menu'">
                 <input type="checkbox" [checked]="!!item.theaterMode" (change)="toggleTheaterMode(item.itemId)" />
                 <span class="mn-track"></span>
               </label>
@@ -248,7 +282,9 @@
             <input type="checkbox" [checked]="item.isAvailable" (change)="toggleAvailability(item.itemId)" />
             <span class="mn-track"></span>
           </label>
-          <label class="mn-toggle mn-toggle-theater" [title]="item.theaterMode ? 'Disable theater item' : 'Mark as theater item'">
+          <label class="mn-toggle mn-toggle-theater"
+            *ngIf="isTheaterEnabled"
+            [title]="item.theaterMode ? 'Move back to Restaurant Menu' : 'Move to Theater Menu'">
             <input type="checkbox" [checked]="!!item.theaterMode" (change)="toggleTheaterMode(item.itemId)" />
             <span class="mn-track"></span>
           </label>
@@ -256,7 +292,7 @@
             <i class="fas fa-pen"></i>
           </button>
         </div>
-        <div class="mn-card-theater" *ngIf="item.theaterMode">
+        <div class="mn-card-theater" *ngIf="isTheaterEnabled && item.theaterMode">
           <span class="mn-card-theater-label">Stock</span>
           <input
             type="number"
@@ -273,9 +309,19 @@
     </div>
   </div>
 
-  <!-- ── No results in selected category ──────────────────────────────────── -->
+  <!-- ── No results in selected tab / category ────────────────────────────── -->
   <div class="mn-no-results" *ngIf="!loading && menuItems.length > 0 && getFilteredItems().length === 0">
-    <p>No items in this category</p>
+    <p *ngIf="isTheaterEnabled && activeMenuTab === 'theater' && countItemsInTab('theater') === 0">
+      <i class="fas fa-couch"></i> No theater items yet. Flip the Theater toggle
+      on any item in the <strong>Restaurant Menu</strong> tab to move it here, then set its stock.
+    </p>
+    <p *ngIf="isTheaterEnabled && activeMenuTab === 'restaurant' && countItemsInTab('restaurant') === 0">
+      No delivery items right now &mdash; every item is currently a theater item.
+    </p>
+    <p *ngIf="!(isTheaterEnabled && activeMenuTab === 'theater' && countItemsInTab('theater') === 0)
+             && !(isTheaterEnabled && activeMenuTab === 'restaurant' && countItemsInTab('restaurant') === 0)">
+      No items in this category
+    </p>
   </div>
 
 </div>

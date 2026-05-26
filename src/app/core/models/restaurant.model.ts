@@ -45,6 +45,15 @@ export interface Restaurant {
   // Timestamps (optional in base model)
   createdAt?: string;
   updatedAt?: string;
+
+  /**
+   * Theater (in-venue) ordering capability flag.
+   * - "AVAILABLE": this restaurant can serve theater/in-venue orders. The
+   *   Menu page exposes a separate "Theater Menu" tab for managing
+   *   inventory-tracked items.
+   * - undefined / null: regular delivery-only restaurant. No theater UI shown.
+   */
+  theaterMode?: 'AVAILABLE' | null;
 }
 
 /**
