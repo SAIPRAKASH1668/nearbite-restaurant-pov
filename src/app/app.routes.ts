@@ -17,6 +17,7 @@ import { PrinterSettingsComponent } from './features/printer-settings/printer-se
 import { TermsComponent } from './features/terms/terms.component';
 import { RiderPolicyComponent } from './features/rider-policy/rider-policy.component';
 import { EnrollmentComponent } from './features/enrollment/enrollment.component';
+import { LinktreeComponent } from './features/linktree/linktree.component';
 
 export const routes: Routes = [
   {
@@ -35,6 +36,18 @@ export const routes: Routes = [
   {
     path: 'enrollment',
     component: EnrollmentComponent
+  },
+  // Public Linktree-style landing. Used as the dual-purpose target for
+  // theater QRs ("/linktree/RES-xxx" → attempt rork-app:// deep link, fall
+  // back to App Store / Play Store) and as the canonical "download YumDude"
+  // page when visited bare at "/linktree".
+  {
+    path: 'linktree',
+    component: LinktreeComponent
+  },
+  {
+    path: 'linktree/:restaurantId',
+    component: LinktreeComponent
   },
   {
     path: 'login',
