@@ -29,6 +29,7 @@
   background: #FFFFFF;
   border: 1px solid #E8E5E2;
   border-radius: 3px;
+  position: relative;
   width: 100%;
   max-width: 1200px;
   max-height: 90vh;
@@ -616,6 +617,7 @@ section {
     }
 
     &.amount { text-align: right; }
+    &.comment-col { text-align: center; width: 72px; }
   }
 
   tbody tr {
@@ -653,6 +655,110 @@ section {
       &.negative { color: v.$status-error; }
       &.strong   { color: v.$status-success; }
     }
+
+    &.comment-col {
+      text-align: center;
+    }
+  }
+}
+
+.comment-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid #E8E5E2;
+  border-radius: 3px;
+  background: #FAFAF9;
+  color: v.$text-muted;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: not-allowed;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &.has-comment {
+    background: rgba(232, 58, 42, 0.08);
+    border-color: rgba(232, 58, 42, 0.28);
+    color: v.$primary-orange;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(232, 58, 42, 0.14);
+      border-color: rgba(232, 58, 42, 0.42);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.45;
+  }
+}
+
+.comment-popup-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.comment-popup {
+  width: min(460px, 100%);
+  background: #FFFFFF;
+  border: 1px solid #E8E5E2;
+  border-radius: 3px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  padding: 1rem;
+
+  p {
+    margin: 0.75rem 0 0;
+    color: v.$text-primary;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}
+
+.comment-popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h3 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: v.$text-primary;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+}
+
+.comment-order-id {
+  margin-top: 0.35rem;
+  color: v.$text-muted;
+  font-family: 'Courier New', monospace;
+  font-size: 0.76rem;
+}
+
+.comment-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 3px;
+  background: #F5F3F0;
+  color: v.$text-muted;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &:hover {
+    color: v.$text-primary;
+    background: #E8E5E2;
   }
 }
 
@@ -701,6 +807,50 @@ section {
     background: #F5F3F0;
     color: v.$text-muted;
     border-color: #E8E5E2;
+  }
+}
+
+.settlement-id-row {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.settlement-id-chip {
+  font-size: 0.68rem;
+  font-family: 'Courier New', monospace;
+  color: v.$text-muted;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+
+.settlement-copy-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #E8E5E2;
+  border-radius: 3px;
+  background: #FAFAF9;
+  color: v.$text-muted;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  i {
+    font-size: 0.72rem;
+  }
+
+  &:hover {
+    background: rgba(232, 58, 42, 0.08);
+    border-color: rgba(232, 58, 42, 0.28);
+    color: v.$primary-orange;
   }
 }
 

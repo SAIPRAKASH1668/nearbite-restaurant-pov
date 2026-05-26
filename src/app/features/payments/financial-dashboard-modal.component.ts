@@ -51,6 +51,8 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
 
   // Search
   searchOrderId: string = '';
+  selectedCommentOrderId = '';
+  selectedCommentText = '';
 
   // Pagination
   pagination: PaginationConfig = {
@@ -270,6 +272,56 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  hasComments(payment: Payment): boolean {
+    return !!payment.comments?.trim();
+  }
+
+  openComments(payment: Payment): void {
+    if (!this.hasComments(payment)) return;
+    this.selectedCommentOrderId = payment.orderId;
+    this.selectedCommentText = payment.comments!.trim();
+    this.cdr.markForCheck();
+  }
+
+  closeComments(): void {
+    this.selectedCommentOrderId = '';
+    this.selectedCommentText = '';
+    this.cdr.markForCheck();
+  }
+
+  async copySettlementId(settlementId: string | null | undefined, event?: MouseEvent): Promise<void> {
+    event?.stopPropagation();
+    if (!settlementId) return;
+
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(settlementId);
+      } else {
+        this.copyTextFallback(settlementId);
+      }
+      this.notificationService.success('Settlement ID copied.');
+    } catch (error) {
+      console.error('Failed to copy settlement ID', error);
+      this.notificationService.error('Could not copy settlement ID.');
+    }
+  }
+
+  private copyTextFallback(text: string): void {
+    const textarea = this.document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    this.document.body.appendChild(textarea);
+    textarea.select();
+    const copied = this.document.execCommand('copy');
+    this.document.body.removeChild(textarea);
+
+    if (!copied) {
+      throw new Error('Clipboard fallback failed');
+    }
+  }
+
   private applySearch(): void {
     // Start with all payments
     let payments = [...this.allPayments];
@@ -342,10 +394,10 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
       const aVal = a[field];
       const bVal = b[field];
       
-      // Handle undefined values
-      if (aVal === undefined && bVal === undefined) return 0;
-      if (aVal === undefined) return 1;
-      if (bVal === undefined) return -1;
+      // Handle undefined/null values
+      if (aVal == null && bVal == null) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
       
       let comparison = 0;
       if (aVal > bVal) comparison = 1;
@@ -525,7 +577,6 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   getSettlementStatusClass(status: SettlementStatus): string {
     const map: Record<SettlementStatus, string> = {
       'SETTLED': 'status-success',
-      'IN_PROGRESS': 'status-warning',
       'NOT_INITIATED': 'status-muted'
     };
     return map[status] || '';

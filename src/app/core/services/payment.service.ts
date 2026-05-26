@@ -82,7 +82,7 @@ export class PaymentService {
    * In production: fetch from backend API
    */
   getSettlementStatuses(): Observable<SettlementStatus[]> {
-    return of(['NOT_INITIATED', 'IN_PROGRESS', 'SETTLED']);
+    return of(['NOT_INITIATED', 'SETTLED']);
   }
 
   /**
@@ -146,27 +146,16 @@ export class PaymentService {
         paymentStatus = 'FAILED';
       }
 
-      // Enhanced settlement logic with more realistic timelines
+      // Settlement status mirrors backend state: unpaid or settled.
       let settlementStatus: SettlementStatus;
       
       if (paymentStatus === 'SUCCESS') {
-        // Successful payments follow a settlement cycle
         if (daysAgo >= 7) {
-          // Old payments (>7 days): 95% settled, 5% in progress
-          settlementStatus = Math.random() > 0.05 ? 'SETTLED' : 'IN_PROGRESS';
+          settlementStatus = Math.random() > 0.05 ? 'SETTLED' : 'NOT_INITIATED';
         } else if (daysAgo >= 3) {
-          // Recent payments (3-7 days): 40% settled, 50% in progress, 10% not initiated
-          const settleRand = Math.random();
-          if (settleRand < 0.40) {
-            settlementStatus = 'SETTLED';
-          } else if (settleRand < 0.90) {
-            settlementStatus = 'IN_PROGRESS';
-          } else {
-            settlementStatus = 'NOT_INITIATED';
-          }
+          settlementStatus = Math.random() < 0.40 ? 'SETTLED' : 'NOT_INITIATED';
         } else {
-          // Very recent payments (<3 days): 70% not initiated, 30% in progress
-          settlementStatus = Math.random() > 0.30 ? 'NOT_INITIATED' : 'IN_PROGRESS';
+          settlementStatus = 'NOT_INITIATED';
         }
       } else if (paymentStatus === 'INITIATED') {
         // INITIATED = Payment started but not completed yet, or payment gateway still processing
@@ -184,6 +173,11 @@ export class PaymentService {
       const settlementDate = settlementStatus === 'SETTLED' 
         ? new Date(date.getTime() + (3 + Math.floor(Math.random() * 3)) * 24 * 60 * 60 * 1000).toISOString()
         : undefined;
+
+      // Generate a settlement ID for settled transactions (matches backend format: STL-{id[:6]}-{YYYYMMDDHHMMSS})
+      const settlementId = settlementStatus === 'SETTLED'
+        ? `STL-${this.mockRestaurantId.slice(0, 6).toUpperCase()}-${date.toISOString().replace(/[-T:.Z]/g, '').slice(0, 14)}`
+        : null;
 
       // Select appropriate payment gateway
       let paymentGateway: string;
@@ -210,8 +204,10 @@ export class PaymentService {
         transactionId: `TXN_${Date.now()}_${Math.floor(Math.random() * 100000)}_${i}`,
         paymentStatus,
         settlementStatus,
+        settlementId,
         settlementDate,
-        createdAt: date.toISOString()
+        createdAt: date.toISOString(),
+        comments: null
       });
     }
 
@@ -378,7 +374,6 @@ export class PaymentService {
       pending: filteredPayments.filter(p => p.paymentStatus === 'INITIATED').length,
       failed: filteredPayments.filter(p => p.paymentStatus === 'FAILED').length,
       notInitiatedSettlements: filteredPayments.filter(p => p.settlementStatus === 'NOT_INITIATED').length,
-      inProgressSettlements: filteredPayments.filter(p => p.settlementStatus === 'IN_PROGRESS').length,
       settledSettlements: filteredPayments.filter(p => p.settlementStatus === 'SETTLED').length
     });
   }
@@ -714,23 +709,7 @@ export class PaymentService {
       const taxAmount = 0;
       const netPayoutAmount = e.totalEarnings;
 
-      // Determine settlement status with IN_PROGRESS support
-      let settlementStatus: SettlementStatus;
-      if (e.settled) {
-        settlementStatus = 'SETTLED';
-      } else {
-        // Check if order is recent (less than 3 days old)
-        const createdDate = new Date(e.createdAt);
-        const daysSinceCreated = (Date.now() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
-        
-        if (daysSinceCreated >= 3) {
-          // Orders older than 3 days should be IN_PROGRESS if not settled
-          settlementStatus = 'IN_PROGRESS';
-        } else {
-          // Recent orders (< 3 days) are NOT_INITIATED
-          settlementStatus = 'NOT_INITIATED';
-        }
-      }
+      const settlementStatus: SettlementStatus = e.settled ? 'SETTLED' : 'NOT_INITIATED';
 
       // Vary payment methods for realism (based on Indian market distribution)
       // 50% UPI, 30% CARD, 15% WALLET, 5% NETBANKING
@@ -760,8 +739,10 @@ export class PaymentService {
         transactionId: e.orderId,
         paymentStatus: 'SUCCESS', // Earnings only track successful payments
         settlementStatus: settlementStatus,
+        settlementId: e.settlementId || null,
         settlementDate: e.settledAt || undefined,
-        createdAt: e.createdAt
+        createdAt: e.createdAt,
+        comments: e.comments || null
       };
     });
   }
@@ -829,7 +810,6 @@ export class PaymentService {
     const pending = 0; // AWS only tracks completed orders
     const failed = 0;
     const notInitiatedSettlements = earnings.filter(e => !e.settled).length;
-    const inProgressSettlements = 0; // Not tracked in current AWS model
     const settledSettlements = earnings.filter(e => e.settled).length;
 
     return {
@@ -837,7 +817,6 @@ export class PaymentService {
       pending,
       failed,
       notInitiatedSettlements,
-      inProgressSettlements,
       settledSettlements
     };
   }

@@ -10,7 +10,7 @@ export type PaymentStatus = 'INITIATED' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
 export type PaymentMethod = 'UPI' | 'CARD' | 'WALLET' | 'NETBANKING';
 
 // Settlement status (restaurant-specific)
-export type SettlementStatus = 'NOT_INITIATED' | 'IN_PROGRESS' | 'SETTLED';
+export type SettlementStatus = 'NOT_INITIATED' | 'SETTLED';
 
 export interface Payment {
   id: string;
@@ -31,10 +31,12 @@ export interface Payment {
   // Status tracking
   paymentStatus: PaymentStatus;
   settlementStatus: SettlementStatus;
+  settlementId?: string | null;
 
   // Dates
   settlementDate?: string;
   createdAt: string;
+  comments?: string | null;
 }
 
 // Aggregated financial statistics
@@ -60,7 +62,6 @@ export interface PaymentStatusCounts {
   pending: number;
   failed: number;
   notInitiatedSettlements: number;
-  inProgressSettlements: number;
   settledSettlements: number;
 }
 
@@ -102,6 +103,7 @@ export interface RestaurantEarning {
   settledAt: string | null;
   settlementId: string | null;
   createdAt: string;
+  comments?: string | null;
 }
 
 // Response from AWS earnings history endpoint

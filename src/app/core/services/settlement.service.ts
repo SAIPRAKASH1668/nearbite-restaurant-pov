@@ -16,6 +16,7 @@ export interface SettlementOrderRow {
   foodCommission : number;
   couponDeduction: number;
   netPayout      : number;
+  comments       ?: string | null;
 }
 
 export interface SettlementPreview {

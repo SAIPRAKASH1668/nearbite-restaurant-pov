@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { ImageUploadService } from '../../core/services/image-upload.service';
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 import { RestaurantOnlineService } from '../../core/services/restaurant-online.service';
@@ -17,6 +17,18 @@ interface PendingFile {
   name: string;
   dataUrl: string;
 }
+
+interface BatteryOptimizationStatus {
+  supported: boolean;
+  ignoringBatteryOptimizations: boolean;
+}
+
+interface BatteryOptimizationPlugin {
+  getStatus(): Promise<BatteryOptimizationStatus>;
+  requestExemption(): Promise<{ opened: boolean; alreadyAllowed?: boolean }>;
+}
+
+const BatteryOptimization = registerPlugin<BatteryOptimizationPlugin>('BatteryOptimization');
 
 @Component({
   selector: 'app-settings',
@@ -73,6 +85,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
   // ── Notification mode ─────────────────────────────────────────────────────
   readonly isNativePlatform = Capacitor.isNativePlatform();
   takingOverNotifications = false;
+  batteryOptimizationSupported = false;
+  batteryOptimizationAllowed = true;
+  checkingBatteryOptimization = false;
+  requestingBatteryOptimization = false;
 
   // ── Touch swipe tracking ───────────────────────────────────────────────────
   private touchStartX = 0;
@@ -95,6 +111,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.loadAvgPreparationTime();
     this.loadShiftTimings();
     this.checkNotificationDisplacement();
+    this.checkBatteryOptimization();
   }
 
   private checkNotificationDisplacement(): void {
@@ -120,6 +137,11 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.galleryLoadSub?.unsubscribe();
   }
 
+  @HostListener('window:focus')
+  onWindowFocus(): void {
+    this.checkBatteryOptimization();
+  }
+
   get isViewOnlyMode(): boolean {
     return this.isNativePlatform && this.pushNotificationService.isViewOnlyMode();
   }
@@ -139,6 +161,55 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   // ── Operating Hours ────────────────────────────────────────────────────────
+
+  get shouldShowBatteryOptimizationCard(): boolean {
+    return this.isNativePlatform
+      && this.batteryOptimizationSupported
+      && !this.batteryOptimizationAllowed;
+  }
+
+  checkBatteryOptimization(): void {
+    if (!this.isNativePlatform) return;
+
+    this.checkingBatteryOptimization = true;
+    void BatteryOptimization.getStatus()
+      .then((status) => {
+        this.ngZone.run(() => {
+          this.batteryOptimizationSupported = status.supported;
+          this.batteryOptimizationAllowed = status.ignoringBatteryOptimizations;
+          this.checkingBatteryOptimization = false;
+          this.cdr.markForCheck();
+        });
+      })
+      .catch(() => {
+        this.ngZone.run(() => {
+          this.batteryOptimizationSupported = false;
+          this.batteryOptimizationAllowed = true;
+          this.checkingBatteryOptimization = false;
+          this.cdr.markForCheck();
+        });
+      });
+  }
+
+  requestBatteryOptimizationExemption(): void {
+    if (!this.isNativePlatform || this.requestingBatteryOptimization) return;
+
+    this.requestingBatteryOptimization = true;
+    void BatteryOptimization.requestExemption()
+      .then(() => {
+        this.notificationService.info('Allow unrestricted battery use for reliable order alerts.');
+        window.setTimeout(() => this.checkBatteryOptimization(), 1200);
+      })
+      .catch(() => {
+        this.notificationService.error('Could not open battery settings. Please try from Android app settings.');
+      })
+      .finally(() => {
+        this.ngZone.run(() => {
+          this.requestingBatteryOptimization = false;
+          this.cdr.markForCheck();
+        });
+      });
+  }
 
   get hoursUnsaved(): boolean {
     return this.opensAt !== this._savedOpensAt || this.closesAt !== this._savedClosesAt;

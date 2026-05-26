@@ -29,6 +29,8 @@ export class PaymentsComponent implements OnInit {
   preview     : SettlementPreview | null = null;
   settled     = false;   // true after a successful confirm in this session
   settlementId = '';
+  selectedCommentOrderId = '';
+  selectedCommentText = '';
 
   // ── Formatting helper exposed to template ─────────────────────────────────
   Math = Math;
@@ -123,6 +125,21 @@ export class PaymentsComponent implements OnInit {
         hour: '2-digit', minute: '2-digit',
       });
     } catch { return iso; }
+  }
+
+  hasComments(row: SettlementOrderRow): boolean {
+    return !!row.comments?.trim();
+  }
+
+  openComments(row: SettlementOrderRow): void {
+    if (!this.hasComments(row)) return;
+    this.selectedCommentOrderId = row.orderId;
+    this.selectedCommentText = row.comments!.trim();
+  }
+
+  closeComments(): void {
+    this.selectedCommentOrderId = '';
+    this.selectedCommentText = '';
   }
 
   private toDateInput(d: Date): string {

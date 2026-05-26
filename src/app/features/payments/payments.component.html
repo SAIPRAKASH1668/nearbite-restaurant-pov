@@ -3,7 +3,7 @@
   <!-- ── Page Header ─────────────────────────────────────────────────────── -->
   <div class="page-header">
     <div class="header-left">
-      <h1>Settlements</h1>
+      <h1>Pending Settlements</h1>
       <p class="subtitle">Select a date range to preview and confirm your restaurant payout</p>
     </div>
     <div *ngIf="settled" class="settled-badge">
@@ -101,6 +101,7 @@
               <th class="num">Coupon Adj</th>
               <th class="num net-col">Net Payout</th>
               <th>Payment</th>
+              <th class="comment-col">Comments</th>
             </tr>
           </thead>
           <tbody>
@@ -123,6 +124,19 @@
               </td>
               <td class="num net-col">{{ formatCurrency(row.netPayout) }}</td>
               <td><span class="payment-badge">{{ row.paymentMethod }}</span></td>
+              <td class="comment-col">
+                <button
+                  type="button"
+                  class="comment-btn"
+                  [class.has-comment]="hasComments(row)"
+                  [disabled]="!hasComments(row)"
+                  (click)="openComments(row)"
+                  [attr.aria-label]="'View comments for order ' + row.orderId"
+                  title="View comments"
+                >
+                  <i class="fas fa-comment-dots"></i>
+                </button>
+              </td>
             </tr>
           </tbody>
           <tfoot>
@@ -132,7 +146,7 @@
               <td class="num deduction">-{{ formatCurrency(preview.totalCommission) }}</td>
               <td class="num deduction">-{{ formatCurrency(preview.totalCouponDeduction) }}</td>
               <td class="num net-col">{{ formatCurrency(preview.netPayable) }}</td>
-              <td></td>
+              <td colspan="2"></td>
             </tr>
           </tfoot>
         </table>
@@ -143,5 +157,18 @@
     <!-- No settlement actions: view-only mode for restaurants -->
 
   </ng-container>
+
+  <div class="comment-popup-backdrop" *ngIf="selectedCommentText" (click)="closeComments()">
+    <div class="comment-popup" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <div class="comment-popup-header">
+        <h3>Order Comments</h3>
+        <button type="button" class="comment-close" (click)="closeComments()" aria-label="Close comments">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="comment-order-id">{{ selectedCommentOrderId }}</div>
+      <p>{{ selectedCommentText }}</p>
+    </div>
+  </div>
 
 </div>

@@ -84,10 +84,6 @@
                 <span class="chip-label">Settled</span>
                 <span class="chip-count">{{ statusCounts.settledSettlements }}</span>
               </div>
-              <div class="chip in-progress">
-                <span class="chip-label">In Progress</span>
-                <span class="chip-count">{{ statusCounts.inProgressSettlements }}</span>
-              </div>
               <div class="chip not-initiated">
                 <span class="chip-label">Not Initiated</span>
                 <span class="chip-count">{{ statusCounts.notInitiatedSettlements }}</span>
@@ -225,6 +221,7 @@
                   Net Payout {{ getSortIcon('netPayoutAmount') }}
                 </th>
                 <th>Settlement</th>
+                <th class="comment-col">Comments</th>
               </tr>
             </thead>
             <tbody>
@@ -242,6 +239,31 @@
                   <span class="status-badge" [ngClass]="getSettlementStatusClass(payment.settlementStatus)">
                     {{ formatStatusLabel(payment.settlementStatus) }}
                   </span>
+                  <div *ngIf="payment.settlementId" class="settlement-id-row">
+                    <span class="settlement-id-chip">{{ payment.settlementId }}</span>
+                    <button
+                      type="button"
+                      class="settlement-copy-btn"
+                      (click)="copySettlementId(payment.settlementId, $event)"
+                      [attr.aria-label]="'Copy settlement id ' + payment.settlementId"
+                      title="Copy settlement ID"
+                    >
+                      <i class="fas fa-copy"></i>
+                    </button>
+                  </div>
+                </td>
+                <td class="comment-col">
+                  <button
+                    type="button"
+                    class="comment-btn"
+                    [class.has-comment]="hasComments(payment)"
+                    [disabled]="!hasComments(payment)"
+                    (click)="openComments(payment)"
+                    [attr.aria-label]="'View comments for order ' + payment.orderId"
+                    title="View comments"
+                  >
+                    <i class="fas fa-comment-dots"></i>
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -299,6 +321,19 @@
         </div>
       </section>
 
+    </div>
+
+    <div class="comment-popup-backdrop" *ngIf="selectedCommentText" (click)="closeComments()">
+      <div class="comment-popup" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+        <div class="comment-popup-header">
+          <h3>Order Comments</h3>
+          <button type="button" class="comment-close" (click)="closeComments()" aria-label="Close comments">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="comment-order-id">{{ selectedCommentOrderId }}</div>
+        <p>{{ selectedCommentText }}</p>
+      </div>
     </div>
   </div>
 </div>

@@ -6,6 +6,7 @@ import { NavbarComponent } from '../navbar/navbar.component';
 import { FooterComponent } from '../footer/footer.component';
 import { OnlineAnimationComponent } from '../../components/online-animation/online-animation.component';
 import { OrderNotificationService } from '../../../core/services/order-notification.service';
+import { OrderService } from '../../../core/services/order.service';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
@@ -23,9 +24,16 @@ export class AppLayoutComponent implements OnInit, OnDestroy {
 
   private orderSub?: Subscription;
 
-  constructor(private orderNotificationService: OrderNotificationService) {}
+  constructor(
+    private orderNotificationService: OrderNotificationService,
+    private orderService: OrderService
+  ) {}
 
   ngOnInit(): void {
+    // Instantiate OrderService for every authenticated dashboard session so polling
+    // continues even when the restaurant is not currently on the Orders page.
+    void this.orderService;
+
     this.orderSub = this.orderNotificationService.getNewOrdersCount()
       .subscribe(count => { this.newOrdersCount = count; });
   }

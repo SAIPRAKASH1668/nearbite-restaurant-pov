@@ -496,6 +496,41 @@
     </ng-container>
   </div>
 
+  <div class="st-card st-notif-card st-battery-card" *ngIf="shouldShowBatteryOptimizationCard">
+    <div class="st-card-head">
+      <div class="st-card-head-info">
+        <div class="st-card-icon st-card-icon--warn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="st-card-title">Background Order Alerts</h2>
+          <p class="st-card-desc">Android battery settings may pause order monitoring</p>
+        </div>
+      </div>
+      <span class="st-view-only-badge">Recommended</span>
+    </div>
+
+    <div class="st-notif-info">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span>Allow unrestricted battery use so polling and push-triggered checks can keep order alerts ringing reliably.</span>
+    </div>
+
+    <button
+      class="st-btn-takeover"
+      (click)="requestBatteryOptimizationExemption()"
+      [disabled]="requestingBatteryOptimization || checkingBatteryOptimization">
+      <span class="st-spinner" *ngIf="requestingBatteryOptimization || checkingBatteryOptimization"></span>
+      <svg *ngIf="!requestingBatteryOptimization && !checkingBatteryOptimization" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/>
+      </svg>
+      {{ requestingBatteryOptimization ? 'Opening settings...' : 'Allow unrestricted battery use' }}
+    </button>
+  </div>
+
   <!-- __ Order Notifications Card (view-only mode) __________________________ -->
   <div class="st-card st-notif-card" *ngIf="isViewOnlyMode">
     <div class="st-card-head">
