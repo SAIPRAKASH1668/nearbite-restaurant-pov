@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { combineLatest, Subscription } from 'rxjs';
 
 /**
  * Public-facing landing page hosted at `/linktree` (and `/linktree/:restaurantId`).
@@ -28,7 +28,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-linktree',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './linktree.component.html',
   styleUrl: './linktree.component.scss',
 })
@@ -40,18 +40,19 @@ export class LinktreeComponent implements OnInit, OnDestroy {
     'https://apps.apple.com/app/idREPLACE_ME';
   readonly ANDROID_PLAY_STORE_URL =
     'https://play.google.com/store/apps/details?id=app.rork.honesteats';
-  readonly APP_SCHEME = 'rork-app://theater/';
+  readonly APP_SCHEME = 'rork-app://theater';
   /** How long we wait (ms) for the OS to switch apps before bouncing to the store on iOS. */
   readonly APP_NOT_INSTALLED_TIMEOUT_MS = 1500;
 
   // ── State ───────────────────────────────────────────────────────────────
   restaurantId: string | null = null;
+  theatreName: string | null = null;
   isIOS = false;
   isAndroid = false;
   isMobile = false;
 
   /** Drives the three visual states of the page. */
-  uiState: 'opening' | 'install-prompt' | 'desktop' | 'landing' = 'landing';
+  uiState: 'opening' | 'install-prompt' | 'desktop' | 'landing' = 'opening';
 
   private routeSub?: Subscription;
   private didLeavePage = false;
@@ -60,7 +61,6 @@ export class LinktreeComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -77,9 +77,11 @@ export class LinktreeComponent implements OnInit, OnDestroy {
     this.isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
     this.isMobile = this.isAndroid || this.isIOS;
 
-    this.routeSub = this.route.paramMap.subscribe((params) => {
+    this.routeSub = combineLatest([this.route.paramMap, this.route.queryParamMap]).subscribe(([params, query]) => {
       const raw = params.get('restaurantId') || '';
       this.restaurantId = raw ? raw.trim() : null;
+      const theatreName = query.get('theatreName') || query.get('theaterName') || '';
+      this.theatreName = theatreName ? theatreName.trim() : null;
       this.startFlow();
     });
   }
@@ -95,9 +97,9 @@ export class LinktreeComponent implements OnInit, OnDestroy {
 
   /** Single entry point that decides what UI to show and whether to attempt a deep link. */
   private startFlow(): void {
-    if (!this.restaurantId) {
+    if (!this.isMobile) {
       // Generic landing — no deep link attempt, just store + nav links.
-      this.uiState = 'landing';
+      this.uiState = 'desktop';
       this.cdr.detectChanges();
       return;
     }
@@ -119,8 +121,15 @@ export class LinktreeComponent implements OnInit, OnDestroy {
 
   /** Build the raw deep link target — exposed to the template for the "Open in YumDude" CTA. */
   get deeplink(): string {
-    if (!this.restaurantId) return '';
-    return `${this.APP_SCHEME}${encodeURIComponent(this.restaurantId)}`;
+    const path = this.restaurantId ? `/${encodeURIComponent(this.restaurantId)}` : '';
+    const query = this.metadataQueryString;
+    return `${this.APP_SCHEME}${path}${query ? `?${query}` : ''}`;
+  }
+
+  private get metadataQueryString(): string {
+    const params = new URLSearchParams();
+    if (this.theatreName) params.set('theatreName', this.theatreName);
+    return params.toString();
   }
 
   /** Re-trigger the deep link attempt — used by the "Try again" button in the install prompt. */
@@ -139,14 +148,14 @@ export class LinktreeComponent implements OnInit, OnDestroy {
   }
 
   private attemptDeepLink(): void {
-    if (!this.restaurantId) return;
-
     if (this.isAndroid) {
       // intent:// has a built-in S.browser_fallback_url, so Android handles
       // both "open app" and "send to Play Store" in one shot — no JS timer
       // race required.
+      const path = this.restaurantId ? `/${encodeURIComponent(this.restaurantId)}` : '';
+      const query = this.metadataQueryString;
       const intentUrl =
-        `intent://theater/${encodeURIComponent(this.restaurantId)}` +
+        `intent://theater${path}${query ? `?${query}` : ''}` +
         `#Intent;scheme=rork-app;package=app.rork.honesteats;` +
         `S.browser_fallback_url=${encodeURIComponent(this.ANDROID_PLAY_STORE_URL)};end`;
       window.location.replace(intentUrl);

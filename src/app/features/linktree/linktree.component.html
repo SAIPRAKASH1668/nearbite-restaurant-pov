@@ -11,9 +11,13 @@
         <span class="lt-id-label">Restaurant</span>
         <code class="lt-id-code">{{ restaurantId }}</code>
       </div>
+      <div class="lt-id-pill" *ngIf="!restaurantId && theatreName">
+        <span class="lt-id-label">Theatre</span>
+        <code class="lt-id-code">{{ theatreName }}</code>
+      </div>
       <div class="lt-spinner" role="status" aria-label="Opening YumDude"></div>
       <p class="lt-status">Opening YumDude…</p>
-      <p class="lt-status-sub">Hold on while we take you to your seat-side menu.</p>
+      <p class="lt-status-sub">Hold on while we open theatre ordering.</p>
     </ng-container>
 
     <!-- ── State B: app not installed — prompt to download ─────────────── -->
@@ -22,10 +26,14 @@
         <span class="lt-id-label">Restaurant</span>
         <code class="lt-id-code">{{ restaurantId }}</code>
       </div>
+      <div class="lt-id-pill" *ngIf="!restaurantId && theatreName">
+        <span class="lt-id-label">Theatre</span>
+        <code class="lt-id-code">{{ theatreName }}</code>
+      </div>
       <h2 class="lt-prompt-title">YumDude isn't installed yet</h2>
       <p class="lt-prompt-sub">
         Install YumDude, then come back and scan the QR code again — it'll
-        take you straight to the menu for your seat.
+        choose your theatre restaurant and order from your seat.
       </p>
 
       <a class="lt-btn lt-btn-primary" [href]="currentStoreUrl" target="_blank" rel="noopener">
@@ -59,6 +67,10 @@
       <div class="lt-id-pill" *ngIf="restaurantId">
         <span class="lt-id-label">Restaurant</span>
         <code class="lt-id-code">{{ restaurantId }}</code>
+      </div>
+      <div class="lt-id-pill" *ngIf="!restaurantId && theatreName">
+        <span class="lt-id-label">Theatre</span>
+        <code class="lt-id-code">{{ theatreName }}</code>
       </div>
       <h2 class="lt-prompt-title">Scan from your phone</h2>
       <p class="lt-prompt-sub">
@@ -107,25 +119,6 @@
         </a>
       </div>
 
-      <div class="lt-links">
-        <h3 class="lt-links-title">More from YumDude</h3>
-        <a class="lt-link" routerLink="/login">
-          <span><i class="fas fa-store"></i> Restaurant Partner Login</span>
-          <i class="fas fa-chevron-right"></i>
-        </a>
-        <a class="lt-link" routerLink="/enrollment">
-          <span><i class="fas fa-handshake"></i> Become a Partner Restaurant</span>
-          <i class="fas fa-chevron-right"></i>
-        </a>
-        <a class="lt-link" routerLink="/rider-policy">
-          <span><i class="fas fa-motorcycle"></i> Join as a Rider</span>
-          <i class="fas fa-chevron-right"></i>
-        </a>
-        <a class="lt-link" routerLink="/terms">
-          <span><i class="fas fa-file-alt"></i> Terms &amp; Conditions</span>
-          <i class="fas fa-chevron-right"></i>
-        </a>
-      </div>
     </ng-container>
   </div>
 
