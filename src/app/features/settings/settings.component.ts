@@ -85,6 +85,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   // ── Notification mode ─────────────────────────────────────────────────────
   readonly isNativePlatform = Capacitor.isNativePlatform();
   takingOverNotifications = false;
+  sendingTestNotification = false;
   batteryOptimizationSupported = false;
   batteryOptimizationAllowed = true;
   checkingBatteryOptimization = false;
@@ -158,6 +159,49 @@ export class SettingsComponent implements OnInit, OnDestroy {
       this.notificationService.error('Failed to take over notifications. Please try again.');
       this.cdr.markForCheck();
     });
+  }
+
+  sendTestNotification(): void {
+    if (this.sendingTestNotification) return;
+    this.sendingTestNotification = true;
+
+    // Belt-and-braces: re-prompt for permission AND force a fresh token sync
+    // before the test fires, so a stale-token restaurant has the best chance
+    // of seeing the ping land.
+    void this.pushNotificationService
+      .ensurePermissionAndRegister({ promptIfDenied: true })
+      .then(({ granted }) => {
+        if (!granted) {
+          throw new Error('Notification permission not granted');
+        }
+        return this.pushNotificationService.syncTokenForRestaurant(undefined, { force: true });
+      })
+      .then(() => this.pushNotificationService.sendTestNotification())
+      .then((result) => {
+        this.ngZone.run(() => {
+          this.sendingTestNotification = false;
+          if (result.successCount > 0) {
+            this.notificationService.success(
+              `Test push sent — ${result.successCount} of ${result.tokenCount} device(s) notified. Check your phone within 5 seconds.`
+            );
+          } else if (result.tokenCount === 0) {
+            this.notificationService.error('No devices registered for this restaurant yet.');
+          } else {
+            this.notificationService.error(
+              `All ${result.tokenCount} registered token(s) failed. Reinstall the app or log in again to refresh.`
+            );
+          }
+          this.cdr.markForCheck();
+        });
+      })
+      .catch((err) => {
+        this.ngZone.run(() => {
+          this.sendingTestNotification = false;
+          const msg = err?.error?.message || err?.message || 'Failed to send test notification';
+          this.notificationService.error(msg);
+          this.cdr.markForCheck();
+        });
+      });
   }
 
   // ── Operating Hours ────────────────────────────────────────────────────────
