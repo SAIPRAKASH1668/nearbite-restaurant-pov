@@ -51,6 +51,10 @@
             <span class="label">Gross Menu Value</span>
             <span class="value">{{ formatCurrency(commission.grossRevenue) }}</span>
           </div>
+          <div class="commission-row">
+            <span class="label">GST on Food</span>
+            <span class="value">{{ formatCurrency(commission.gstOnFood) }}</span>
+          </div>
           <div class="commission-row negative">
             <span class="label">Platform Commission ({{ commission.commissionPercentage.toFixed(1) }}%)</span>
             <span class="value">− {{ formatCurrency(commission.platformCommission) }}</span>
@@ -151,7 +155,7 @@
 
         <!-- Export Controls -->
         <div class="export-row">
-          <span class="export-label">Export {{ filteredPayments.length }} transactions:</span>
+          <span class="export-label">Export {{ pagination.totalItems }} transactions:</span>
           <button class="btn-export" (click)="exportCSV()" [disabled]="isExporting">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <path d="M8 11L4 7H7V1H9V7H12L8 11Z" fill="currentColor"/>
@@ -171,10 +175,59 @@
 
       <!-- Section 5: Transaction History Table (Paginated, Dense) -->
       <section class="section-table">
+        <div class="table-tabs" role="tablist" aria-label="Settlement view">
+          <button
+            type="button"
+            class="table-tab"
+            [class.active]="activeTableTab === 'UNSETTLED'"
+            (click)="setTableTab('UNSETTLED')"
+          >
+            Unsettled
+            <span>{{ getTabCount('UNSETTLED') }}</span>
+          </button>
+          <button
+            type="button"
+            class="table-tab"
+            [class.active]="activeTableTab === 'SETTLED'"
+            (click)="setTableTab('SETTLED')"
+          >
+            Settled
+            <span>{{ getTabCount('SETTLED') }}</span>
+          </button>
+        </div>
+
+        <div class="group-mode-tabs" *ngIf="activeTableTab === 'SETTLED'">
+          <button
+            type="button"
+            class="group-mode-tab"
+            [class.active]="settledGroupMode === 'SETTLEMENT_ID'"
+            (click)="setSettledGroupMode('SETTLEMENT_ID')"
+          >
+            Settlement ID
+          </button>
+          <button
+            type="button"
+            class="group-mode-tab"
+            [class.active]="settledGroupMode === 'WEEK'"
+            (click)="setSettledGroupMode('WEEK')"
+          >
+            Week
+          </button>
+          <button
+            type="button"
+            class="group-mode-tab"
+            [class.active]="settledGroupMode === 'DATE_RANGE'"
+            (click)="setSettledGroupMode('DATE_RANGE')"
+          >
+            Selected Dates
+          </button>
+        </div>
+
         <div class="table-header">
           <h3 class="section-title">
-            Transaction History
-            <span class="count">({{ pagination.totalItems }} records, showing page {{ pagination.currentPage }} of {{ pagination.totalPages }})</span>
+            {{ getActiveTableTitle() }}
+            <span class="count" *ngIf="activeTableTab === 'UNSETTLED'">({{ pagination.totalItems }} records, showing page {{ pagination.currentPage }} of {{ pagination.totalPages }})</span>
+            <span class="count" *ngIf="activeTableTab === 'SETTLED'">({{ pagination.totalItems }} records, {{ settledGroups.length }} groups)</span>
           </h3>
           
           <!-- Search by Order ID -->
@@ -201,18 +254,21 @@
           </div>
         </div>
         
-        <div class="table-wrapper">
+        <div class="table-wrapper" *ngIf="activeTableTab === 'UNSETTLED'">
           <table class="transactions-table">
             <thead>
               <tr>
-                <th (click)="sortBy('createdAt')" class="sortable">
-                  Date {{ getSortIcon('createdAt') }}
+                <th (click)="sortBy('deliveryDate')" class="sortable">
+                  Delivery Date {{ getSortIcon('deliveryDate') }}
                 </th>
                 <th (click)="sortBy('orderId')" class="sortable">
                   Order ID {{ getSortIcon('orderId') }}
                 </th>
                 <th (click)="sortBy('grossAmount')" class="sortable amount">
                   Menu Value {{ getSortIcon('grossAmount') }}
+                </th>
+                <th (click)="sortBy('gstOnFoodAmount')" class="sortable amount">
+                  GST on Food {{ getSortIcon('gstOnFoodAmount') }}
                 </th>
                 <th (click)="sortBy('commissionAmount')" class="sortable amount">
                   Commission {{ getSortIcon('commissionAmount') }}
@@ -226,13 +282,14 @@
             </thead>
             <tbody>
               <tr *ngFor="let payment of displayedPayments">
-                <td class="date">{{ formatDate(payment.createdAt) }}</td>
+                <td class="date">{{ formatDate(getOrderDeliveryDate(payment)) }}</td>
                 <td class="order-id">
                   <ng-container *ngIf="payment.orderId | orderIdHighlight as oid">
                     {{ oid.prefix }}<span class="ord-id-last4">{{ oid.suffix }}</span>
                   </ng-container>
                 </td>
                 <td class="amount">{{ formatCurrency(payment.grossAmount) }}</td>
+                <td class="amount">{{ formatCurrency(payment.gstOnFoodAmount) }}</td>
                 <td class="amount negative">{{ formatCurrency(payment.commissionAmount) }}</td>
                 <td class="amount strong">{{ formatCurrency(payment.netPayoutAmount) }}</td>
                 <td>
@@ -279,8 +336,123 @@
           </div>
         </div>
 
+        <div class="settled-groups" *ngIf="activeTableTab === 'SETTLED'">
+          <div class="settled-group" *ngFor="let group of settledGroups">
+            <div
+              class="settled-group-header"
+              role="button"
+              tabindex="0"
+              (click)="toggleSettledGroup(group.key)"
+              (keydown.enter)="toggleSettledGroup(group.key)"
+              (keydown.space)="toggleSettledGroup(group.key); $event.preventDefault()"
+              [attr.aria-expanded]="!isSettledGroupCollapsed(group.key)"
+            >
+              <div>
+                <div class="settled-group-title">
+                  <span class="settled-group-chevron" [class.collapsed]="isSettledGroupCollapsed(group.key)">⌄</span>
+                  {{ group.label }}
+                </div>
+                <div class="settled-group-meta">{{ group.payments.length }} orders</div>
+              </div>
+              <div class="settled-group-totals">
+                <div><span>Menu</span>{{ formatCurrency(group.totalGross) }}</div>
+                <div><span>GST Food</span>{{ formatCurrency(group.totalGstOnFood) }}</div>
+                <div><span>Commission</span>{{ formatCurrency(group.totalCommission) }}</div>
+                <div><span>Net</span>{{ formatCurrency(group.totalNet) }}</div>
+              </div>
+              <div class="settled-group-actions">
+                <button
+                  type="button"
+                  class="group-export-btn"
+                  (click)="exportGroupCSV(group, $event)"
+                  [disabled]="isExporting"
+                >
+                  CSV
+                </button>
+                <button
+                  type="button"
+                  class="group-export-btn"
+                  (click)="exportGroupPDF(group, $event)"
+                  [disabled]="isExporting"
+                >
+                  PDF
+                </button>
+              </div>
+            </div>
+
+            <div class="table-wrapper" *ngIf="!isSettledGroupCollapsed(group.key)">
+              <table class="transactions-table">
+                <thead>
+                  <tr>
+                    <th>Delivery Date</th>
+                    <th>Order ID</th>
+                    <th class="amount">Menu Value</th>
+                    <th class="amount">GST on Food</th>
+                    <th class="amount">Commission</th>
+                    <th class="amount">Net Payout</th>
+                    <th>Settlement</th>
+                    <th class="comment-col">Comments</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let payment of group.payments">
+                    <td class="date">{{ formatDate(getOrderDeliveryDate(payment)) }}</td>
+                    <td class="order-id">
+                      <ng-container *ngIf="payment.orderId | orderIdHighlight as oid">
+                        {{ oid.prefix }}<span class="ord-id-last4">{{ oid.suffix }}</span>
+                      </ng-container>
+                    </td>
+                    <td class="amount">{{ formatCurrency(payment.grossAmount) }}</td>
+                    <td class="amount">{{ formatCurrency(payment.gstOnFoodAmount) }}</td>
+                    <td class="amount negative">{{ formatCurrency(payment.commissionAmount) }}</td>
+                    <td class="amount strong">{{ formatCurrency(payment.netPayoutAmount) }}</td>
+                    <td>
+                      <span class="status-badge" [ngClass]="getSettlementStatusClass(payment.settlementStatus)">
+                        {{ formatStatusLabel(payment.settlementStatus) }}
+                      </span>
+                      <div *ngIf="payment.settlementId" class="settlement-id-row">
+                        <span class="settlement-id-chip">{{ payment.settlementId }}</span>
+                        <button
+                          type="button"
+                          class="settlement-copy-btn"
+                          (click)="copySettlementId(payment.settlementId, $event)"
+                          [attr.aria-label]="'Copy settlement id ' + payment.settlementId"
+                          title="Copy settlement ID"
+                        >
+                          <i class="fas fa-copy"></i>
+                        </button>
+                      </div>
+                    </td>
+                    <td class="comment-col">
+                      <button
+                        type="button"
+                        class="comment-btn"
+                        [class.has-comment]="hasComments(payment)"
+                        [disabled]="!hasComments(payment)"
+                        (click)="openComments(payment)"
+                        [attr.aria-label]="'View comments for order ' + payment.orderId"
+                        title="View comments"
+                      >
+                        <i class="fas fa-comment-dots"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="empty-state" *ngIf="settledGroups.length === 0 && !isLoading">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="20" stroke="currentColor" stroke-width="2"/>
+              <path d="M18 24H30M24 18V30" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <p>No settled transactions found for the selected filters</p>
+          </div>
+        </div>
+
         <!-- Pagination Controls -->
-        <div class="pagination-controls" *ngIf="pagination.totalPages > 1">
+        <div class="pagination-controls" *ngIf="activeTableTab === 'UNSETTLED' && pagination.totalPages > 1">
           <div class="pagination-info">
             Showing {{ (pagination.currentPage - 1) * pagination.pageSize + 1 }} 
             to {{ Math.min(pagination.currentPage * pagination.pageSize, pagination.totalItems) }} 

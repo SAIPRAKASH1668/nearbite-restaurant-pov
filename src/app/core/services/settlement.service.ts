@@ -14,6 +14,7 @@ export interface SettlementOrderRow {
   paymentMethod  : string;
   restaurantName : string;
   foodCommission : number;
+  gstOnFood       : number;
   couponDeduction: number;
   netPayout      : number;
   comments       ?: string | null;
@@ -27,6 +28,7 @@ export interface SettlementPreview {
   totalOrders          : number;
   totalGMV             : number;
   totalCommission      : number;
+  totalGstOnFood       : number;
   totalCouponDeduction : number;
   netPayable           : number;
   orders               : SettlementOrderRow[];

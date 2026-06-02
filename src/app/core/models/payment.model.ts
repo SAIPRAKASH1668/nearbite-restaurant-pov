@@ -20,6 +20,7 @@ export interface Payment {
   // Financial breakdown
   grossAmount: number;
   commissionAmount: number;
+  gstOnFoodAmount: number;
   taxAmount: number;
   netPayoutAmount: number;
 
@@ -35,6 +36,7 @@ export interface Payment {
 
   // Dates
   settlementDate?: string;
+  deliveryDate?: string;
   createdAt: string;
   comments?: string | null;
 }
@@ -51,6 +53,7 @@ export interface EarningsSummary {
 export interface CommissionBreakdown {
   grossRevenue: number;
   platformCommission: number;
+  gstOnFood: number;
   taxCharges: number;
   netPayout: number;
   commissionPercentage: number;

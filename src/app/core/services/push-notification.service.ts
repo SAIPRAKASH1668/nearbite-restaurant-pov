@@ -289,7 +289,7 @@ export class PushNotificationService {
     if (this.foregroundListenerAttached) return;
     this.foregroundListenerAttached = true;
 
-    void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+    void CapacitorApp.addListener('appStateChange', ({ isActive }: { isActive: boolean }) => {
       if (!isActive) return;
       // App came back to foreground — re-confirm we still hold the active
       // FCM token. Handles: token rotated in background, OS revoked

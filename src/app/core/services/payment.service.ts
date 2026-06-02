@@ -22,6 +22,9 @@ import { FileExportService } from './file-export.service';
 
 interface BackendOrderRevenue {
   customerPaidFoodValue?: number;
+  govtRevenue?: {
+    gstOnFood?: number;
+  };
   platformRevenue?: {
     foodCommission?: number;
   };
@@ -30,6 +33,7 @@ interface BackendOrderRevenue {
 interface BackendOrder {
   orderId: string;
   createdAt: string;
+  riderDeliveredAt?: string;
   foodTotal?: number;
   revenue?: BackendOrderRevenue;
 }
@@ -45,6 +49,16 @@ interface RestaurantFinancialData {
   earningsSummary: EarningsSummary;
   commissionBreakdown: CommissionBreakdown;
   statusCounts: PaymentStatusCounts;
+}
+
+export interface PaymentExportGroup {
+  label: string;
+  payments: Payment[];
+}
+
+export interface PaymentExportOptions {
+  title?: string;
+  groups?: PaymentExportGroup[];
 }
 
 @Injectable({
@@ -110,6 +124,7 @@ export class PaymentService {
       const grossAmount = Math.floor(Math.random() * 2350) + 150;
       const commissionRate = 0.18; // 18% platform commission
       const commissionAmount = Math.round(grossAmount * commissionRate);
+      const gstOnFoodAmount = Math.round(grossAmount * 0.05 * 100) / 100;
       const taxAmount = Math.round(commissionAmount * 0.18); // 18% GST on commission
       const netPayoutAmount = grossAmount - commissionAmount - taxAmount;
 
@@ -197,6 +212,7 @@ export class PaymentService {
         orderId: `ORD_${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
         grossAmount,
         commissionAmount,
+        gstOnFoodAmount,
         taxAmount,
         netPayoutAmount,
         paymentMethod,
@@ -206,6 +222,7 @@ export class PaymentService {
         settlementStatus,
         settlementId,
         settlementDate,
+        deliveryDate: date.toISOString(),
         createdAt: date.toISOString(),
         comments: null
       });
@@ -332,6 +349,7 @@ export class PaymentService {
 
     const grossRevenue = successfulPayments.reduce((sum, p) => sum + p.grossAmount, 0);
     const platformCommission = successfulPayments.reduce((sum, p) => sum + p.commissionAmount, 0);
+    const gstOnFood = successfulPayments.reduce((sum, p) => sum + p.gstOnFoodAmount, 0);
     const taxCharges = successfulPayments.reduce((sum, p) => sum + p.taxAmount, 0);
     
     // Net Payout = Total earnings in date range (includes settled + unsettled)
@@ -341,6 +359,7 @@ export class PaymentService {
     return of({
       grossRevenue,
       platformCommission,
+      gstOnFood,
       taxCharges,
       netPayout,
       commissionPercentage
@@ -383,9 +402,10 @@ export class PaymentService {
    */
   exportToCSV(payments: Payment[]): void {
     const headers = [
-      'Date',
+      'Delivery Date',
       'Order ID',
       'Menu Order Value',
+      'GST on Food',
       'Commission',
       'Net Payout',
       'Settlement Status',
@@ -393,9 +413,10 @@ export class PaymentService {
     ];
 
     const rows = payments.map(p => [
-      new Date(p.createdAt).toLocaleDateString('en-IN'),
+      new Date(this.getPaymentDeliveryDate(p)).toLocaleDateString('en-IN'),
       p.orderId,
       p.grossAmount.toFixed(2),
+      p.gstOnFoodAmount.toFixed(2),
       p.commissionAmount.toFixed(2),
       p.netPayoutAmount.toFixed(2),
       p.settlementStatus,
@@ -423,18 +444,20 @@ export class PaymentService {
     content += `Total Transactions: ${payments.length}\n\n`;
     
     const totalGross = payments.reduce((sum, p) => sum + p.grossAmount, 0);
+    const totalGstOnFood = payments.reduce((sum, p) => sum + p.gstOnFoodAmount, 0);
     const totalCommission = payments.reduce((sum, p) => sum + p.commissionAmount, 0);
     const totalNet = payments.reduce((sum, p) => sum + p.netPayoutAmount, 0);
     
     content += `Total Gross Revenue: ₹${totalGross.toFixed(2)}\n`;
+    content += `Total GST on Food: Rs.${totalGstOnFood.toFixed(2)}\n`;
     content += `Total Platform Commission: ₹${totalCommission.toFixed(2)}\n`;
     content += `Total Net Payout: ₹${totalNet.toFixed(2)}\n\n`;
     content += '='.repeat(80) + '\n\n';
     
     payments.forEach(p => {
-      content += `Date: ${new Date(p.createdAt).toLocaleDateString('en-IN')}\n`;
+      content += `Delivery Date: ${new Date(this.getPaymentDeliveryDate(p)).toLocaleDateString('en-IN')}\n`;
       content += `Order: ${p.orderId}\n`;
-      content += `Gross: ₹${p.grossAmount} | Commission: ₹${p.commissionAmount} | Net: ₹${p.netPayoutAmount}\n`;
+      content += `Gross: Rs.${p.grossAmount} | GST on Food: Rs.${p.gstOnFoodAmount} | Commission: Rs.${p.commissionAmount} | Net: Rs.${p.netPayoutAmount}\n`;
       content += `Settlement: ${p.settlementStatus}\n`;
       content += '-'.repeat(80) + '\n';
     });
@@ -457,29 +480,65 @@ export class PaymentService {
     window.URL.revokeObjectURL(url);
   }
 
-  async exportToCSVFile(payments: Payment[]): Promise<void> {
+  async exportToCSVFile(payments: Payment[], options: PaymentExportOptions = {}): Promise<void> {
     const headers = [
-      'Date',
+      'Group',
+      'Delivery Date',
       'Order ID',
       'Gross Menu Value',
+      'GST on Food',
       'Platform Commission',
       'Net Payout (Your Earnings)',
       'Settlement Status',
+      'Settlement ID',
+      'Comments',
       'Transaction ID'
     ];
 
-    const rows = payments.map((payment) => [
-      new Date(payment.createdAt).toLocaleDateString('en-IN'),
-      payment.orderId,
-      payment.grossAmount.toFixed(2),
-      payment.commissionAmount.toFixed(2),
-      payment.netPayoutAmount.toFixed(2),
-      payment.settlementStatus,
-      payment.transactionId
-    ]);
+    const groups = options.groups?.length
+      ? options.groups
+      : [{ label: options.title || 'Transactions', payments }];
+    const rows: string[][] = [];
 
-    // Formula note as first data row (informational)
-    const formulaNote = ['Formula: Net Payout = Gross Menu Value - Platform Commission - Your Coupon Discount', '', '', '', '', '', ''];
+    groups.forEach((group) => {
+      const groupGross = group.payments.reduce((sum, payment) => sum + payment.grossAmount, 0);
+      const groupGstOnFood = group.payments.reduce((sum, payment) => sum + payment.gstOnFoodAmount, 0);
+      const groupCommission = group.payments.reduce((sum, payment) => sum + payment.commissionAmount, 0);
+      const groupNet = group.payments.reduce((sum, payment) => sum + payment.netPayoutAmount, 0);
+
+      rows.push([
+        `${group.label} Total`,
+        '',
+        `${group.payments.length} orders`,
+        groupGross.toFixed(2),
+        groupGstOnFood.toFixed(2),
+        groupCommission.toFixed(2),
+        groupNet.toFixed(2),
+        '',
+        '',
+        '',
+        ''
+      ]);
+
+      group.payments.forEach((payment) => rows.push([
+        group.label,
+        new Date(this.getPaymentDeliveryDate(payment)).toLocaleDateString('en-IN'),
+        payment.orderId,
+        payment.grossAmount.toFixed(2),
+        payment.gstOnFoodAmount.toFixed(2),
+        payment.commissionAmount.toFixed(2),
+        payment.netPayoutAmount.toFixed(2),
+        payment.settlementStatus,
+        payment.settlementId || '',
+        payment.comments || '',
+        payment.transactionId
+      ]));
+    });
+
+    const formulaNote = [
+      'Formula: Net Payout = Gross Menu Value - Platform Commission - Your Coupon Discount',
+      '', '', '', '', '', '', '', '', '', ''
+    ];
 
     const csvContent = [
       headers.join(','),
@@ -495,10 +554,14 @@ export class PaymentService {
     });
   }
 
-  async exportToPDFFile(payments: Payment[]): Promise<void> {
+  async exportToPDFFile(payments: Payment[], options: PaymentExportOptions = {}): Promise<void> {
     const totalGross = payments.reduce((sum, payment) => sum + payment.grossAmount, 0);
+    const totalGstOnFood = payments.reduce((sum, payment) => sum + payment.gstOnFoodAmount, 0);
     const totalCommission = payments.reduce((sum, payment) => sum + payment.commissionAmount, 0);
     const totalNet = payments.reduce((sum, payment) => sum + payment.netPayoutAmount, 0);
+    const groups = options.groups?.length
+      ? options.groups
+      : [{ label: options.title || 'Transactions', payments }];
 
     const pdf = new jsPDF({
       unit: 'pt',
@@ -527,40 +590,64 @@ export class PaymentService {
     };
 
     addLine('YumDude - Financial Dashboard Report', 18, 'bold');
+    addLine(`View: ${options.title || 'Transactions'}`, 10);
     addLine(`Generated: ${new Date().toLocaleString('en-IN')}`, 10);
     addLine(`Total Transactions: ${payments.length}`, 10);
     y += 4;
     addLine('Earnings Formula: Net Payout = Gross Menu Value - Platform Commission - Your Coupon Discount', 9);
     y += 8;
     addLine(`Total Gross Menu Value: Rs.${totalGross.toFixed(2)}`, 10);
+    addLine(`Total GST on Food: Rs.${totalGstOnFood.toFixed(2)}`, 10);
     addLine(`Total Platform Commission: Rs.${totalCommission.toFixed(2)}`, 10);
     addLine(`Total Net Payout (Your Earnings): Rs.${totalNet.toFixed(2)}`, 10, 'bold');
     y += 6;
 
-    payments.forEach((payment, index) => {
+    groups.forEach((group) => {
+      const groupGross = group.payments.reduce((sum, payment) => sum + payment.grossAmount, 0);
+      const groupGstOnFood = group.payments.reduce((sum, payment) => sum + payment.gstOnFoodAmount, 0);
+      const groupCommission = group.payments.reduce((sum, payment) => sum + payment.commissionAmount, 0);
+      const groupNet = group.payments.reduce((sum, payment) => sum + payment.netPayoutAmount, 0);
+
       if (y > pageHeight - 120) {
         pdf.addPage();
         y = margin;
       }
 
-      pdf.setDrawColor(220, 220, 220);
-      pdf.line(margin, y, pageWidth - margin, y);
-      y += 14;
+      y += 8;
+      addLine(group.label, 12, 'bold');
+      addWrappedLine(
+        `Orders: ${group.payments.length} | Gross: Rs.${groupGross.toFixed(2)} | GST on Food: Rs.${groupGstOnFood.toFixed(2)} | Commission: Rs.${groupCommission.toFixed(2)} | Net: Rs.${groupNet.toFixed(2)}`,
+        9
+      );
 
-      addLine(`${index + 1}. Order ${payment.orderId}`, 11, 'bold');
-      addWrappedLine(
-        `Date: ${new Date(payment.createdAt).toLocaleDateString('en-IN')} | Transaction: ${payment.transactionId}`,
-        9
-      );
-      addWrappedLine(
-        `Gross Menu Value: Rs.${payment.grossAmount.toFixed(2)} | Commission: Rs.${payment.commissionAmount.toFixed(2)} | Net Payout: Rs.${payment.netPayoutAmount.toFixed(2)}`,
-        9
-      );
-      addWrappedLine(
-        `Settlement Status: ${payment.settlementStatus}`,
-        9
-      );
-      y += 4;
+      group.payments.forEach((payment, index) => {
+        if (y > pageHeight - 120) {
+          pdf.addPage();
+          y = margin;
+        }
+
+        pdf.setDrawColor(220, 220, 220);
+        pdf.line(margin, y, pageWidth - margin, y);
+        y += 14;
+
+        addLine(`${index + 1}. Order ${payment.orderId}`, 11, 'bold');
+        addWrappedLine(
+          `Delivery Date: ${new Date(this.getPaymentDeliveryDate(payment)).toLocaleDateString('en-IN')} | Transaction: ${payment.transactionId}`,
+          9
+        );
+        addWrappedLine(
+          `Gross Menu Value: Rs.${payment.grossAmount.toFixed(2)} | GST on Food: Rs.${payment.gstOnFoodAmount.toFixed(2)} | Commission: Rs.${payment.commissionAmount.toFixed(2)} | Net Payout: Rs.${payment.netPayoutAmount.toFixed(2)}`,
+          9
+        );
+        addWrappedLine(
+          `Settlement Status: ${payment.settlementStatus}${payment.settlementId ? ` | Settlement ID: ${payment.settlementId}` : ''}`,
+          9
+        );
+        if (payment.comments) {
+          addWrappedLine(`Comments: ${payment.comments}`, 9);
+        }
+        y += 4;
+      });
     });
 
     const blob = new Blob([pdf.output('arraybuffer')], {
@@ -582,6 +669,10 @@ export class PaymentService {
 
   private escapeCsvCell(value: string): string {
     return `"${value.replace(/"/g, '""')}"`;
+  }
+
+  private getPaymentDeliveryDate(payment: Payment): string {
+    return payment.deliveryDate || payment.createdAt;
   }
 
   // ============================================
@@ -624,23 +715,46 @@ export class PaymentService {
     startDate: string,
     endDate: string
   ): Observable<RestaurantFinancialData> {
+    const earningsStartDate = this.shiftDate(startDate, -1);
+    const earningsEndDate = this.shiftDate(endDate, 1);
+
     return forkJoin({
-      earningsResponse: this.getRestaurantEarnings(restaurantId, startDate, endDate),
+      earningsResponse: this.getRestaurantEarnings(restaurantId, earningsStartDate, earningsEndDate),
       orders: this.getRestaurantOrders(restaurantId)
     }).pipe(
       map(({ earningsResponse, orders }) => {
         const financialByOrderId = this.buildFinancialByOrderId(orders);
-        const payments = this.convertEarningsToPayments(earningsResponse.history, financialByOrderId);
+        const payments = this.convertEarningsToPayments(earningsResponse.history, financialByOrderId)
+          .filter((payment) => this.isPaymentInDeliveryDateRange(payment, startDate, endDate));
+        const visibleOrderIds = new Set(payments.map((payment) => payment.orderId));
+        const history = earningsResponse.history.filter((earning) => visibleOrderIds.has(earning.orderId));
 
         return {
-          history: earningsResponse.history,
+          history,
           payments,
-          earningsSummary: this.calculateEarningsSummaryFromAWS(earningsResponse.history),
+          earningsSummary: this.calculateEarningsSummaryFromPayments(payments),
           commissionBreakdown: this.calculateCommissionFromAWS(payments),
-          statusCounts: this.calculateStatusCountsFromAWS(earningsResponse.history)
+          statusCounts: this.calculateStatusCountsFromPayments(payments)
         };
       })
     );
+  }
+
+  private shiftDate(dateString: string, days: number): string {
+    const date = new Date(`${dateString}T00:00:00`);
+    date.setDate(date.getDate() + days);
+    return date.toISOString().slice(0, 10);
+  }
+
+  private isPaymentInDeliveryDateRange(payment: Payment, startDate: string, endDate: string): boolean {
+    const deliveredAt = new Date(payment.deliveryDate || payment.createdAt);
+    if (Number.isNaN(deliveredAt.getTime())) {
+      return false;
+    }
+
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T23:59:59.999`);
+    return deliveredAt >= start && deliveredAt <= end;
   }
 
   private getRestaurantOrders(restaurantId: string): Observable<BackendOrder[]> {
@@ -656,8 +770,8 @@ export class PaymentService {
     );
   }
 
-  private buildFinancialByOrderId(orders: BackendOrder[]): Map<string, { menuOrderValue: number; commissionAmount: number }> {
-    const financialByOrderId = new Map<string, { menuOrderValue: number; commissionAmount: number }>();
+  private buildFinancialByOrderId(orders: BackendOrder[]): Map<string, { menuOrderValue: number; commissionAmount: number; gstOnFoodAmount: number; deliveryDate?: string }> {
+    const financialByOrderId = new Map<string, { menuOrderValue: number; commissionAmount: number; gstOnFoodAmount: number; deliveryDate?: string }>();
 
     orders.forEach((order) => {
       if (!order.orderId) {
@@ -667,10 +781,13 @@ export class PaymentService {
       const revenue = order.revenue || {};
       const menuOrderValue = Number(revenue.customerPaidFoodValue ?? order.foodTotal ?? 0) || 0;
       const commissionAmount = Number(revenue.platformRevenue?.foodCommission ?? 0) || 0;
+      const gstOnFoodAmount = Number(revenue.govtRevenue?.gstOnFood ?? 0) || 0;
 
       financialByOrderId.set(order.orderId, {
         menuOrderValue,
-        commissionAmount
+        commissionAmount,
+        gstOnFoodAmount,
+        deliveryDate: order.riderDeliveredAt
       });
     });
 
@@ -700,12 +817,13 @@ export class PaymentService {
    */
   convertEarningsToPayments(
     earnings: RestaurantEarning[],
-    financialByOrderId: Map<string, { menuOrderValue: number; commissionAmount: number }> = new Map()
+    financialByOrderId: Map<string, { menuOrderValue: number; commissionAmount: number; gstOnFoodAmount: number; deliveryDate?: string }> = new Map()
   ): Payment[] {
     return earnings.map(e => {
       const financial = financialByOrderId.get(e.orderId);
       const grossAmount = financial?.menuOrderValue ?? 0;
       const commissionAmount = financial?.commissionAmount ?? 0;
+      const gstOnFoodAmount = financial?.gstOnFoodAmount ?? 0;
       const taxAmount = 0;
       const netPayoutAmount = e.totalEarnings;
 
@@ -732,6 +850,7 @@ export class PaymentService {
         orderId: e.orderId,
         grossAmount: grossAmount,
         commissionAmount: commissionAmount,
+        gstOnFoodAmount: gstOnFoodAmount,
         taxAmount: taxAmount,
         netPayoutAmount: netPayoutAmount,
         paymentMethod: paymentMethod,
@@ -741,6 +860,7 @@ export class PaymentService {
         settlementStatus: settlementStatus,
         settlementId: e.settlementId || null,
         settlementDate: e.settledAt || undefined,
+        deliveryDate: financial?.deliveryDate || e.createdAt,
         createdAt: e.createdAt,
         comments: e.comments || null
       };
@@ -783,12 +903,47 @@ export class PaymentService {
     };
   }
 
+  calculateEarningsSummaryFromPayments(payments: Payment[]): EarningsSummary {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const paymentDate = (payment: Payment) => new Date(payment.deliveryDate || payment.createdAt);
+
+    const todayEarnings = payments
+      .filter(payment => {
+        const deliveredAt = paymentDate(payment);
+        return deliveredAt >= today && deliveredAt < new Date(today.getTime() + 24 * 60 * 60 * 1000);
+      })
+      .reduce((sum, payment) => sum + payment.netPayoutAmount, 0);
+
+    const weekEarnings = payments
+      .filter(payment => paymentDate(payment) >= weekAgo)
+      .reduce((sum, payment) => sum + payment.netPayoutAmount, 0);
+
+    const monthEarnings = payments
+      .filter(payment => paymentDate(payment) >= monthAgo)
+      .reduce((sum, payment) => sum + payment.netPayoutAmount, 0);
+
+    const pendingSettlements = payments
+      .filter(payment => payment.settlementStatus !== 'SETTLED')
+      .reduce((sum, payment) => sum + payment.netPayoutAmount, 0);
+
+    return {
+      todayEarnings,
+      weekEarnings,
+      monthEarnings,
+      pendingSettlements
+    };
+  }
+
   /**
    * Calculate commission breakdown from AWS data
    */
   calculateCommissionFromAWS(payments: Payment[]): CommissionBreakdown {
     const grossRevenue = payments.reduce((sum, payment) => sum + (payment.grossAmount || 0), 0);
     const platformCommission = payments.reduce((sum, payment) => sum + (payment.commissionAmount || 0), 0);
+    const gstOnFood = payments.reduce((sum, payment) => sum + (payment.gstOnFoodAmount || 0), 0);
     const taxCharges = 0;
     const netPayout = payments.reduce((sum, payment) => sum + (payment.netPayoutAmount || 0), 0);
     const commissionPercentage = grossRevenue > 0 ? (platformCommission / grossRevenue) * 100 : 0;
@@ -796,6 +951,7 @@ export class PaymentService {
     return {
       grossRevenue,
       platformCommission,
+      gstOnFood,
       taxCharges,
       netPayout,
       commissionPercentage
@@ -818,6 +974,16 @@ export class PaymentService {
       failed,
       notInitiatedSettlements,
       settledSettlements
+    };
+  }
+
+  calculateStatusCountsFromPayments(payments: Payment[]): PaymentStatusCounts {
+    return {
+      successful: payments.length,
+      pending: 0,
+      failed: 0,
+      notInitiatedSettlements: payments.filter(payment => payment.settlementStatus === 'NOT_INITIATED').length,
+      settledSettlements: payments.filter(payment => payment.settlementStatus === 'SETTLED').length
     };
   }
 }

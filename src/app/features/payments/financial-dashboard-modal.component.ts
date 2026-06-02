@@ -13,9 +13,23 @@ import {
   RestaurantEarning
 } from '../../core/models/payment.model';
 import { PaymentService } from '../../core/services/payment.service';
+import { PaymentExportGroup } from '../../core/services/payment.service';
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 import { NotificationService } from '../../shared/components/notification/notification.service';
 import { OrderIdHighlightPipe } from '../../shared/pipes/order-id-highlight.pipe';
+
+type FinancialTableTab = 'UNSETTLED' | 'SETTLED';
+type SettledGroupMode = 'SETTLEMENT_ID' | 'WEEK' | 'DATE_RANGE';
+
+interface PaymentGroup {
+  key: string;
+  label: string;
+  payments: Payment[];
+  totalGross: number;
+  totalGstOnFood: number;
+  totalCommission: number;
+  totalNet: number;
+}
 
 @Component({
   selector: 'app-financial-dashboard-modal',
@@ -54,6 +68,12 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   selectedCommentOrderId = '';
   selectedCommentText = '';
 
+  // Table view
+  activeTableTab: FinancialTableTab = 'UNSETTLED';
+  settledGroupMode: SettledGroupMode = 'SETTLEMENT_ID';
+  settledGroups: PaymentGroup[] = [];
+  collapsedGroupKeys = new Set<string>();
+
   // Pagination
   pagination: PaginationConfig = {
     currentPage: 1,
@@ -63,7 +83,7 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   };
 
   // Sorting
-  sortConfig: SortConfig = { field: 'createdAt', direction: 'desc' };
+  sortConfig: SortConfig = { field: 'deliveryDate', direction: 'desc' };
 
   // Loading states
   isLoading = false;
@@ -325,15 +345,7 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
   private applySearch(): void {
     // Start with all payments
     let payments = [...this.allPayments];
-    
-    // Apply settlement status filter
-    if (this.selectedSettlementStatuses.length > 0) {
-      payments = payments.filter(p => 
-        this.selectedSettlementStatuses.includes(p.settlementStatus)
-      );
-    }
-    
-    
+
     // Apply order ID search
     if (this.searchOrderId.trim()) {
       const searchTerm = this.searchOrderId.trim().toLowerCase();
@@ -344,6 +356,161 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
     
     this.filteredPayments = payments;
     this.applySorting();
+  }
+
+  setTableTab(tab: FinancialTableTab): void {
+    this.activeTableTab = tab;
+    this.pagination.currentPage = 1;
+    this.updatePagination();
+    this.cdr.markForCheck();
+  }
+
+  setSettledGroupMode(mode: SettledGroupMode): void {
+    this.settledGroupMode = mode;
+    this.collapsedGroupKeys.clear();
+    this.updateSettledGroups(this.getActiveTabPayments());
+    this.cdr.markForCheck();
+  }
+
+  toggleSettledGroup(groupKey: string): void {
+    if (this.collapsedGroupKeys.has(groupKey)) {
+      this.collapsedGroupKeys.delete(groupKey);
+    } else {
+      this.collapsedGroupKeys.add(groupKey);
+    }
+    this.cdr.markForCheck();
+  }
+
+  isSettledGroupCollapsed(groupKey: string): boolean {
+    return this.collapsedGroupKeys.has(groupKey);
+  }
+
+  getTabCount(tab: FinancialTableTab): number {
+    const status: SettlementStatus = tab === 'SETTLED' ? 'SETTLED' : 'NOT_INITIATED';
+    return this.filteredPayments.filter(payment => payment.settlementStatus === status).length;
+  }
+
+  getActiveTableTitle(): string {
+    if (this.activeTableTab === 'UNSETTLED') {
+      return 'Unsettled Transactions';
+    }
+    const labels: Record<SettledGroupMode, string> = {
+      SETTLEMENT_ID: 'Settled Transactions by Settlement ID',
+      WEEK: 'Settled Transactions by Week',
+      DATE_RANGE: 'Settled Transactions for Selected Dates'
+    };
+    return labels[this.settledGroupMode];
+  }
+
+  private getActiveTabPayments(): Payment[] {
+    const status: SettlementStatus = this.activeTableTab === 'SETTLED' ? 'SETTLED' : 'NOT_INITIATED';
+    return this.filteredPayments.filter(payment => payment.settlementStatus === status);
+  }
+
+  private updateSettledGroups(payments: Payment[]): void {
+    if (this.activeTableTab !== 'SETTLED') {
+      this.settledGroups = [];
+      return;
+    }
+
+    const groupMap = new Map<string, Payment[]>();
+
+    payments.forEach((payment) => {
+      const key = this.getGroupKey(payment);
+      const groupPayments = groupMap.get(key) || [];
+      groupPayments.push(payment);
+      groupMap.set(key, groupPayments);
+    });
+
+    this.settledGroups = Array.from(groupMap.entries())
+      .map(([key, groupPayments]) => this.buildPaymentGroup(key, groupPayments))
+      .sort((a, b) => this.getGroupLatestDeliveryTime(b) - this.getGroupLatestDeliveryTime(a));
+  }
+
+  private getGroupKey(payment: Payment): string {
+    if (this.settledGroupMode === 'SETTLEMENT_ID') {
+      return payment.settlementId || 'No Settlement ID';
+    }
+    if (this.settledGroupMode === 'DATE_RANGE') {
+      return `${this.startDate || 'Start'} to ${this.endDate || 'End'}`;
+    }
+
+    return this.getWeekKey(this.getOrderDeliveryDate(payment));
+  }
+
+  private buildPaymentGroup(key: string, payments: Payment[]): PaymentGroup {
+    return {
+      key,
+      label: this.getGroupLabel(key, payments),
+      payments: [...payments].sort((a, b) => this.getOrderDeliveryTime(b) - this.getOrderDeliveryTime(a)),
+      totalGross: payments.reduce((sum, payment) => sum + payment.grossAmount, 0),
+      totalGstOnFood: payments.reduce((sum, payment) => sum + payment.gstOnFoodAmount, 0),
+      totalCommission: payments.reduce((sum, payment) => sum + payment.commissionAmount, 0),
+      totalNet: payments.reduce((sum, payment) => sum + payment.netPayoutAmount, 0)
+    };
+  }
+
+  private getGroupLatestDeliveryTime(group: PaymentGroup): number {
+    return Math.max(...group.payments.map(payment => this.getOrderDeliveryTime(payment)), 0);
+  }
+
+  getOrderDeliveryDate(payment: Payment): string {
+    return payment.deliveryDate || payment.createdAt;
+  }
+
+  private getOrderDeliveryTime(payment: Payment): number {
+    const time = new Date(this.getOrderDeliveryDate(payment)).getTime();
+    return Number.isNaN(time) ? 0 : time;
+  }
+
+  private getGroupLabel(key: string, payments: Payment[]): string {
+    if (this.settledGroupMode === 'SETTLEMENT_ID') {
+      return key;
+    }
+    if (this.settledGroupMode === 'DATE_RANGE') {
+      return `Selected Dates (${this.formatDate(this.startDate)} - ${this.formatDate(this.endDate)})`;
+    }
+
+    const firstPayment = payments[0];
+    return firstPayment ? this.formatWeekLabel(this.getOrderDeliveryDate(firstPayment)) : key;
+  }
+
+  private getWeekKey(dateString: string): string {
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return 'Unknown Week';
+    }
+    const weekStart = this.getWeekStart(date);
+    return weekStart.toISOString().slice(0, 10);
+  }
+
+  private formatWeekLabel(dateString: string): string {
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return 'Unknown Week';
+    }
+    const weekStart = this.getWeekStart(date);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
+    return `${this.formatDate(this.formatDateForInput(weekStart))} - ${this.formatDate(this.formatDateForInput(weekEnd))}`;
+  }
+
+  private getWeekStart(date: Date): Date {
+    const result = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const day = result.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    result.setDate(result.getDate() + diff);
+    return result;
+  }
+
+  getExportGroups(): PaymentExportGroup[] {
+    if (this.activeTableTab !== 'SETTLED') {
+      return [{ label: this.getActiveTableTitle(), payments: this.getActiveTabPayments() }];
+    }
+    return this.settledGroups.map(group => ({
+      label: group.label,
+      payments: group.payments
+    }));
   }
 
   /**
@@ -414,7 +581,10 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
    * Update pagination state and slice data for current page
    */
   private updatePagination(): void {
-    this.pagination.totalItems = this.filteredPayments.length;
+    const activePayments = this.getActiveTabPayments();
+
+    this.updateSettledGroups(activePayments);
+    this.pagination.totalItems = activePayments.length;
     this.pagination.totalPages = Math.ceil(this.pagination.totalItems / this.pagination.pageSize);
     
     // Ensure current page is valid
@@ -428,7 +598,7 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
     // Slice data for current page
     const startIndex = (this.pagination.currentPage - 1) * this.pagination.pageSize;
     const endIndex = startIndex + this.pagination.pageSize;
-    this.displayedPayments = this.filteredPayments.slice(startIndex, endIndex);
+    this.displayedPayments = activePayments.slice(startIndex, endIndex);
   }
 
   /**
@@ -513,10 +683,34 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
 
     try {
-      await this.paymentService.exportToCSVFile(this.filteredPayments);
+      const payments = this.getActiveTabPayments();
+      await this.paymentService.exportToCSVFile(payments, {
+        title: this.getActiveTableTitle(),
+        groups: this.getExportGroups()
+      });
       this.notificationService.success('Financial dashboard CSV is ready.');
     } catch (error) {
       console.error('Failed to export financial dashboard CSV', error);
+      this.notificationService.error('Could not export financial dashboard CSV.');
+    } finally {
+      this.isExporting = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  async exportGroupCSV(group: PaymentGroup, event: MouseEvent): Promise<void> {
+    event.stopPropagation();
+    this.isExporting = true;
+    this.cdr.markForCheck();
+
+    try {
+      await this.paymentService.exportToCSVFile(group.payments, {
+        title: group.label,
+        groups: [{ label: group.label, payments: group.payments }]
+      });
+      this.notificationService.success('Financial dashboard CSV is ready.');
+    } catch (error) {
+      console.error('Failed to export financial dashboard group CSV', error);
       this.notificationService.error('Could not export financial dashboard CSV.');
     } finally {
       this.isExporting = false;
@@ -532,10 +726,34 @@ export class FinancialDashboardModalComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
 
     try {
-      await this.paymentService.exportToPDFFile(this.filteredPayments);
+      const payments = this.getActiveTabPayments();
+      await this.paymentService.exportToPDFFile(payments, {
+        title: this.getActiveTableTitle(),
+        groups: this.getExportGroups()
+      });
       this.notificationService.success('Financial dashboard PDF is ready.');
     } catch (error) {
       console.error('Failed to export financial dashboard PDF', error);
+      this.notificationService.error('Could not export financial dashboard PDF.');
+    } finally {
+      this.isExporting = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  async exportGroupPDF(group: PaymentGroup, event: MouseEvent): Promise<void> {
+    event.stopPropagation();
+    this.isExporting = true;
+    this.cdr.markForCheck();
+
+    try {
+      await this.paymentService.exportToPDFFile(group.payments, {
+        title: group.label,
+        groups: [{ label: group.label, payments: group.payments }]
+      });
+      this.notificationService.success('Financial dashboard PDF is ready.');
+    } catch (error) {
+      console.error('Failed to export financial dashboard group PDF', error);
       this.notificationService.error('Could not export financial dashboard PDF.');
     } finally {
       this.isExporting = false;
