@@ -4,13 +4,28 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { OrderNotificationService } from '../../core/services/order-notification.service';
 import { OrderService } from '../../core/services/order.service';
-import { Order, OrderStatus } from '../../core/models/order.model';
+import { Order, OrderAdjustmentRecord, OrderItem, OrderStatus } from '../../core/models/order.model';
 import { Subscription } from 'rxjs';
 import { OrderRejectionModalComponent } from '../../shared/components/order-rejection-modal/order-rejection-modal.component';
 import { SoundService } from '../../core/services/sound.service';
 import { PrinterService, PrintStatus } from '../../core/services/printer.service';
 import { NotificationService } from '../../shared/components/notification/notification.service';
 import { OrderIdHighlightPipe } from '../../shared/pipes/order-id-highlight.pipe';
+import { MenuItem, MenuService } from '../../core/services/menu.service';
+import { RestaurantContextService } from '../../core/services/restaurant-context.service';
+
+interface SwapReplacementLine {
+  tempId: string;
+  itemId: string;
+  quantity: number;
+  selectedAddOnIds: string[];
+}
+
+interface OrderCardSwapGroup {
+  removedLabel: string;
+  addedItems: OrderItem[];
+  hiddenAddedCount: number;
+}
 
 @Component({
   selector: 'app-orders',
@@ -62,9 +77,31 @@ export class OrdersComponent implements OnInit, OnDestroy {
   orderPendingAccept: Order | null = null;
   prepTime = 6;
   prepTimeOptions = [5, 10, 15, 20, 30, 45];
+
+  // Manager item-swap state
+  showSwapModal = false;
+  swapOrder: Order | null = null;
+  swapSourceItem: OrderItem | null = null;
+  swapDraftItemId = '';
+  swapDraftQuantity = 1;
+  swapReplacementItems: SwapReplacementLine[] = [];
+  swapReason = 'Item unavailable';
+  swapSearchQuery = '';
+  swapDraftAddOnIds: string[] = [];
+  swapSubmitting = false;
+  swapReasonOptions = [
+    'Item unavailable',
+    'Customer requested alternative',
+    'Kitchen stock change'
+  ];
+
+  // Swap history modal state (separate from expandedOrder)
+  showSwapHistoryModal = false;
+  swapHistoryOrder: Order | null = null;
   
   // Status enum for template
   OrderStatus = OrderStatus;
+  private readonly ITEM_SWAP_ENABLED_RESTAURANT_ID = 'RES-1774074885558-3227';
 
   /** Page mode (driven by route data):
    *   - 'delivery' for /dashboard/orders   → DELIVERY orders only
@@ -83,8 +120,14 @@ export class OrdersComponent implements OnInit, OnDestroy {
     private soundService: SoundService,
     private printerService: PrinterService,
     private notificationService: NotificationService,
+    private menuService: MenuService,
+    private restaurantContext: RestaurantContextService,
     private route: ActivatedRoute
   ) {}
+
+  get isItemSwapEnabled(): boolean {
+    return this.restaurantContext.getRestaurantId() === this.ITEM_SWAP_ENABLED_RESTAURANT_ID;
+  }
 
   private isConflictError(error: any): boolean {
     return error?.status === 409;
@@ -116,6 +159,11 @@ export class OrdersComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
     this.orderService.fetchOrders();
+    if (this.isItemSwapEnabled) {
+      void this.menuService.ensureMenuLoaded().catch(() => {
+        this.notificationService.warning('Menu could not be loaded for item swaps.');
+      });
+    }
     this.newOrderSubscription = this.orderNotificationService.getNewOrders().subscribe();
   }
 
@@ -248,7 +296,398 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   closeExpandedOrder(): void {
+    this.closeSwapModal();
     this.expandedOrder = null;
+  }
+
+  canAdjustOrder(order: Order | null): boolean {
+    if (!order || !this.isItemSwapEnabled) return false;
+    if (!['new', 'preparing'].includes(this.activeTab)) return false;
+    return [
+      OrderStatus.CONFIRMED,
+      OrderStatus.ACCEPTED,
+      OrderStatus.PREPARING
+    ].includes(order.status);
+  }
+
+  openSwapModal(order: Order, item?: OrderItem): void {
+    if (!this.isItemSwapEnabled) {
+      this.notificationService.warning('Item swap is not enabled for this restaurant.');
+      return;
+    }
+
+    if (!this.canAdjustOrder(order)) {
+      this.notificationService.warning('This order can no longer be adjusted.');
+      return;
+    }
+
+    this.swapOrder = order;
+    this.swapSourceItem = item || order.items[0] || null;
+    this.swapDraftQuantity = Math.max(1, this.swapSourceItem?.quantity || 1);
+    this.swapReplacementItems = [];
+    this.swapReason = 'Item unavailable';
+    this.swapSearchQuery = '';
+    this.swapDraftAddOnIds = [];
+    this.swapDraftItemId = '';
+    this.showSwapModal = true;
+
+    void this.menuService.ensureMenuLoaded()
+      .then(() => {
+        this.selectDefaultReplacement();
+        this.cdr.detectChanges();
+      })
+      .catch(() => {
+        this.notificationService.error('Menu is unavailable. Please refresh and try again.');
+      });
+  }
+
+  closeSwapModal(): void {
+    this.showSwapModal = false;
+    this.swapOrder = null;
+    this.swapSourceItem = null;
+    this.swapDraftItemId = '';
+    this.swapDraftQuantity = 1;
+    this.swapReplacementItems = [];
+    this.swapReason = 'Item unavailable';
+    this.swapSearchQuery = '';
+    this.swapDraftAddOnIds = [];
+    this.swapSubmitting = false;
+  }
+
+  selectSwapSourceItem(item: OrderItem): void {
+    this.swapSourceItem = item;
+    this.swapDraftQuantity = Math.max(1, item.quantity || 1);
+    this.swapReplacementItems = [];
+    this.swapDraftAddOnIds = [];
+    this.selectDefaultReplacement();
+  }
+
+  get replacementOptions(): MenuItem[] {
+    if (!this.swapOrder || !this.swapSourceItem) return [];
+
+    const orderItemIds = new Set((this.swapOrder.items || []).map(item => item.itemId));
+    const query = this.swapSearchQuery.trim().toLowerCase();
+    const isPickup = this.isPickupOrder(this.swapOrder);
+
+    return this.menuService.currentItems
+      .filter(item => {
+        if (!item.itemId || orderItemIds.has(item.itemId)) return false;
+        if (item.isAvailable === false || item.effectivelyAvailable === false) return false;
+        if (isPickup && item.theaterMode !== true) return false;
+        if (!isPickup && item.theaterMode === true) return false;
+        if (isPickup && item.theaterMode === true && typeof item.inventoryCount === 'number' && item.inventoryCount <= 0) {
+          return false;
+        }
+        if (!query) return true;
+        return [
+          item.itemName,
+          item.category,
+          item.subCategory
+        ].some(value => String(value || '').toLowerCase().includes(query));
+      })
+      .sort((a, b) => {
+        const categorySort = String(a.category || '').localeCompare(String(b.category || ''));
+        if (categorySort !== 0) return categorySort;
+        return String(a.itemName || '').localeCompare(String(b.itemName || ''));
+      });
+  }
+
+  get selectedDraftReplacementItem(): MenuItem | null {
+    return this.menuService.currentItems.find(item => item.itemId === this.swapDraftItemId) || null;
+  }
+
+  get selectedDraftReplacementAddOns(): { optionId: string; name: string; extraPrice: number }[] {
+    return (this.selectedDraftReplacementItem?.addOnOptions || [])
+      .filter(option => this.swapDraftAddOnIds.includes(option.optionId));
+  }
+
+  get draftReplacementAddOnTotal(): number {
+    return this.selectedDraftReplacementAddOns.reduce((sum, option) => sum + Number(option.extraPrice || 0), 0);
+  }
+
+  get sourceLineTotal(): number {
+    if (!this.swapSourceItem) return 0;
+    const addOnTotal = this.getOrderItemAddOnTotal(this.swapSourceItem);
+    return (Number(this.swapSourceItem.price || 0) + addOnTotal) * Math.max(1, Number(this.swapSourceItem.quantity || 1));
+  }
+
+  get replacementLineTotal(): number {
+    return this.swapReplacementItems.reduce((sum, line) => sum + this.getReplacementLineTotal(line), 0);
+  }
+
+  get estimatedSwapDelta(): number {
+    return this.replacementLineTotal - this.sourceLineTotal;
+  }
+
+  get canSubmitSwap(): boolean {
+    return Boolean(
+      this.swapOrder &&
+      this.swapSourceItem &&
+      this.isItemSwapEnabled &&
+      this.canAdjustOrder(this.swapOrder) &&
+      this.swapReplacementItems.length > 0 &&
+      this.swapReason.trim() &&
+      !this.swapSubmitting
+    );
+  }
+
+  private selectDefaultReplacement(): void {
+    const first = this.replacementOptions[0];
+    this.swapDraftItemId = first?.itemId || '';
+    this.swapDraftAddOnIds = [];
+  }
+
+  selectReplacementItem(item: MenuItem): void {
+    this.swapDraftItemId = item.itemId;
+    this.swapDraftAddOnIds = [];
+  }
+
+  toggleReplacementAddOn(optionId: string): void {
+    this.swapDraftAddOnIds = this.swapDraftAddOnIds.includes(optionId)
+      ? this.swapDraftAddOnIds.filter(id => id !== optionId)
+      : [...this.swapDraftAddOnIds, optionId];
+  }
+
+  incrementSwapQuantity(): void {
+    if (this.swapDraftQuantity < 99) this.swapDraftQuantity++;
+  }
+
+  decrementSwapQuantity(): void {
+    if (this.swapDraftQuantity > 1) this.swapDraftQuantity--;
+  }
+
+  addReplacementLine(): void {
+    if (!this.selectedDraftReplacementItem) return;
+
+    const itemId = this.selectedDraftReplacementItem.itemId;
+    const selectedAddOnIds = [...this.swapDraftAddOnIds].sort();
+    const existingIndex = this.swapReplacementItems.findIndex(line =>
+      line.itemId === itemId &&
+      [...line.selectedAddOnIds].sort().join('|') === selectedAddOnIds.join('|')
+    );
+    const quantity = Math.max(1, Number(this.swapDraftQuantity || 1));
+
+    if (existingIndex !== -1) {
+      const next = [...this.swapReplacementItems];
+      next[existingIndex] = {
+        ...next[existingIndex],
+        quantity: Math.min(99, next[existingIndex].quantity + quantity)
+      };
+      this.swapReplacementItems = next;
+    } else {
+      this.swapReplacementItems = [
+        ...this.swapReplacementItems,
+        {
+          tempId: `${itemId}-${Date.now()}-${this.swapReplacementItems.length}`,
+          itemId,
+          quantity,
+          selectedAddOnIds
+        }
+      ];
+    }
+
+    this.swapDraftQuantity = 1;
+    this.swapDraftAddOnIds = [];
+  }
+
+  removeReplacementLine(tempId: string): void {
+    this.swapReplacementItems = this.swapReplacementItems.filter(line => line.tempId !== tempId);
+  }
+
+  updateReplacementLineQuantity(tempId: string, delta: number): void {
+    this.swapReplacementItems = this.swapReplacementItems
+      .map(line => line.tempId === tempId
+        ? { ...line, quantity: Math.max(1, Math.min(99, line.quantity + delta)) }
+        : line
+      );
+  }
+
+  confirmSwap(): void {
+    if (!this.canSubmitSwap || !this.swapOrder || !this.swapSourceItem) return;
+    if (!this.isItemSwapEnabled) {
+      this.notificationService.warning('Item swap is not enabled for this restaurant.');
+      return;
+    }
+
+    this.swapSubmitting = true;
+
+    this.orderService.adjustItems(this.swapOrder.orderId, {
+      removeItemIds: [this.swapSourceItem.itemId],
+      addItems: this.swapReplacementItems.map(line => ({
+        itemId: line.itemId,
+        quantity: Math.max(1, Number(line.quantity || 1)),
+        addOns: this.getReplacementLineAddOns(line),
+        addOnTotal: this.getReplacementLineAddOnTotal(line)
+      })),
+      reason: this.swapReason.trim()
+    }).subscribe({
+      next: (result) => {
+        const deltaText = result.delta === 0
+          ? 'No bill change.'
+          : `${result.delta > 0 ? 'Customer owes' : 'Refund due'} ${this.formatMoney(Math.abs(result.delta))}.`;
+        this.notificationService.success(`Item swapped. ${deltaText}`);
+        this.closeSwapModal();
+        this.orderService.fetchOrders({ suppressNewOrderEffects: true });
+      },
+      error: (error) => {
+        this.swapSubmitting = false;
+        const message = error?.error?.message || 'Swap failed. Please refresh and try again.';
+        this.notificationService.error(message);
+      }
+    });
+  }
+
+  getOrderItemAddOnTotal(item: OrderItem): number {
+    if (typeof item.addOnTotal === 'number') return item.addOnTotal;
+    return (item.addOns || item.addOnOptions || []).reduce((sum, option) => sum + Number(option.extraPrice || 0), 0);
+  }
+
+  getReplacementLineMenuItem(line: SwapReplacementLine): MenuItem | null {
+    return this.menuService.currentItems.find(item => item.itemId === line.itemId) || null;
+  }
+
+  getReplacementLineName(line: SwapReplacementLine): string {
+    return this.getReplacementLineMenuItem(line)?.itemName || line.itemId;
+  }
+
+  getReplacementLineAddOns(line: SwapReplacementLine): { optionId: string; name: string; extraPrice: number }[] {
+    const item = this.getReplacementLineMenuItem(line);
+    return (item?.addOnOptions || []).filter(option => line.selectedAddOnIds.includes(option.optionId));
+  }
+
+  getReplacementLineAddOnTotal(line: SwapReplacementLine): number {
+    return this.getReplacementLineAddOns(line).reduce((sum, option) => sum + Number(option.extraPrice || 0), 0);
+  }
+
+  getReplacementLineTotal(line: SwapReplacementLine): number {
+    const item = this.getReplacementLineMenuItem(line);
+    if (!item) return 0;
+    return (Number(item.price || 0) + this.getReplacementLineAddOnTotal(line)) * Math.max(1, Number(line.quantity || 1));
+  }
+
+  getReplacementLineAddOnLabel(line: SwapReplacementLine): string {
+    const labels = this.getReplacementLineAddOns(line).map(option => option.name);
+    return labels.length ? labels.join(', ') : '';
+  }
+
+  formatMoney(value: number | undefined | null): string {
+    return `₹${Number(value || 0).toFixed(2)}`;
+  }
+
+  getLatestAdjustment(order: Order | null) {
+    return order?.adjustments?.length ? order.adjustments[order.adjustments.length - 1] : null;
+  }
+
+  hasSwapHistory(order: Order | null): boolean {
+    return !!order?.adjustments?.length;
+  }
+
+  getOrderItemName(order: Order | null, itemId: string): string {
+    const orderItem = order?.items?.find(item => item.itemId === itemId);
+    if (orderItem?.name) return orderItem.name;
+
+    const menuItem = this.menuService.currentItems.find(item => item.itemId === itemId);
+    return menuItem?.itemName || itemId;
+  }
+
+  getAdjustmentRemovedLabels(order: Order | null, adjustment: OrderAdjustmentRecord): string {
+    const labels = (adjustment.removedItemIds || []).map(itemId => this.getOrderItemName(order, itemId));
+    return labels.length ? labels.join(', ') : 'None';
+  }
+
+  getAdjustmentAddedLabels(adjustment: OrderAdjustmentRecord): string {
+    const labels = (adjustment.addedItems || []).map(item => `${item.name}×${item.quantity}`);
+    return labels.length ? labels.join(', ') : 'None';
+  }
+
+  getAdjustmentSummary(order: Order | null, adjustment: OrderAdjustmentRecord): string {
+    const removed = this.getAdjustmentRemovedLabels(order, adjustment);
+    const added = this.getAdjustmentAddedLabels(adjustment);
+
+    if (removed !== 'None' && added !== 'None') {
+      return `Swapped ${removed} for ${added}`;
+    }
+    if (removed !== 'None') {
+      return `Removed ${removed}`;
+    }
+    if (added !== 'None') {
+      return `Added ${added}`;
+    }
+    return adjustment.reason || 'Item swap';
+  }
+
+  getSwapSummary(order: Order): string {
+    const adjustment = this.getLatestAdjustment(order);
+    if (!adjustment) return 'Swapped item';
+
+    const removed = this.getAdjustmentRemovedLabels(order, adjustment);
+    const added = this.getAdjustmentAddedLabels(adjustment);
+    return removed !== 'None' && added !== 'None'
+      ? `Swapped ${removed} for ${added}`
+      : 'Item swapped';
+  }
+
+  getOrderCardItems(order: Order | null): OrderItem[] {
+    const items = this.getOrderCardSourceItems(order)
+      .filter(item => !this.getOrderCardSwapReplacementIds(order).has(item.itemId));
+    const visibleLimit = this.getOrderCardSwapGroup(order) ? 2 : 4;
+
+    return items.slice(0, visibleLimit);
+  }
+
+  getHiddenOrderCardItemCount(order: Order | null): number {
+    const group = this.getOrderCardSwapGroup(order);
+    const items = this.getOrderCardSourceItems(order)
+      .filter(item => !this.getOrderCardSwapReplacementIds(order).has(item.itemId));
+    const visibleLimit = group ? 2 : 4;
+
+    return Math.max(0, items.length - visibleLimit) + (group?.hiddenAddedCount || 0);
+  }
+
+  hasOrderCardContent(order: Order | null): boolean {
+    return Boolean(this.getOrderCardSwapGroup(order) || this.getOrderCardItems(order).length);
+  }
+
+  getOrderCardSwapGroup(order: Order | null): OrderCardSwapGroup | null {
+    const adjustment = this.getLatestAdjustment(order);
+    const addedItems = adjustment?.addedItems || [];
+    const removedItemIds = adjustment?.removedItemIds || [];
+
+    if (!removedItemIds.length || !addedItems.length) return null;
+
+    const removedLabel = removedItemIds
+      .map(itemId => this.getOrderItemName(order, itemId))
+      .filter(Boolean)
+      .join(', ');
+
+    return {
+      removedLabel: removedLabel || 'unavailable item',
+      addedItems: addedItems.slice(0, 3),
+      hiddenAddedCount: Math.max(0, addedItems.length - 3)
+    };
+  }
+
+  private getOrderCardSourceItems(order: Order | null): OrderItem[] {
+    return order?.items?.length
+      ? order.items
+      : this.getLatestAdjustment(order)?.addedItems || [];
+  }
+
+  private getOrderCardSwapReplacementIds(order: Order | null): Set<string> {
+    const adjustment = this.getLatestAdjustment(order);
+    const hasSwapGroup = Boolean(adjustment?.removedItemIds?.length && adjustment?.addedItems?.length);
+    return new Set(hasSwapGroup ? (adjustment?.addedItems || []).map(item => item.itemId) : []);
+  }
+
+  viewSwapHistory(order: Order): void {
+    this.swapHistoryOrder = order;
+    this.showSwapHistoryModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeSwapHistoryModal(): void {
+    this.showSwapHistoryModal = false;
+    this.swapHistoryOrder = null;
   }
 
   /**

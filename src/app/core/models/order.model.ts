@@ -4,10 +4,27 @@ export interface OrderItem {
   quantity: number;
   price: number;
   isVeg?: boolean; // true = veg, false = non-veg, undefined = unknown
+  addOnTotal?: number;
   /** Key used by the backend API response */
   addOns?: { optionId: string; name: string; extraPrice: number }[];
   /** Legacy alias — kept for backwards compatibility */
   addOnOptions?: { optionId: string; name: string; extraPrice: number }[];
+}
+
+export interface OrderAdjustmentRecord {
+  adjustmentId: string;
+  at?: string;
+  reason?: string;
+  opsUser?: string;
+  removedItemIds?: string[];
+  addedItems?: OrderItem[];
+  oldGrandTotal?: number;
+  previousGrandTotal?: number;
+  newGrandTotal?: number;
+  delta?: number;
+  settlementType?: 'COD_IN_PLACE' | 'COD_TOPUP' | 'REFUND_ADJUSTMENT' | string;
+  paymentIdsAffected?: string[];
+  restaurantPayoutDelta?: number;
 }
 
 /** Revenue breakdown returned by the backend on each order */
@@ -85,6 +102,12 @@ export interface Order {
   pickupToken?: string | null;
   /** True once the theater stock has been restocked after a cancellation. */
   inventoryReverted?: boolean;
+  /** Backend item-adjustment state, used when managers swap unavailable items. */
+  originalGrandTotal?: number;
+  prepaidAmount?: number;
+  amountDueAtDelivery?: number;
+  adjustments?: OrderAdjustmentRecord[];
+  wasAdjusted?: boolean;
 }
 
 export interface OrdersResponse {
@@ -100,3 +123,29 @@ export interface UpdateOrderStatusRequest {
 }
 
 export interface UpdateOrderStatusResponse extends Order {}
+
+export interface OrderAdjustmentAddItem {
+  itemId: string;
+  quantity: number;
+  addOnTotal?: number;
+  addOns?: { optionId: string; name: string; extraPrice: number }[];
+}
+
+export interface OrderAdjustmentRequest {
+  removeItemIds: string[];
+  addItems: OrderAdjustmentAddItem[];
+  reason: string;
+  opsUser?: string;
+}
+
+export interface OrderAdjustmentResponse {
+  adjustmentId: string;
+  orderId: string;
+  delta: number;
+  newGrandTotal: number;
+  originalGrandTotal: number;
+  amountDueAtDelivery: number;
+  settlementType: 'COD_IN_PLACE' | 'COD_TOPUP' | 'REFUND_ADJUSTMENT' | string;
+  paymentIdsAffected: string[];
+  restaurantPayoutDelta: number;
+}
