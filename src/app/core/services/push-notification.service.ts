@@ -20,6 +20,7 @@ import { OrderService } from './order.service';
 export class PushNotificationService {
   private readonly API_BASE_URL = environment.apiUrl;
   private readonly CHANNEL_ID = 'new_orders';
+  private readonly CRITICAL_CHANNEL_ID = 'new_orders_critical';
   private readonly TOKEN_STORAGE_KEY = 'nearbite_fcm_token';
   private readonly VIEW_ONLY_KEY = 'nearbite_notification_mode';
   private readonly DEVICE_REGISTERED_KEY = 'nearbite_fcm_device_registered';
@@ -372,11 +373,11 @@ export class PushNotificationService {
     }
 
     await PushNotifications.deleteChannel({ id: this.CHANNEL_ID }).catch(() => undefined);
+    await PushNotifications.deleteChannel({ id: this.CRITICAL_CHANNEL_ID }).catch(() => undefined);
 
-    // Importance 3 = DEFAULT (shows notification silently in shade).
-    // The native OrderPollingService foreground service owns alarming — it launches
-    // OrderAlarmActivity directly and rings telephone_ring.mp3 in a loop.
-    // FCM is kept only as a data trigger (causes an order refresh) not as the alarm.
+    // Legacy silent channel. Kept for in-process data-handler refreshes when
+    // OrderPollingService is alive and owns the ring loop. Importance 3 =
+    // DEFAULT (shown silently in shade).
     await PushNotifications.createChannel({
       id: this.CHANNEL_ID,
       name: 'New Orders',
@@ -387,6 +388,24 @@ export class PushNotificationService {
       lights: true,
       lightColor: '#F97316',
       sound: 'default'
+    });
+
+    // Critical channel used by the backend FCM notification block. Importance 5
+    // = HIGH (heads-up + sound + lockscreen). This is the path that fires when
+    // the app process is dead or the foreground OrderPollingService has been
+    // killed by an OEM task manager — Play Services renders the notification
+    // directly so the operator still hears the ring.
+    // Requires `telephone_ring` resource at android/app/src/main/res/raw/telephone_ring.<ext>.
+    await PushNotifications.createChannel({
+      id: this.CRITICAL_CHANNEL_ID,
+      name: 'New Orders (Critical)',
+      description: 'High-priority new-order alerts that ring even when the app is closed',
+      importance: 5,
+      visibility: 1,
+      vibration: true,
+      lights: true,
+      lightColor: '#F97316',
+      sound: 'telephone_ring'
     });
   }
 
