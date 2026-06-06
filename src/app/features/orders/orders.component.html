@@ -78,12 +78,12 @@
           <button class="ord-icon-btn" (click)="copyOrderId(order.orderId); $event.stopPropagation()" title="Copy ID">
             <i class="fas fa-copy"></i>
           </button>
-          <!-- swap history indicator (clickable) -->
+          <!-- modification history indicator (clickable) -->
           <button
             *ngIf="hasSwapHistory(order)"
             class="ord-icon-btn ord-icon-btn--swap-history"
             (click)="viewSwapHistory(order); $event.stopPropagation()"
-            aria-label="View swap history">
+            aria-label="View modification history">
             <i class="fas fa-history"></i>
           </button>
           <button class="ord-icon-btn" (click)="expandOrder(order); $event.stopPropagation()" title="View details">
@@ -127,7 +127,7 @@
                 <span class="ord-item-qty">×{{ item.quantity || 1 }}</span>
               </div>
               <div class="ord-card-swap-more" *ngIf="swapGroup.hiddenAddedCount > 0">
-                +{{ swapGroup.hiddenAddedCount }} more replacement{{ swapGroup.hiddenAddedCount !== 1 ? 's' : '' }}
+                +{{ swapGroup.hiddenAddedCount }} more added item{{ swapGroup.hiddenAddedCount !== 1 ? 's' : '' }}
               </div>
             </div>
           </div>
@@ -146,7 +146,7 @@
             *ngIf="getHiddenOrderCardItemCount(order) > 0"
             class="ord-see-more"
             (click)="expandOrder(order); $event.stopPropagation()">
-            +{{ getHiddenOrderCardItemCount(order) }} more item{{ getHiddenOrderCardItemCount(order) !== 1 ? 's' : '' }}
+            View {{ getHiddenOrderCardItemCount(order) }} more
           </button>
         </div>
         <ng-template #noCardItems>
@@ -290,13 +290,13 @@
   <span *ngIf="printStatus === 'error'">Print failed — check printer connection</span>
 </div>
 
-<!-- Global Swap History Modal -->
+<!-- Global Modification History Modal -->
 <div class="ord-modal-bg" *ngIf="showSwapHistoryModal" (click)="closeSwapHistoryModal()">
   <div class="ord-modal" (click)="$event.stopPropagation()">
     <div class="ord-modal-banner">
       <div class="ord-modal-banner-left">
         <span class="ord-modal-status-dot"></span>
-        <span class="ord-modal-status-text">Swap history</span>
+        <span class="ord-modal-status-text">Modification history</span>
       </div>
       <button class="ord-modal-close" (click)="closeSwapHistoryModal()" aria-label="Close">
         <i class="fas fa-times"></i>
@@ -306,7 +306,7 @@
     <div class="ord-modal-body">
       <div class="ord-swap-history" *ngIf="swapHistoryOrder?.adjustments?.length; else noSwapHistoryGlobal">
         <div class="ord-swap-history-list">
-          <div class="ord-swap-history-entry" *ngFor="let adjustment of (swapHistoryOrder?.adjustments || [])">
+          <div class="ord-swap-history-entry" *ngFor="let adjustment of getAdjustmentsNewestFirst(swapHistoryOrder)">
             <div class="ord-swap-history-entry-head">
               <span class="ord-swap-history-timestamp">{{ adjustment.at ? (adjustment.at | date:'short') : 'Updated' }}</span>
               <span class="ord-swap-history-summary">{{ getAdjustmentSummary(swapHistoryOrder, adjustment) }}</span>
@@ -315,7 +315,7 @@
         </div>
       </div>
       <ng-template #noSwapHistoryGlobal>
-        <p class="ord-empty-sub">No swap history for this order.</p>
+        <p class="ord-empty-sub">No modification history for this order.</p>
       </ng-template>
     </div>
   </div>
@@ -375,10 +375,10 @@
         <div class="ord-swap-history" *ngIf="expandedOrder.adjustments?.length">
           <div class="ord-swap-history-title">
             <i class="fas fa-history"></i>
-            <span>Swap history</span>
+            <span>Modification history</span>
           </div>
           <div class="ord-swap-history-list">
-            <div class="ord-swap-history-entry" *ngFor="let adjustment of expandedOrder.adjustments">
+            <div class="ord-swap-history-entry" *ngFor="let adjustment of getAdjustmentsNewestFirst(expandedOrder)">
               <div class="ord-swap-history-entry-head">
                 <span class="ord-swap-history-timestamp">{{ adjustment.at ? (adjustment.at | date:'short') : 'Updated' }}</span>
                 <span class="ord-swap-history-summary">{{ getAdjustmentSummary(expandedOrder, adjustment) }}</span>
@@ -393,13 +393,12 @@
             <i class="fas fa-shopping-bag"></i> Items Ordered
             <span class="ord-modal-item-count">{{ expandedOrder.items.length }} item{{ expandedOrder.items.length !== 1 ? 's' : '' }}</span>
           </div>
-          <div class="ord-modal-items" [class.has-actions]="canAdjustOrder(expandedOrder)">
+          <div class="ord-modal-items">
             <div class="ord-modal-items-header">
               <span>Dish</span>
               <span class="center">Qty</span>
               <span class="right">Price</span>
               <span class="right">Total</span>
-              <span class="center" *ngIf="canAdjustOrder(expandedOrder)">Action</span>
             </div>
             <div class="ord-modal-item" *ngFor="let item of expandedOrder.items; let odd = odd" [class.alt]="odd">
               <span class="ord-modal-item-name">
@@ -413,12 +412,6 @@
               <span class="ord-modal-item-qty center">{{ item.quantity }}</span>
               <span class="ord-modal-item-price right">₹{{ item.price }}</span>
               <span class="ord-modal-item-total right">₹{{ item.price * item.quantity }}</span>
-              <span class="ord-modal-item-action center" *ngIf="canAdjustOrder(expandedOrder)">
-                <button class="ord-swap-line-btn" type="button" (click)="openSwapModal(expandedOrder, item)">
-                  <i class="fas fa-right-left"></i>
-                  <span>Swap</span>
-                </button>
-              </span>
             </div>
           </div>
         </div>
@@ -514,7 +507,7 @@
           *ngIf="canAdjustOrder(expandedOrder)"
           class="ord-btn ord-btn-swap ord-modal-act-btn"
           (click)="openSwapModal(expandedOrder)">
-          <i class="fas fa-right-left"></i> Swap Item
+          <i class="fas fa-pen-to-square"></i> Modify Order
         </button>
         <button
           *ngIf="expandedOrder.status === OrderStatus.CONFIRMED"
@@ -535,12 +528,6 @@
           <i class="fas fa-check-double"></i> Mark Ready for Pickup
         </button>
         <button
-          *ngIf="expandedOrder.status === OrderStatus.READY_FOR_PICKUP && !isPickupOrder(expandedOrder)"
-          class="ord-btn ord-btn-delivery ord-modal-act-btn primary"
-          (click)="markOutForDelivery(expandedOrder); closeExpandedOrder()">
-          <i class="fas fa-motorcycle"></i> Out for Delivery
-        </button>
-        <button
           *ngIf="expandedOrder.status === OrderStatus.READY_FOR_PICKUP && isPickupOrder(expandedOrder)"
           class="ord-btn ord-btn-delivery ord-modal-act-btn primary"
           (click)="markPickedUp(expandedOrder); closeExpandedOrder()">
@@ -552,127 +539,170 @@
   </div>
 </div>
 
-<!-- Manager Item Swap Modal -->
+<!-- Manager Order Modification Modal -->
 <div class="ord-swap-bg" *ngIf="showSwapModal && swapOrder" (click)="closeSwapModal()">
-  <div class="ord-swap-modal" (click)="$event.stopPropagation()">
+  <div class="ord-swap-modal ord-order-edit-modal" (click)="$event.stopPropagation()">
     <div class="ord-swap-head">
       <div>
         <span class="ord-swap-kicker">Manager action</span>
-        <h3>Item Swap</h3>
+        <h3>Modify Order</h3>
+        <p class="ord-order-edit-sub">Review the original order, choose menu items, then save the corrected order.</p>
       </div>
-      <button class="ord-swap-close" type="button" (click)="closeSwapModal()" aria-label="Close item swap">
+      <button class="ord-swap-close" type="button" (click)="closeSwapModal()" aria-label="Close order modification">
         <i class="fas fa-times"></i>
       </button>
     </div>
 
-    <div class="ord-swap-body">
-      <section class="ord-swap-pane">
-        <div class="ord-swap-label">Unavailable item</div>
-        <div class="ord-swap-source-list">
-          <button
-            type="button"
-            class="ord-swap-source"
-            *ngFor="let item of swapOrder.items"
-            [class.active]="swapSourceItem?.itemId === item.itemId"
-            (click)="selectSwapSourceItem(item)">
-            <span class="ord-swap-source-name">{{ item.name }}</span>
-            <span class="ord-swap-source-meta">×{{ item.quantity }} · {{ formatMoney((item.price + getOrderItemAddOnTotal(item)) * item.quantity) }}</span>
-          </button>
+    <div class="ord-order-edit-mobile-tabs" role="tablist" aria-label="Order modification sections">
+      <button type="button" [class.active]="orderEditMobilePanel === 'current'" (click)="orderEditMobilePanel = 'current'">
+        Current
+      </button>
+      <button type="button" [class.active]="orderEditMobilePanel === 'menu'" (click)="orderEditMobilePanel = 'menu'">
+        Menu
+      </button>
+      <button type="button" [class.active]="orderEditMobilePanel === 'review'" (click)="orderEditMobilePanel = 'review'">
+        New Order
+        <span>{{ swapReplacementItems.length }}</span>
+      </button>
+    </div>
+
+    <div class="ord-swap-body ord-order-edit-body">
+      <section class="ord-swap-pane ord-order-edit-panel ord-order-edit-panel--current" [class.active-mobile]="orderEditMobilePanel === 'current'">
+        <div class="ord-swap-label">Current order</div>
+        <div class="ord-order-edit-total">
+          <span>{{ swapOrder.items.length }} item{{ swapOrder.items.length !== 1 ? 's' : '' }}</span>
+          <strong>{{ formatMoney(originalOrderTotal) }}</strong>
         </div>
 
-        <div class="ord-swap-qty-row">
-          <span>Qty to add</span>
-          <div class="ord-swap-stepper">
-            <button type="button" (click)="decrementSwapQuantity()" [disabled]="swapDraftQuantity <= 1">
-              <i class="fas fa-minus"></i>
-            </button>
-            <strong>{{ swapDraftQuantity }}</strong>
-            <button type="button" (click)="incrementSwapQuantity()" [disabled]="swapDraftQuantity >= 99">
-              <i class="fas fa-plus"></i>
-            </button>
+        <div class="ord-order-edit-lines">
+          <div class="ord-order-edit-line readonly" *ngFor="let item of swapOrder.items">
+            <div>
+              <strong>{{ item.name }}</strong>
+              <small *ngIf="(item.addOns || item.addOnOptions)?.length">
+                + <ng-container *ngFor="let ao of (item.addOns || item.addOnOptions); let last = last">{{ ao.name }}{{ last ? '' : ', ' }}</ng-container>
+              </small>
+            </div>
+            <span>×{{ item.quantity }}</span>
+            <em>{{ formatMoney((item.price + getOrderItemAddOnTotal(item)) * item.quantity) }}</em>
           </div>
         </div>
 
-        <div class="ord-swap-reason">
-          <div class="ord-swap-label">Reason</div>
-          <div class="ord-swap-reason-chips">
-            <button
-              type="button"
-              *ngFor="let reason of swapReasonOptions"
-              [class.active]="swapReason === reason"
-              (click)="swapReason = reason">
-              {{ reason }}
-            </button>
+        <div class="ord-order-edit-history" *ngIf="swapOrder.adjustments?.length">
+          <div class="ord-swap-label">Versions</div>
+          <div class="ord-order-edit-version" *ngFor="let adjustment of getAdjustmentsNewestFirst(swapOrder)">
+            <span>{{ getAdjustmentVersionLabel(swapOrder, adjustment) }}</span>
+            <div>
+              <strong>{{ adjustment.at ? (adjustment.at | date:'short') : 'Updated' }}</strong>
+              <small>{{ getAdjustmentSummary(swapOrder, adjustment) }}</small>
+            </div>
+            <em [class.positive]="(adjustment.delta || 0) > 0" [class.negative]="(adjustment.delta || 0) < 0">
+              {{ (adjustment.delta || 0) > 0 ? '+' : '' }}{{ formatMoney(adjustment.delta || 0) }}
+            </em>
           </div>
-          <textarea rows="2" [(ngModel)]="swapReason" maxlength="140"></textarea>
         </div>
       </section>
 
-      <section class="ord-swap-pane ord-swap-pane-menu">
+      <section class="ord-swap-pane ord-swap-pane-menu ord-order-edit-panel ord-order-edit-panel--menu" [class.active-mobile]="orderEditMobilePanel === 'menu'">
         <div class="ord-swap-menu-top">
-          <div class="ord-swap-label">Replacement item</div>
-          <button class="ord-swap-add-item-btn ord-swap-add-item-btn--top" type="button" (click)="addReplacementLine()" [disabled]="!selectedDraftReplacementItem">
-            <i class="fas fa-plus"></i>
-            Add to replacement
-          </button>
-        </div>
-        <div class="ord-swap-search">
-          <i class="fas fa-search"></i>
-          <input type="text" [(ngModel)]="swapSearchQuery" placeholder="Search menu" />
-        </div>
-
-        <div class="ord-swap-menu-list" *ngIf="replacementOptions.length; else noSwapItems">
-          <button
-            type="button"
-            class="ord-swap-menu-item"
-            *ngFor="let item of replacementOptions"
-            [class.active]="swapDraftItemId === item.itemId"
-            (click)="selectReplacementItem(item)">
-            <span>
-              <strong>{{ item.itemName }}</strong>
-              <small>{{ item.category || 'Menu' }}</small>
-            </span>
-            <em>{{ formatMoney(item.price) }}</em>
-          </button>
-        </div>
-        <ng-template #noSwapItems>
-          <div class="ord-swap-empty">
-            <i class="fas fa-circle-info"></i>
-            <span>No available replacement found.</span>
+          <div>
+            <div class="ord-swap-label">Available menu</div>
+            <p class="ord-order-edit-panel-note">Search, set quantity, choose add-ons, then add to the new order.</p>
           </div>
-        </ng-template>
+          <strong class="ord-order-edit-count" *ngIf="replacementOptions.length">{{ replacementOptions.length }} item{{ replacementOptions.length !== 1 ? 's' : '' }}</strong>
+        </div>
 
-        <div class="ord-swap-addons" *ngIf="selectedDraftReplacementItem?.addOnOptions?.length">
-          <div class="ord-swap-label">Add-ons</div>
-          <button
-            type="button"
-            *ngFor="let option of (selectedDraftReplacementItem?.addOnOptions || [])"
-            [class.active]="swapDraftAddOnIds.includes(option.optionId)"
-            (click)="toggleReplacementAddOn(option.optionId)">
-            <i class="fas" [class.fa-check]="swapDraftAddOnIds.includes(option.optionId)" [class.fa-plus]="!swapDraftAddOnIds.includes(option.optionId)"></i>
-            {{ option.name }}
-            <span *ngIf="option.extraPrice > 0">{{ formatMoney(option.extraPrice) }}</span>
-          </button>
+        <div class="ord-order-edit-add">
+          <div class="ord-order-edit-add-controls">
+            <div class="ord-swap-menu-top">
+              <div class="ord-swap-label">Choose item</div>
+              <button class="ord-swap-add-item-btn ord-swap-add-item-btn--top" type="button" (click)="addReplacementLine(); orderEditMobilePanel = 'review'" [disabled]="!selectedDraftReplacementItem">
+                <i class="fas fa-plus"></i>
+                Add
+              </button>
+            </div>
+
+            <div class="ord-swap-search">
+              <i class="fas fa-search"></i>
+              <input type="text" [(ngModel)]="swapSearchQuery" placeholder="Search available menu" />
+            </div>
+
+          </div>
+
+          <div class="ord-order-edit-picker">
+            <div class="ord-order-edit-picker-head">
+              <span>Menu results</span>
+              <strong *ngIf="replacementOptions.length">{{ replacementOptions.length }} item{{ replacementOptions.length !== 1 ? 's' : '' }}</strong>
+            </div>
+
+            <div class="ord-order-edit-picker-scroll">
+              <div class="ord-swap-menu-list" *ngIf="replacementOptions.length; else noSwapItems">
+                <div
+                  class="ord-swap-menu-item"
+                  *ngFor="let item of replacementOptions"
+                  [class.active]="swapDraftItemId === item.itemId"
+                  role="button"
+                  tabindex="0"
+                  (click)="selectReplacementItem(item)"
+                  (keydown.enter)="selectReplacementItem(item)"
+                  (keydown.space)="selectReplacementItem(item); $event.preventDefault()">
+                  <span>
+                    <span class="ord-swap-menu-title">
+                      <strong>{{ item.itemName }}</strong>
+                      <span class="ord-swap-stepper ord-swap-stepper--inline" *ngIf="swapDraftItemId === item.itemId">
+                        <button type="button" (click)="decrementSwapQuantity(); $event.stopPropagation()" [disabled]="swapDraftQuantity <= 1">
+                          <i class="fas fa-minus"></i>
+                        </button>
+                        <strong>{{ swapDraftQuantity }}</strong>
+                        <button type="button" (click)="incrementSwapQuantity(); $event.stopPropagation()" [disabled]="swapDraftQuantity >= 99">
+                          <i class="fas fa-plus"></i>
+                        </button>
+                      </span>
+                    </span>
+                    <small>{{ item.category || 'Menu' }}</small>
+                  </span>
+                  <em>{{ formatMoney(item.price) }}</em>
+                </div>
+              </div>
+              <ng-template #noSwapItems>
+                <div class="ord-swap-empty">
+                  <i class="fas fa-circle-info"></i>
+                  <span>No available item found.</span>
+                </div>
+              </ng-template>
+
+              <div class="ord-swap-addons" *ngIf="selectedDraftReplacementItem?.addOnOptions?.length">
+                <div class="ord-swap-label">Add-ons</div>
+                <button
+                  type="button"
+                  *ngFor="let option of (selectedDraftReplacementItem?.addOnOptions || [])"
+                  [class.active]="swapDraftAddOnIds.includes(option.optionId)"
+                  (click)="toggleReplacementAddOn(option.optionId)">
+                  <i class="fas" [class.fa-check]="swapDraftAddOnIds.includes(option.optionId)" [class.fa-plus]="!swapDraftAddOnIds.includes(option.optionId)"></i>
+                  {{ option.name }}
+                  <span *ngIf="option.extraPrice > 0">{{ formatMoney(option.extraPrice) }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <aside class="ord-swap-preview">
-        <div class="ord-swap-label">Review</div>
-        <div class="ord-swap-review-line">
-          <span>Remove</span>
-          <strong>{{ swapSourceItem?.name || 'Select item' }}</strong>
-        </div>
-        <div class="ord-swap-review-line">
-          <span>Add</span>
-          <strong>{{ swapReplacementItems.length }} replacement item{{ swapReplacementItems.length !== 1 ? 's' : '' }}</strong>
+      <aside class="ord-swap-preview ord-order-edit-panel ord-order-edit-review" [class.active-mobile]="orderEditMobilePanel === 'review'">
+        <div class="ord-swap-menu-top">
+          <div>
+            <div class="ord-swap-label">New order</div>
+            <p class="ord-order-edit-panel-note">Adjust quantities or remove items before saving.</p>
+          </div>
+          <strong class="ord-order-edit-count">{{ swapReplacementItems.length }} item{{ swapReplacementItems.length !== 1 ? 's' : '' }}</strong>
         </div>
 
-        <div class="ord-swap-cart-list" *ngIf="swapReplacementItems.length; else emptyReplacementCart">
-          <div class="ord-swap-cart-line" *ngFor="let line of swapReplacementItems">
-            <div class="ord-swap-cart-main">
+        <div class="ord-order-edit-lines editable">
+          <div class="ord-order-edit-line" *ngFor="let line of swapReplacementItems" [class.changed]="isLineChanged(line)">
+            <div>
               <strong>{{ getReplacementLineName(line) }}</strong>
               <small *ngIf="getReplacementLineAddOnLabel(line)">+ {{ getReplacementLineAddOnLabel(line) }}</small>
-              <span>{{ formatMoney(getReplacementLineTotal(line)) }}</span>
+              <small *ngIf="line.source === 'existing' && isLineChanged(line)">Was ×{{ getLineOriginalQuantity(line) }}</small>
+              <small *ngIf="line.source === 'new'">New item</small>
             </div>
             <div class="ord-swap-cart-actions">
               <button type="button" (click)="updateReplacementLineQuantity(line.tempId, -1)" [disabled]="line.quantity <= 1">
@@ -682,29 +712,48 @@
               <button type="button" (click)="updateReplacementLineQuantity(line.tempId, 1)" [disabled]="line.quantity >= 99">
                 <i class="fas fa-plus"></i>
               </button>
-              <button class="danger" type="button" (click)="removeReplacementLine(line.tempId)" aria-label="Remove replacement item">
+              <button class="danger" type="button" (click)="removeReplacementLine(line.tempId)" aria-label="Remove item from new order">
                 <i class="fas fa-trash"></i>
               </button>
             </div>
+            <em>{{ formatMoney(getReplacementLineTotal(line)) }}</em>
           </div>
         </div>
-        <ng-template #emptyReplacementCart>
-          <div class="ord-swap-cart-empty">Add one or more replacement items.</div>
-        </ng-template>
 
-        <div class="ord-swap-review-amounts">
-          <div>
-            <span>Original line</span>
-            <strong>{{ formatMoney(sourceLineTotal) }}</strong>
-          </div>
-          <div>
-            <span>Replacement line</span>
-            <strong>{{ formatMoney(replacementLineTotal) }}</strong>
+        <div class="ord-order-edit-accordion" [class.open]="orderEditDetailsExpanded">
+          <button
+            class="ord-order-edit-accordion-trigger"
+            type="button"
+            (click)="orderEditDetailsExpanded = !orderEditDetailsExpanded"
+            [attr.aria-expanded]="orderEditDetailsExpanded">
+            <span>
+              <strong>Details &amp; reason</strong>
+              <small>{{ swapReason || 'Add reason' }}</small>
+            </span>
+            <i class="fas fa-chevron-down"></i>
+          </button>
+
+          <div class="ord-order-edit-accordion-body" *ngIf="orderEditDetailsExpanded">
+            <div class="ord-swap-reason">
+              <div class="ord-swap-label">Reason</div>
+              <div class="ord-swap-reason-chips">
+                <button
+                  type="button"
+                  *ngFor="let reason of swapReasonOptions"
+                  [class.active]="swapReason === reason"
+                  (click)="swapReason = reason">
+                  {{ reason }}
+                </button>
+              </div>
+              <textarea rows="3" [(ngModel)]="swapReason" maxlength="140"></textarea>
+            </div>
           </div>
         </div>
+
         <div class="ord-swap-delta" [class.positive]="estimatedSwapDelta > 0" [class.negative]="estimatedSwapDelta < 0">
-          <span>Estimated bill change</span>
+          <span>Extra:</span>
           <strong>{{ estimatedSwapDelta > 0 ? '+' : '' }}{{ formatMoney(estimatedSwapDelta) }}</strong>
+          <span>+ govt Taxes</span>
         </div>
       </aside>
     </div>
@@ -715,7 +764,7 @@
       </button>
       <button class="ord-btn ord-btn-swap primary" type="button" (click)="confirmSwap()" [disabled]="!canSubmitSwap">
         <i class="fas" [class.fa-spinner]="swapSubmitting" [class.fa-spin]="swapSubmitting" [class.fa-right-left]="!swapSubmitting"></i>
-        Confirm Swap
+        Save New Order
       </button>
     </div>
   </div>

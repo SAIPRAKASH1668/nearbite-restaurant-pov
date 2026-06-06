@@ -14,11 +14,13 @@ import { OrderIdHighlightPipe } from '../../shared/pipes/order-id-highlight.pipe
 import { MenuItem, MenuService } from '../../core/services/menu.service';
 import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 
-interface SwapReplacementLine {
+interface OrderEditLine {
   tempId: string;
   itemId: string;
   quantity: number;
   selectedAddOnIds: string[];
+  source: 'existing' | 'new';
+  originalItem?: OrderItem;
 }
 
 interface OrderCardSwapGroup {
@@ -78,21 +80,23 @@ export class OrdersComponent implements OnInit, OnDestroy {
   prepTime = 6;
   prepTimeOptions = [5, 10, 15, 20, 30, 45];
 
-  // Manager item-swap state
+  // Manager order-modification state
   showSwapModal = false;
   swapOrder: Order | null = null;
-  swapSourceItem: OrderItem | null = null;
   swapDraftItemId = '';
   swapDraftQuantity = 1;
-  swapReplacementItems: SwapReplacementLine[] = [];
-  swapReason = 'Item unavailable';
+  swapReplacementItems: OrderEditLine[] = [];
+  swapReason = 'Item out of stock';
   swapSearchQuery = '';
   swapDraftAddOnIds: string[] = [];
   swapSubmitting = false;
+  orderEditMobilePanel: 'current' | 'menu' | 'review' = 'menu';
+  orderEditDetailsExpanded = false;
   swapReasonOptions = [
-    'Item unavailable',
-    'Customer requested alternative',
-    'Kitchen stock change'
+    'Item out of stock',
+    'Customer requested order modification',
+    'Kitchen stock change',
+    'Wrong item selected'
   ];
 
   // Swap history modal state (separate from expandedOrder)
@@ -161,7 +165,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
     this.orderService.fetchOrders();
     if (this.isItemSwapEnabled) {
       void this.menuService.ensureMenuLoaded().catch(() => {
-        this.notificationService.warning('Menu could not be loaded for item swaps.');
+        this.notificationService.warning('Menu could not be loaded for order modifications.');
       });
     }
     this.newOrderSubscription = this.orderNotificationService.getNewOrders().subscribe();
@@ -310,25 +314,33 @@ export class OrdersComponent implements OnInit, OnDestroy {
     ].includes(order.status);
   }
 
-  openSwapModal(order: Order, item?: OrderItem): void {
+  openSwapModal(order: Order): void {
     if (!this.isItemSwapEnabled) {
-      this.notificationService.warning('Item swap is not enabled for this restaurant.');
+      this.notificationService.warning('Order modification is not enabled for this restaurant.');
       return;
     }
 
     if (!this.canAdjustOrder(order)) {
-      this.notificationService.warning('This order can no longer be adjusted.');
+      this.notificationService.warning('This order can no longer be modified.');
       return;
     }
 
     this.swapOrder = order;
-    this.swapSourceItem = item || order.items[0] || null;
-    this.swapDraftQuantity = Math.max(1, this.swapSourceItem?.quantity || 1);
-    this.swapReplacementItems = [];
-    this.swapReason = 'Item unavailable';
+    this.swapDraftQuantity = 1;
+    this.swapReplacementItems = (order.items || []).map(item => ({
+      tempId: `existing-${item.itemId}`,
+      itemId: item.itemId,
+      quantity: Math.max(1, Number(item.quantity || 1)),
+      selectedAddOnIds: [],
+      source: 'existing',
+      originalItem: item
+    }));
+    this.swapReason = 'Item out of stock';
     this.swapSearchQuery = '';
     this.swapDraftAddOnIds = [];
     this.swapDraftItemId = '';
+    this.orderEditMobilePanel = 'menu';
+    this.orderEditDetailsExpanded = false;
     this.showSwapModal = true;
 
     void this.menuService.ensureMenuLoaded()
@@ -344,34 +356,27 @@ export class OrdersComponent implements OnInit, OnDestroy {
   closeSwapModal(): void {
     this.showSwapModal = false;
     this.swapOrder = null;
-    this.swapSourceItem = null;
     this.swapDraftItemId = '';
     this.swapDraftQuantity = 1;
     this.swapReplacementItems = [];
-    this.swapReason = 'Item unavailable';
+    this.swapReason = 'Item out of stock';
     this.swapSearchQuery = '';
     this.swapDraftAddOnIds = [];
     this.swapSubmitting = false;
-  }
-
-  selectSwapSourceItem(item: OrderItem): void {
-    this.swapSourceItem = item;
-    this.swapDraftQuantity = Math.max(1, item.quantity || 1);
-    this.swapReplacementItems = [];
-    this.swapDraftAddOnIds = [];
-    this.selectDefaultReplacement();
+    this.orderEditMobilePanel = 'menu';
+    this.orderEditDetailsExpanded = false;
   }
 
   get replacementOptions(): MenuItem[] {
-    if (!this.swapOrder || !this.swapSourceItem) return [];
+    if (!this.swapOrder) return [];
 
-    const orderItemIds = new Set((this.swapOrder.items || []).map(item => item.itemId));
+    const selectedItemIds = new Set(this.swapReplacementItems.map(item => item.itemId));
     const query = this.swapSearchQuery.trim().toLowerCase();
     const isPickup = this.isPickupOrder(this.swapOrder);
 
     return this.menuService.currentItems
       .filter(item => {
-        if (!item.itemId || orderItemIds.has(item.itemId)) return false;
+        if (!item.itemId || selectedItemIds.has(item.itemId)) return false;
         if (item.isAvailable === false || item.effectivelyAvailable === false) return false;
         if (isPickup && item.theaterMode !== true) return false;
         if (!isPickup && item.theaterMode === true) return false;
@@ -405,27 +410,28 @@ export class OrdersComponent implements OnInit, OnDestroy {
     return this.selectedDraftReplacementAddOns.reduce((sum, option) => sum + Number(option.extraPrice || 0), 0);
   }
 
-  get sourceLineTotal(): number {
-    if (!this.swapSourceItem) return 0;
-    const addOnTotal = this.getOrderItemAddOnTotal(this.swapSourceItem);
-    return (Number(this.swapSourceItem.price || 0) + addOnTotal) * Math.max(1, Number(this.swapSourceItem.quantity || 1));
+  get originalOrderTotal(): number {
+    return (this.swapOrder?.items || []).reduce(
+      (sum, item) => sum + (Number(item.price || 0) + this.getOrderItemAddOnTotal(item)) * Math.max(1, Number(item.quantity || 1)),
+      0
+    );
   }
 
-  get replacementLineTotal(): number {
+  get editedOrderTotal(): number {
     return this.swapReplacementItems.reduce((sum, line) => sum + this.getReplacementLineTotal(line), 0);
   }
 
   get estimatedSwapDelta(): number {
-    return this.replacementLineTotal - this.sourceLineTotal;
+    return this.editedOrderTotal - this.originalOrderTotal;
   }
 
   get canSubmitSwap(): boolean {
     return Boolean(
       this.swapOrder &&
-      this.swapSourceItem &&
       this.isItemSwapEnabled &&
       this.canAdjustOrder(this.swapOrder) &&
       this.swapReplacementItems.length > 0 &&
+      this.hasOrderEditChanges() &&
       this.swapReason.trim() &&
       !this.swapSubmitting
     );
@@ -460,34 +466,28 @@ export class OrdersComponent implements OnInit, OnDestroy {
     if (!this.selectedDraftReplacementItem) return;
 
     const itemId = this.selectedDraftReplacementItem.itemId;
+    if (this.swapReplacementItems.some(line => line.itemId === itemId)) {
+      this.notificationService.warning('This item is already in the new order. Adjust its quantity instead.');
+      return;
+    }
+
     const selectedAddOnIds = [...this.swapDraftAddOnIds].sort();
-    const existingIndex = this.swapReplacementItems.findIndex(line =>
-      line.itemId === itemId &&
-      [...line.selectedAddOnIds].sort().join('|') === selectedAddOnIds.join('|')
-    );
     const quantity = Math.max(1, Number(this.swapDraftQuantity || 1));
 
-    if (existingIndex !== -1) {
-      const next = [...this.swapReplacementItems];
-      next[existingIndex] = {
-        ...next[existingIndex],
-        quantity: Math.min(99, next[existingIndex].quantity + quantity)
-      };
-      this.swapReplacementItems = next;
-    } else {
-      this.swapReplacementItems = [
-        ...this.swapReplacementItems,
-        {
-          tempId: `${itemId}-${Date.now()}-${this.swapReplacementItems.length}`,
-          itemId,
-          quantity,
-          selectedAddOnIds
-        }
-      ];
-    }
+    this.swapReplacementItems = [
+      ...this.swapReplacementItems,
+      {
+        tempId: `new-${itemId}-${Date.now()}`,
+        itemId,
+        quantity,
+        selectedAddOnIds,
+        source: 'new'
+      }
+    ];
 
     this.swapDraftQuantity = 1;
     this.swapDraftAddOnIds = [];
+    this.selectDefaultReplacement();
   }
 
   removeReplacementLine(tempId: string): void {
@@ -503,21 +503,21 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   confirmSwap(): void {
-    if (!this.canSubmitSwap || !this.swapOrder || !this.swapSourceItem) return;
+    if (!this.canSubmitSwap || !this.swapOrder) return;
     if (!this.isItemSwapEnabled) {
-      this.notificationService.warning('Item swap is not enabled for this restaurant.');
+      this.notificationService.warning('Order modification is not enabled for this restaurant.');
       return;
     }
 
     this.swapSubmitting = true;
 
     this.orderService.adjustItems(this.swapOrder.orderId, {
-      removeItemIds: [this.swapSourceItem.itemId],
-      addItems: this.swapReplacementItems.map(line => ({
+      items: this.swapReplacementItems.map(line => ({
         itemId: line.itemId,
         quantity: Math.max(1, Number(line.quantity || 1)),
-        addOns: this.getReplacementLineAddOns(line),
-        addOnTotal: this.getReplacementLineAddOnTotal(line)
+        ...(line.selectedAddOnIds.length
+          ? { addOns: line.selectedAddOnIds.map(optionId => ({ optionId })) }
+          : {})
       })),
       reason: this.swapReason.trim()
     }).subscribe({
@@ -525,13 +525,13 @@ export class OrdersComponent implements OnInit, OnDestroy {
         const deltaText = result.delta === 0
           ? 'No bill change.'
           : `${result.delta > 0 ? 'Customer owes' : 'Refund due'} ${this.formatMoney(Math.abs(result.delta))}.`;
-        this.notificationService.success(`Item swapped. ${deltaText}`);
+        this.notificationService.success(`Order modified. ${deltaText}`);
         this.closeSwapModal();
         this.orderService.fetchOrders({ suppressNewOrderEffects: true });
       },
       error: (error) => {
         this.swapSubmitting = false;
-        const message = error?.error?.message || 'Swap failed. Please refresh and try again.';
+        const message = error?.error?.message || 'Order modification failed. Please refresh and try again.';
         this.notificationService.error(message);
       }
     });
@@ -542,32 +542,65 @@ export class OrdersComponent implements OnInit, OnDestroy {
     return (item.addOns || item.addOnOptions || []).reduce((sum, option) => sum + Number(option.extraPrice || 0), 0);
   }
 
-  getReplacementLineMenuItem(line: SwapReplacementLine): MenuItem | null {
+  getReplacementLineMenuItem(line: OrderEditLine): MenuItem | null {
     return this.menuService.currentItems.find(item => item.itemId === line.itemId) || null;
   }
 
-  getReplacementLineName(line: SwapReplacementLine): string {
-    return this.getReplacementLineMenuItem(line)?.itemName || line.itemId;
+  getReplacementLineName(line: OrderEditLine): string {
+    return line.originalItem?.name || this.getReplacementLineMenuItem(line)?.itemName || line.itemId;
   }
 
-  getReplacementLineAddOns(line: SwapReplacementLine): { optionId: string; name: string; extraPrice: number }[] {
+  getReplacementLineAddOns(line: OrderEditLine): { optionId: string; name: string; extraPrice: number }[] {
+    if (line.source === 'existing') return line.originalItem?.addOns || line.originalItem?.addOnOptions || [];
     const item = this.getReplacementLineMenuItem(line);
     return (item?.addOnOptions || []).filter(option => line.selectedAddOnIds.includes(option.optionId));
   }
 
-  getReplacementLineAddOnTotal(line: SwapReplacementLine): number {
+  getReplacementLineAddOnTotal(line: OrderEditLine): number {
+    if (line.source === 'existing' && line.originalItem) return this.getOrderItemAddOnTotal(line.originalItem);
     return this.getReplacementLineAddOns(line).reduce((sum, option) => sum + Number(option.extraPrice || 0), 0);
   }
 
-  getReplacementLineTotal(line: SwapReplacementLine): number {
+  getReplacementLineUnitPrice(line: OrderEditLine): number {
+    if (line.source === 'existing' && line.originalItem) {
+      return Number(line.originalItem.price || 0) + this.getOrderItemAddOnTotal(line.originalItem);
+    }
+
     const item = this.getReplacementLineMenuItem(line);
-    if (!item) return 0;
-    return (Number(item.price || 0) + this.getReplacementLineAddOnTotal(line)) * Math.max(1, Number(line.quantity || 1));
+    return Number(item?.price || 0) + this.getReplacementLineAddOnTotal(line);
   }
 
-  getReplacementLineAddOnLabel(line: SwapReplacementLine): string {
+  getReplacementLineTotal(line: OrderEditLine): number {
+    return this.getReplacementLineUnitPrice(line) * Math.max(1, Number(line.quantity || 1));
+  }
+
+  getReplacementLineAddOnLabel(line: OrderEditLine): string {
     const labels = this.getReplacementLineAddOns(line).map(option => option.name);
     return labels.length ? labels.join(', ') : '';
+  }
+
+  getLineOriginalQuantity(line: OrderEditLine): number {
+    return Math.max(0, Number(line.originalItem?.quantity || 0));
+  }
+
+  isLineChanged(line: OrderEditLine): boolean {
+    if (line.source === 'new') return true;
+    return this.getLineOriginalQuantity(line) !== Math.max(1, Number(line.quantity || 1));
+  }
+
+  hasOrderEditChanges(): boolean {
+    if (!this.swapOrder) return false;
+
+    const originalIds = new Set((this.swapOrder.items || []).map(item => item.itemId));
+    const nextIds = new Set(this.swapReplacementItems.map(line => line.itemId));
+    if (originalIds.size !== nextIds.size) return true;
+    for (const item of this.swapOrder.items || []) {
+      const next = this.swapReplacementItems.find(line => line.itemId === item.itemId);
+      if (!next || Math.max(1, Number(next.quantity || 1)) !== Math.max(1, Number(item.quantity || 1))) {
+        return true;
+      }
+    }
+    return this.swapReplacementItems.some(line => line.source === 'new' && !originalIds.has(line.itemId));
   }
 
   formatMoney(value: number | undefined | null): string {
@@ -580,6 +613,20 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   hasSwapHistory(order: Order | null): boolean {
     return !!order?.adjustments?.length;
+  }
+
+  getAdjustmentsNewestFirst(order: Order | null): OrderAdjustmentRecord[] {
+    const adjustments = order?.adjustments || [];
+    return [...adjustments].sort((a, b) => {
+      const bTime = b.at ? new Date(b.at).getTime() : 0;
+      const aTime = a.at ? new Date(a.at).getTime() : 0;
+      return (bTime - aTime) || (adjustments.indexOf(b) - adjustments.indexOf(a));
+    });
+  }
+
+  getAdjustmentVersionLabel(order: Order | null, adjustment: OrderAdjustmentRecord): string {
+    const originalIndex = (order?.adjustments || []).indexOf(adjustment);
+    return originalIndex >= 0 ? `V${originalIndex + 2}` : 'V-';
   }
 
   getOrderItemName(order: Order | null, itemId: string): string {
@@ -603,34 +650,29 @@ export class OrdersComponent implements OnInit, OnDestroy {
   getAdjustmentSummary(order: Order | null, adjustment: OrderAdjustmentRecord): string {
     const removed = this.getAdjustmentRemovedLabels(order, adjustment);
     const added = this.getAdjustmentAddedLabels(adjustment);
+    const quantityChanges = adjustment.quantityChanges || [];
+    const changes: string[] = [];
 
-    if (removed !== 'None' && added !== 'None') {
-      return `Swapped ${removed} for ${added}`;
+    if (removed !== 'None') changes.push(`removed ${removed}`);
+    if (added !== 'None') changes.push(`added ${added}`);
+    if (quantityChanges.length) {
+      changes.push(`${quantityChanges.length} quantity change${quantityChanges.length !== 1 ? 's' : ''}`);
     }
-    if (removed !== 'None') {
-      return `Removed ${removed}`;
-    }
-    if (added !== 'None') {
-      return `Added ${added}`;
-    }
-    return adjustment.reason || 'Item swap';
+
+    return changes.length ? `Modified order: ${changes.join(', ')}` : adjustment.reason || 'Order modified';
   }
 
   getSwapSummary(order: Order): string {
     const adjustment = this.getLatestAdjustment(order);
-    if (!adjustment) return 'Swapped item';
+    if (!adjustment) return 'Order modified';
 
-    const removed = this.getAdjustmentRemovedLabels(order, adjustment);
-    const added = this.getAdjustmentAddedLabels(adjustment);
-    return removed !== 'None' && added !== 'None'
-      ? `Swapped ${removed} for ${added}`
-      : 'Item swapped';
+    return this.getAdjustmentSummary(order, adjustment);
   }
 
   getOrderCardItems(order: Order | null): OrderItem[] {
     const items = this.getOrderCardSourceItems(order)
       .filter(item => !this.getOrderCardSwapReplacementIds(order).has(item.itemId));
-    const visibleLimit = this.getOrderCardSwapGroup(order) ? 2 : 4;
+    const visibleLimit = this.getOrderCardVisibleItemLimit(order, items.length);
 
     return items.slice(0, visibleLimit);
   }
@@ -639,9 +681,14 @@ export class OrdersComponent implements OnInit, OnDestroy {
     const group = this.getOrderCardSwapGroup(order);
     const items = this.getOrderCardSourceItems(order)
       .filter(item => !this.getOrderCardSwapReplacementIds(order).has(item.itemId));
-    const visibleLimit = group ? 2 : 4;
+    const visibleLimit = this.getOrderCardVisibleItemLimit(order, items.length);
 
     return Math.max(0, items.length - visibleLimit) + (group?.hiddenAddedCount || 0);
+  }
+
+  getOrderCardVisibleItemLimit(order: Order | null, itemCount: number): number {
+    const baseLimit = this.getOrderCardSwapGroup(order) ? 2 : 4;
+    return itemCount > baseLimit ? Math.max(1, baseLimit - 1) : baseLimit;
   }
 
   hasOrderCardContent(order: Order | null): boolean {
@@ -970,17 +1017,25 @@ export class OrdersComponent implements OnInit, OnDestroy {
   /**
    * Mark order as out for delivery
    */
-  markOutForDelivery(order: Order): void {
+  markOutForDelivery(order: Order, event?: Event): void {
+    event?.stopPropagation();
     this.orderService.updateOrderStatus(order.orderId, OrderStatus.OUT_FOR_DELIVERY).subscribe({
-      next: (updatedOrder) => {
-        const index = this.allOrders.findIndex(o => o.orderId === order.orderId);
-        if (index !== -1) {
-          this.allOrders[index] = updatedOrder;
-          this.cdr.detectChanges();
+      next: () => {
+        this.orderService.fetchOrders();
+        if (this.expandedOrder?.orderId === order.orderId) {
+          this.closeExpandedOrder();
         }
       },
-      error: () => {
-        alert('Failed to update order. Please try again.');
+      error: (error) => {
+        this.orderService.fetchOrders();
+        if (this.isConflictError(error)) {
+          if (this.expandedOrder?.orderId === order.orderId) {
+            this.closeExpandedOrder();
+          }
+          this.notifyOrderAlreadyHandled('Order already moved by another device.');
+          return;
+        }
+        this.notificationService.error('Failed to update order. Please try again.');
       }
     });
   }
@@ -1030,6 +1085,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
       OrderStatus.RIDER_ASSIGNED
     ].includes(order.status);
   }
+
   // ── Manual print shortcuts ────────────────────────────────────────────────
 
   manualPrint(type: 'bill' | 'kot' | 'vegkot' | 'nonvegkot' | 'all', order: Order): void {

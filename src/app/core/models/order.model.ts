@@ -17,7 +17,11 @@ export interface OrderAdjustmentRecord {
   reason?: string;
   opsUser?: string;
   removedItemIds?: string[];
+  addedItemIds?: string[];
   addedItems?: OrderItem[];
+  quantityChanges?: { itemId: string; oldQuantity: number; newQuantity: number }[];
+  oldItems?: OrderItem[];
+  newItems?: OrderItem[];
   oldGrandTotal?: number;
   previousGrandTotal?: number;
   newGrandTotal?: number;
@@ -124,16 +128,14 @@ export interface UpdateOrderStatusRequest {
 
 export interface UpdateOrderStatusResponse extends Order {}
 
-export interface OrderAdjustmentAddItem {
+export interface OrderAdjustmentItem {
   itemId: string;
   quantity: number;
-  addOnTotal?: number;
-  addOns?: { optionId: string; name: string; extraPrice: number }[];
+  addOns?: { optionId: string }[];
 }
 
 export interface OrderAdjustmentRequest {
-  removeItemIds: string[];
-  addItems: OrderAdjustmentAddItem[];
+  items: OrderAdjustmentItem[];
   reason: string;
   opsUser?: string;
 }
