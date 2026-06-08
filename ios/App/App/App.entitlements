@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict/>
+<dict>
+	<!-- Universal Links: open https://www.yumdude.com/dashboard/* in the app
+	     (e.g. the ntfy "open orders" notification tap). iOS verifies ownership
+	     against https://www.yumdude.com/.well-known/apple-app-site-association.
+	     The deep link is routed in src/app/app.ts. -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:www.yumdude.com</string>
+	</array>
+</dict>
 </plist>

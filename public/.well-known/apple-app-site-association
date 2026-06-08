@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["REPLACE_WITH_APPLE_TEAM_ID.com.nearbite.restaurant"],
+        "components": [
+          {
+            "/": "/dashboard/*",
+            "comment": "Open restaurant dashboard deep links (e.g. /dashboard/orders) in the app"
+          }
+        ]
+      }
+    ]
+  }
+}

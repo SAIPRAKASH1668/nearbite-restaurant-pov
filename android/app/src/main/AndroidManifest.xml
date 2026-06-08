@@ -49,6 +49,22 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- App Links: open https://www.yumdude.com/dashboard/* natively
+                 (e.g. the ntfy "open orders" notification tap). autoVerify
+                 makes Android verify ownership against
+                 https://www.yumdude.com/.well-known/assetlinks.json so the app
+                 is opened directly without a chooser. Unverified → falls back
+                 to the browser. The deep link is routed in src/app/app.ts. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="www.yumdude.com"
+                    android:pathPrefix="/dashboard" />
+            </intent-filter>
+
         </activity>
 
         <provider

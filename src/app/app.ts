@@ -1,5 +1,6 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, NgZone, OnInit, signal } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
+import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { NewOrderToastService } from './core/services/new-order-toast.service';
@@ -18,6 +19,7 @@ export class App implements OnInit {
 
   constructor(
     private router: Router,
+    private ngZone: NgZone,
     private newOrderToastService: NewOrderToastService,
     private orderNotificationService: OrderNotificationService,
     private pushNotificationService: PushNotificationService
@@ -45,9 +47,43 @@ export class App implements OnInit {
         void this.router.navigateByUrl('/dashboard/orders');
       }
 
+      this.registerDeepLinkHandler();
+
       return;
     }
 
     this.orderNotificationService.requestNotificationPermission();
+  }
+
+  /**
+   * Route Android App Link / iOS Universal Link taps (e.g. the ntfy "new
+   * order" notification opening https://www.yumdude.com/dashboard/orders) to
+   * the matching in-app route. Handles both warm opens (`appUrlOpen`) and a
+   * cold start where the deep link launched the app (`getLaunchUrl`).
+   */
+  private registerDeepLinkHandler(): void {
+    void CapacitorApp.addListener('appUrlOpen', ({ url }) => {
+      this.ngZone.run(() => this.openDeepLink(url));
+    });
+
+    void CapacitorApp.getLaunchUrl().then((launch) => {
+      if (launch?.url) {
+        this.ngZone.run(() => this.openDeepLink(launch.url));
+      }
+    });
+  }
+
+  private openDeepLink(url: string): void {
+    let path: string;
+    try {
+      const parsed = new URL(url);
+      path = parsed.pathname + parsed.search;
+    } catch {
+      return; // malformed deep link — ignore
+    }
+    // Only follow our own dashboard deep links; never navigate to arbitrary URLs.
+    if (path.startsWith('/dashboard')) {
+      void this.router.navigateByUrl(path);
+    }
   }
 }
