@@ -21,6 +21,7 @@ public class MainActivity extends BridgeActivity {
     registerPlugin(NetworkPrinterPlugin.class);
     registerPlugin(OrderPollingPlugin.class);
     registerPlugin(BatteryOptimizationPlugin.class);
+    registerPlugin(AppUpdaterPlugin.class);
     super.onCreate(savedInstanceState);
     // Handle "open orders" intent when app was NOT already running
     handleOpenOrdersIntent(getIntent());

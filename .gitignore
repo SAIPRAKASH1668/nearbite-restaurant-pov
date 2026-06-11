@@ -7,12 +7,13 @@
 /out-tsc
 /bazel-out
 ios/
-android/
 # Capacitor Android build artifacts
 /android/.gradle
 /android/app/build
 /android/build
 /android/local.properties
+/update-test/
+/update-release/
 
 # Node
 /node_modules

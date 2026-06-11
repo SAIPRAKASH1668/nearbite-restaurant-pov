@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Transparent window — the dark scrim below lets the wallpaper / previous
+    screen show through. On API 31+ a blur radius is applied in the Activity.
+-->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#BF000000">
+
+    <!-- Floating card — centered on screen -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical"
+        android:background="@drawable/bg_alarm_card"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="24dp"
+        android:paddingBottom="20dp"
+        android:elevation="24dp">
+
+        <!-- Header row: badge (left) | YumDude brand (right) -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="22dp">
+
+            <!-- NEW ORDER pill -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_alarm_badge"
+                android:paddingStart="10dp"
+                android:paddingEnd="14dp"
+                android:paddingTop="5dp"
+                android:paddingBottom="5dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true">
+
+                <View
+                    android:layout_width="7dp"
+                    android:layout_height="7dp"
+                    android:background="@drawable/bg_alarm_dot"
+                    android:layout_marginEnd="7dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="NEW ORDER"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:textColor="#E8352A"
+                    android:letterSpacing="0.08" />
+            </LinearLayout>
+
+            <!-- YumDude brand — Yum in yellow, Dude in red -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Yum"
+                    android:textSize="19sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFC52E" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Dude"
+                    android:textSize="19sp"
+                    android:textStyle="bold"
+                    android:textColor="#E8352A" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <!-- Order headline -->
+        <TextView
+            android:id="@+id/alarm_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="New Order Received!"
+            android:textSize="21sp"
+            android:textStyle="bold"
+            android:textColor="#111111"
+            android:layout_marginBottom="6dp" />
+
+        <!-- Amount in YumDude Yellow -->
+        <TextView
+            android:id="@+id/alarm_amount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="&#x20B9;0"
+            android:textSize="50sp"
+            android:textStyle="bold"
+            android:textColor="#FFC52E"
+            android:layout_marginBottom="6dp" />
+
+        <!-- Order ID (subtle) -->
+        <TextView
+            android:id="@+id/alarm_order_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="13sp"
+            android:textColor="#999999"
+            android:layout_marginBottom="28dp" />
+
+        <!-- Warm beige divider -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#F0EAD6"
+            android:layout_marginBottom="20dp" />
+
+        <!-- Primary CTA -->
+        <Button
+            android:id="@+id/btn_open_app"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="Open YumDude Partner"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/bg_alarm_btn_primary"
+            android:stateListAnimator="@null"
+            android:layout_marginBottom="6dp" />
+
+        <!-- Dismiss ghost button -->
+        <Button
+            android:id="@+id/btn_dismiss"
+            android:layout_width="match_parent"
+            android:layout_height="42dp"
+            android:text="Dismiss for now"
+            android:textSize="13sp"
+            android:textColor="#AAAAAA"
+            android:backgroundTint="@android:color/transparent"
+            android:stateListAnimator="@null" />
+
+    </LinearLayout>
+
+</FrameLayout>

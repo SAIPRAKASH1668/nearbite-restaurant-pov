@@ -12,7 +12,6 @@ import { PrinterService, PrintStatus } from '../../core/services/printer.service
 import { NotificationService } from '../../shared/components/notification/notification.service';
 import { OrderIdHighlightPipe } from '../../shared/pipes/order-id-highlight.pipe';
 import { MenuItem, MenuService } from '../../core/services/menu.service';
-import { RestaurantContextService } from '../../core/services/restaurant-context.service';
 
 interface OrderEditLine {
   tempId: string;
@@ -105,7 +104,14 @@ export class OrdersComponent implements OnInit, OnDestroy {
   
   // Status enum for template
   OrderStatus = OrderStatus;
-  private readonly ITEM_SWAP_ENABLED_RESTAURANT_ID = 'RES-1774074885558-3227';
+  private readonly FOOD_READY_INTERNAL_STATUS = 'FOOD_READY';
+  private readonly preFoodReadyDeliveryStatuses = new Set<OrderStatus>([
+    OrderStatus.ACCEPTED,
+    OrderStatus.PREPARING,
+    OrderStatus.AWAITING_RIDER_ASSIGNMENT,
+    OrderStatus.OFFERED_TO_RIDER,
+    OrderStatus.RIDER_ASSIGNED
+  ]);
 
   /** Page mode (driven by route data):
    *   - 'delivery' for /dashboard/orders   → DELIVERY orders only
@@ -125,13 +131,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
     private printerService: PrinterService,
     private notificationService: NotificationService,
     private menuService: MenuService,
-    private restaurantContext: RestaurantContextService,
     private route: ActivatedRoute
   ) {}
-
-  get isItemSwapEnabled(): boolean {
-    return this.restaurantContext.getRestaurantId() === this.ITEM_SWAP_ENABLED_RESTAURANT_ID;
-  }
 
   private isConflictError(error: any): boolean {
     return error?.status === 409;
@@ -163,11 +164,9 @@ export class OrdersComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     });
     this.orderService.fetchOrders();
-    if (this.isItemSwapEnabled) {
-      void this.menuService.ensureMenuLoaded().catch(() => {
-        this.notificationService.warning('Menu could not be loaded for order modifications.');
-      });
-    }
+    void this.menuService.ensureMenuLoaded().catch(() => {
+      this.notificationService.warning('Menu could not be loaded for order modifications.');
+    });
     this.newOrderSubscription = this.orderNotificationService.getNewOrders().subscribe();
   }
 
@@ -191,20 +190,10 @@ export class OrdersComponent implements OnInit, OnDestroy {
         filteredOrders = todayOrders.filter(o => o.status === OrderStatus.CONFIRMED);
         break;
       case 'preparing':
-        filteredOrders = todayOrders.filter(o => 
-          o.status === OrderStatus.ACCEPTED || 
-          o.status === OrderStatus.PREPARING
-        );
+        filteredOrders = todayOrders.filter(o => this.isPreparingPhase(o));
         break;
       case 'ready':
-        filteredOrders = todayOrders.filter(o => 
-          o.status === OrderStatus.READY_FOR_PICKUP || 
-          o.status === OrderStatus.AWAITING_RIDER_ASSIGNMENT ||
-          o.status === OrderStatus.OFFERED_TO_RIDER ||
-          o.status === OrderStatus.RIDER_ASSIGNED ||
-          o.status === OrderStatus.PICKED_UP ||
-          o.status === OrderStatus.OUT_FOR_DELIVERY
-        );
+        filteredOrders = todayOrders.filter(o => this.isReadyPhase(o));
         break;
       case 'completed':
         filteredOrders = todayOrders.filter(o => o.status === OrderStatus.DELIVERED);
@@ -268,17 +257,9 @@ export class OrdersComponent implements OnInit, OnDestroy {
       case 'new':
         return todayOrders.filter(o => o.status === OrderStatus.CONFIRMED).length;
       case 'preparing':
-        return todayOrders.filter(o =>  
-          o.status === OrderStatus.PREPARING
-        ).length;
+        return todayOrders.filter(o => this.isPreparingPhase(o)).length;
       case 'ready':
-        return todayOrders.filter(o => 
-          o.status === OrderStatus.READY_FOR_PICKUP || 
-          o.status === OrderStatus.AWAITING_RIDER_ASSIGNMENT ||
-          o.status === OrderStatus.OFFERED_TO_RIDER ||
-          o.status === OrderStatus.RIDER_ASSIGNED ||
-          o.status === OrderStatus.OUT_FOR_DELIVERY
-        ).length;
+        return todayOrders.filter(o => this.isReadyPhase(o)).length;
       case 'completed':
         return todayOrders.filter(o => o.status === OrderStatus.DELIVERED).length;
       case 'cancelled':
@@ -305,7 +286,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   canAdjustOrder(order: Order | null): boolean {
-    if (!order || !this.isItemSwapEnabled) return false;
+    if (!order) return false;
     if (!['new', 'preparing'].includes(this.activeTab)) return false;
     return [
       OrderStatus.CONFIRMED,
@@ -315,11 +296,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   openSwapModal(order: Order): void {
-    if (!this.isItemSwapEnabled) {
-      this.notificationService.warning('Order modification is not enabled for this restaurant.');
-      return;
-    }
-
     if (!this.canAdjustOrder(order)) {
       this.notificationService.warning('This order can no longer be modified.');
       return;
@@ -428,7 +404,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
   get canSubmitSwap(): boolean {
     return Boolean(
       this.swapOrder &&
-      this.isItemSwapEnabled &&
       this.canAdjustOrder(this.swapOrder) &&
       this.swapReplacementItems.length > 0 &&
       this.hasOrderEditChanges() &&
@@ -504,10 +479,6 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
   confirmSwap(): void {
     if (!this.canSubmitSwap || !this.swapOrder) return;
-    if (!this.isItemSwapEnabled) {
-      this.notificationService.warning('Order modification is not enabled for this restaurant.');
-      return;
-    }
 
     this.swapSubmitting = true;
 
@@ -795,6 +766,30 @@ export class OrdersComponent implements OnInit, OnDestroy {
     return order?.orderType === 'PICKUP' || /^THEATER#/i.test(order?.addressId || '');
   }
 
+  isFoodReady(order: Order): boolean {
+    return order?.internalStatus === this.FOOD_READY_INTERNAL_STATUS || order?.status === OrderStatus.READY_FOR_PICKUP;
+  }
+
+  isPreparingPhase(order: Order): boolean {
+    if (this.isPickupOrder(order)) return false;
+    return this.preFoodReadyDeliveryStatuses.has(order.status) && !this.isFoodReady(order);
+  }
+
+  isReadyPhase(order: Order): boolean {
+    if (this.isPickupOrder(order)) return order.status === OrderStatus.READY_FOR_PICKUP;
+    if (order.status === OrderStatus.PICKED_UP || order.status === OrderStatus.OUT_FOR_DELIVERY) return true;
+    return this.isFoodReady(order) && [
+      OrderStatus.READY_FOR_PICKUP,
+      OrderStatus.AWAITING_RIDER_ASSIGNMENT,
+      OrderStatus.OFFERED_TO_RIDER,
+      OrderStatus.RIDER_ASSIGNED
+    ].includes(order.status);
+  }
+
+  canMarkReady(order: Order): boolean {
+    return !this.isPickupOrder(order) && this.isPreparingPhase(order);
+  }
+
   /** Parse the stored "{venue} - {seat}" address into its two halves. */
   parseTheaterAddress(order: Order): { venue: string; seat: string } {
     const raw = String(order?.deliveryAddress || '');
@@ -994,8 +989,13 @@ export class OrdersComponent implements OnInit, OnDestroy {
    * Mark order as ready
    */
   markReady(order: Order): void {
-    this.orderService.updateOrderStatus(order.orderId, OrderStatus.READY_FOR_PICKUP, {
-      expectedCurrentStatus: OrderStatus.PREPARING
+    const nextStatus = [OrderStatus.ACCEPTED, OrderStatus.PREPARING].includes(order.status)
+      ? OrderStatus.READY_FOR_PICKUP
+      : order.status;
+
+    this.orderService.updateOrderStatus(order.orderId, nextStatus, {
+      expectedCurrentStatus: order.status,
+      internalStatus: this.FOOD_READY_INTERNAL_STATUS
     }).subscribe({
       next: () => {
         this.orderService.fetchOrders();
@@ -1062,12 +1062,11 @@ export class OrdersComponent implements OnInit, OnDestroy {
    * Get available actions for an order based on its status
    */
   getAvailableActions(order: Order): string[] {
+    if (this.canMarkReady(order)) return ['ready'];
+
     switch (order.status) {
       case OrderStatus.CONFIRMED:
         return ['accept', 'reject'];
-      case OrderStatus.ACCEPTED:
-      case OrderStatus.PREPARING:
-        return ['ready'];
       default:
         return [];
     }
@@ -1078,7 +1077,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
    * Show OTP when order is ready for pickup but not yet picked up by rider
    */
   shouldShowPickupOtp(order: Order): boolean {
-    return [
+    return this.isFoodReady(order) && [
       OrderStatus.READY_FOR_PICKUP,
       OrderStatus.AWAITING_RIDER_ASSIGNMENT,
       OrderStatus.OFFERED_TO_RIDER,

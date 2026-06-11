@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subscription, interval, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, interval } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
@@ -22,7 +22,6 @@ import { SoundService } from './sound.service';
 export class OrderService {
   private readonly API_BASE_URL = environment.apiUrl;
   private readonly POLLING_INTERVAL = 20000;
-  private readonly ITEM_SWAP_ENABLED_RESTAURANT_ID = 'RES-1774074885558-3227';
 
   private ordersSubject = new BehaviorSubject<Order[]>([]);
   public orders$: Observable<Order[]> = this.ordersSubject.asObservable();
@@ -221,13 +220,6 @@ export class OrderService {
 
   adjustItems(orderId: string, payload: OrderAdjustmentRequest): Observable<OrderAdjustmentResponse> {
     const restaurantId = this.restaurantContext.getRestaurantId();
-    if (restaurantId !== this.ITEM_SWAP_ENABLED_RESTAURANT_ID) {
-      return throwError(() => ({
-        status: 403,
-        error: { message: 'Item swap is not enabled for this restaurant.' }
-      }));
-    }
-
     const headers = new HttpHeaders({ 'X-Api-Key': 'dev-admin-key-12345' });
     const body = {
       ...payload,

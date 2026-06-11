@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Semi-transparent warm cream card — 90% opacity so the darkened wallpaper/
+    screen shows very faintly through, giving a frosted-glass feel consistent
+    with the app's #FFFDF7 elevated card color.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#E6FFFDF7" />
+    <corners android:radius="24dp" />
+</shape>

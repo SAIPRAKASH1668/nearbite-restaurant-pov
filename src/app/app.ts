@@ -3,6 +3,7 @@ import { Router, RouterOutlet } from '@angular/router';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { AppUpdateService } from './core/services/app-update.service';
 import { NewOrderToastService } from './core/services/new-order-toast.service';
 import { OrderNotificationService } from './core/services/order-notification.service';
 import { PushNotificationService } from './core/services/push-notification.service';
@@ -16,19 +17,26 @@ import { NotificationComponent } from './shared/components/notification/notifica
 })
 export class App implements OnInit {
   protected readonly title = signal('restaurant-dashboard');
+  protected readonly updateState;
 
   constructor(
     private router: Router,
     private ngZone: NgZone,
+    private appUpdateService: AppUpdateService,
     private newOrderToastService: NewOrderToastService,
     private orderNotificationService: OrderNotificationService,
     private pushNotificationService: PushNotificationService
-  ) {}
+  ) {
+    this.updateState = this.appUpdateService.state;
+  }
 
   ngOnInit(): void {
     void this.newOrderToastService;
 
     if (Capacitor.isNativePlatform()) {
+      this.appUpdateService.initialize().catch((error) => {
+        console.error('AppUpdateService initialization failed', error);
+      });
       StatusBar.setOverlaysWebView({ overlay: true });
       StatusBar.setStyle({ style: Style.Light });
       this.pushNotificationService.initialize().catch((error) => {
@@ -85,5 +93,30 @@ export class App implements OnInit {
     if (path.startsWith('/dashboard')) {
       void this.router.navigateByUrl(path);
     }
+  }
+
+  protected async startRequiredUpdate(): Promise<void> {
+    await this.appUpdateService.startRequiredUpdate();
+  }
+
+  protected async openInstallPermissionSettings(): Promise<void> {
+    await this.appUpdateService.openInstallPermissionSettings();
+  }
+
+  protected async retryUpdateCheck(): Promise<void> {
+    await this.appUpdateService.checkForRequiredUpdate();
+  }
+
+  protected updateButtonLabel(): string {
+    const state = this.updateState();
+    if (state.status === 'downloading') {
+      return state.progressPercent === undefined
+        ? 'Downloading...'
+        : `Downloading ${state.progressPercent}%`;
+    }
+    if (state.status === 'installing') {
+      return 'Installer opened';
+    }
+    return 'Update now';
   }
 }

@@ -103,12 +103,12 @@ export class AuthService {
 
         // Re-sync this device token on every login so multiple devices can receive notifications.
         if (this.pushNotificationService.isDeviceRegistered()) {
-          void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId);
+          void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId, { force: true });
           return of({ success: true as const });
         }
 
         // No takeover conflict flow: always best-effort sync unless user explicitly enabled view-only mode.
-        void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId);
+        void this.pushNotificationService.syncTokenForRestaurant(response.restaurantId, { force: true });
         return of({ success: true as const, fcmConflict: false });
       }),
       catchError((error: HttpErrorResponse) => {

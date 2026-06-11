@@ -20,7 +20,7 @@ import { OrderService } from './order.service';
 export class PushNotificationService {
   private readonly API_BASE_URL = environment.apiUrl;
   private readonly CHANNEL_ID = 'new_orders';
-  private readonly CRITICAL_CHANNEL_ID = 'new_orders_critical';
+  private readonly CRITICAL_CHANNEL_ID = 'new_orders_critical_v2';
   private readonly TOKEN_STORAGE_KEY = 'nearbite_fcm_token';
   private readonly VIEW_ONLY_KEY = 'nearbite_notification_mode';
   private readonly DEVICE_REGISTERED_KEY = 'nearbite_fcm_device_registered';
@@ -160,7 +160,10 @@ export class PushNotificationService {
    * user must visit Settings).
    */
   async ensurePermissionAndRegister(
-    { promptIfDenied = false }: { promptIfDenied?: boolean } = {}
+    {
+      promptIfDenied = false,
+      forceSync = false
+    }: { promptIfDenied?: boolean; forceSync?: boolean } = {}
   ): Promise<{ granted: boolean }> {
     if (!Capacitor.isNativePlatform()) {
       return { granted: false };
@@ -182,7 +185,7 @@ export class PushNotificationService {
     } catch (err) {
       console.error('[push] PushNotifications.register() failed', err);
     }
-    await this.syncTokenForRestaurant();
+    await this.syncTokenForRestaurant(undefined, { force: forceSync });
     return { granted: true };
   }
 
@@ -292,11 +295,10 @@ export class PushNotificationService {
 
     void CapacitorApp.addListener('appStateChange', ({ isActive }: { isActive: boolean }) => {
       if (!isActive) return;
-      // App came back to foreground — re-confirm we still hold the active
-      // FCM token. Handles: token rotated in background, OS revoked
-      // permission since last launch, last sync went stale (>24h).
+      // App came back to foreground: refresh registration and force-upload the
+      // latest FCM token so restaurant notification routing never goes stale.
       this.ngZone.run(() => {
-        void this.ensurePermissionAndRegister({ promptIfDenied: false });
+        void this.ensurePermissionAndRegister({ promptIfDenied: false, forceSync: true });
       });
     });
   }
@@ -373,7 +375,7 @@ export class PushNotificationService {
     }
 
     await PushNotifications.deleteChannel({ id: this.CHANNEL_ID }).catch(() => undefined);
-    await PushNotifications.deleteChannel({ id: this.CRITICAL_CHANNEL_ID }).catch(() => undefined);
+    await PushNotifications.deleteChannel({ id: 'new_orders_critical' }).catch(() => undefined);
 
     // Legacy silent channel. Kept for in-process data-handler refreshes when
     // OrderPollingService is alive and owns the ring loop. Importance 3 =

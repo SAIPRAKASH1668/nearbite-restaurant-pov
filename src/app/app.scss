@@ -1,1 +1,127 @@
 
+.force-update-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: grid;
+  place-items: center;
+  padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+  background: rgba(18, 24, 38, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.force-update-panel {
+  width: min(440px, 100%);
+  border-radius: 8px;
+  padding: 28px 24px 24px;
+  color: #172033;
+  background: #ffffff;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.28);
+  text-align: center;
+}
+
+.force-update-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 16px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #f15a24;
+  font-size: 22px;
+}
+
+.force-update-kicker {
+  margin: 0 0 6px;
+  color: #f15a24;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.force-update-panel h1 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.force-update-copy {
+  margin: 14px 0 18px;
+  color: #536071;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.force-update-version {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f5f7fb;
+  color: #6a7483;
+  font-size: 12px;
+}
+
+.force-update-version strong {
+  overflow-wrap: anywhere;
+  color: #172033;
+  font-size: 13px;
+}
+
+.force-update-notes {
+  margin: 14px 0 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: #fff7f2;
+  color: #7a3418;
+  font-size: 14px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.force-update-progress {
+  height: 8px;
+  margin-top: 18px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8edf4;
+}
+
+.force-update-progress-bar {
+  height: 100%;
+  min-width: 8%;
+  border-radius: inherit;
+  background: #f15a24;
+  transition: width 180ms ease;
+}
+
+.force-update-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.force-update-button {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #f15a24;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.force-update-button.secondary {
+  color: #172033;
+  background: #eef2f7;
+}
+
+.force-update-button:disabled {
+  cursor: default;
+  opacity: 0.7;
+}

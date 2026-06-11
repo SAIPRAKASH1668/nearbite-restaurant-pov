@@ -1,0 +1,10 @@
+{
+  "android": {
+    "versionCode": 9,
+    "versionName": "1.0.2",
+    "minRequiredVersionCode": 9,
+    "apkUrl": "https://your-s3-bucket.s3.amazonaws.com/yumdude-partner/yumdude-partner-1.0.2.apk",
+    "sha256": "replace_with_64_character_lowercase_sha256_of_the_apk",
+    "releaseNotes": "Critical update for more reliable order ringing and background alerts."
+  }
+}

@@ -2,3 +2,85 @@
 
 <!-- Global Notification Component -->
 <app-notification></app-notification>
+
+@if (
+  updateState().status === 'required' ||
+  updateState().status === 'permission-required' ||
+  updateState().status === 'downloading' ||
+  updateState().status === 'installing' ||
+  updateState().status === 'error'
+) {
+  <div class="force-update-backdrop" role="dialog" aria-modal="true" aria-labelledby="force-update-title">
+    <section class="force-update-panel">
+      <div class="force-update-icon">
+        <i class="fas fa-arrow-up-from-bracket"></i>
+      </div>
+      <p class="force-update-kicker">Required update</p>
+      <h1 id="force-update-title">Update YumDude Partner</h1>
+
+      @if (updateState().status === 'permission-required') {
+        <p class="force-update-copy">
+          Android needs permission before YumDude Partner can install this APK update.
+          Enable "Allow from this source", then return here and tap update again.
+        </p>
+      } @else if (updateState().status === 'installing') {
+        <p class="force-update-copy">
+          Android installer is open. Approve the update, then reopen YumDude Partner.
+        </p>
+      } @else if (updateState().status === 'error') {
+        <p class="force-update-copy">
+          {{ updateState().message || 'We could not prepare the required update.' }}
+        </p>
+      } @else {
+        <p class="force-update-copy">
+          A newer app version is required for reliable order alerts and restaurant operations.
+        </p>
+      }
+
+      <div class="force-update-version">
+        <span>Current</span>
+        <strong>{{ updateState().currentVersionName || updateState().currentVersionCode || 'Installed' }}</strong>
+        <i class="fas fa-arrow-right"></i>
+        <span>Required</span>
+        <strong>{{ updateState().targetVersionName || updateState().targetVersionCode || 'Latest' }}</strong>
+      </div>
+
+      @if (updateState().releaseNotes) {
+        <p class="force-update-notes">{{ updateState().releaseNotes }}</p>
+      }
+
+      @if (updateState().status === 'downloading') {
+        <div class="force-update-progress" aria-label="Update download progress">
+          <div
+            class="force-update-progress-bar"
+            [style.width.%]="updateState().progressPercent || 8"
+          ></div>
+        </div>
+      }
+
+      <div class="force-update-actions">
+        @if (updateState().status === 'permission-required') {
+          <button type="button" class="force-update-button secondary" (click)="openInstallPermissionSettings()">
+            Allow APK updates
+          </button>
+          <button type="button" class="force-update-button" (click)="startRequiredUpdate()">
+            I enabled it
+          </button>
+        } @else if (updateState().status === 'error') {
+          <button type="button" class="force-update-button" (click)="retryUpdateCheck()">
+            Retry
+          </button>
+        } @else {
+          <button
+            type="button"
+            class="force-update-button"
+            (click)="startRequiredUpdate()"
+            [disabled]="updateState().status === 'downloading' || updateState().status === 'installing'"
+          >
+            {{ updateButtonLabel() }}
+          </button>
+        }
+      </div>
+    </section>
+  </div>
+}

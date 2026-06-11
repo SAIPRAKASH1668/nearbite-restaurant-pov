@@ -112,6 +112,7 @@ export interface Order {
   amountDueAtDelivery?: number;
   adjustments?: OrderAdjustmentRecord[];
   wasAdjusted?: boolean;
+  internalStatus?: string;
 }
 
 export interface OrdersResponse {
@@ -124,6 +125,7 @@ export interface UpdateOrderStatusRequest {
   expectedCurrentStatus?: OrderStatus;
   cancellationReason?: string;
   preparationTime?: number; // minutes
+  internalStatus?: 'FOOD_READY' | string;
 }
 
 export interface UpdateOrderStatusResponse extends Order {}

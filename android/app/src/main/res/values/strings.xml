@@ -4,5 +4,5 @@
     <string name="title_activity_main">YumDude Partner</string>
     <string name="package_name">com.nearbite.restaurant</string>
     <string name="custom_url_scheme">com.nearbite.restaurant</string>
-    <string name="default_notification_channel_id">new_orders</string>
+    <string name="default_notification_channel_id">new_orders_critical_v2</string>
 </resources>

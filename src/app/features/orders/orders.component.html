@@ -211,7 +211,7 @@
             <i class="fas fa-times"></i> Reject
           </button>
           <button
-            *ngIf="(order.status === OrderStatus.ACCEPTED || order.status === OrderStatus.PREPARING) && !isPickupOrder(order)"
+            *ngIf="canMarkReady(order)"
             class="ord-btn ord-btn-ready"
             (click)="markReady(order); $event.stopPropagation()">
             <i class="fas fa-check-double"></i> Mark Ready
