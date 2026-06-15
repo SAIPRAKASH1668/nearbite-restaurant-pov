@@ -10,9 +10,16 @@ public class BootRestartJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        Log.i(TAG, "Boot restart job started");
-        BootReceiver.scheduleWatchdogJob(this, "job_scheduler");
-        BootReceiver.restartPollingService(this, "job_scheduler");
+        int jobId = params != null ? params.getJobId() : -1;
+        Log.i(TAG, "Polling restart job started id=" + jobId);
+
+        if (jobId == BootReceiver.WATCHDOG_JOB_ID && OrderPollingService.isRunning()) {
+            Log.d(TAG, "Watchdog checked: polling service is already running");
+            jobFinished(params, false);
+            return false;
+        }
+
+        BootReceiver.restartPollingService(this, "job_scheduler_" + jobId);
         jobFinished(params, false);
         return false;
     }

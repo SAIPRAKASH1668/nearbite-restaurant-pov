@@ -484,6 +484,25 @@ $dude-red:   hsl(0,  79%,  55%);
   margin-top: 1.25rem;
 }
 
+.download-app-banner--android {
+  background: rgba(61, 155, 75, 0.05);
+  border-color: rgba(61, 155, 75, 0.22);
+  border-left-color: #3d9b4b;
+
+  .download-app-icon {
+    background: rgba(61, 155, 75, 0.12);
+    border-color: rgba(61, 155, 75, 0.24);
+
+    i { color: #3d9b4b; }
+  }
+
+  .download-app-btn {
+    background: #3d9b4b;
+
+    &:hover { background: #34843f; }
+  }
+}
+
 .download-app-icon {
   width: 36px; height: 36px;
   border-radius: $radius-md;

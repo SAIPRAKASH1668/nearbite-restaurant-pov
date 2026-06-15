@@ -1,10 +1,18 @@
 import { Component, NgZone, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { PushNotificationService } from '../../core/services/push-notification.service';
 import { Capacitor } from '@capacitor/core';
+import { environment } from '../../../environments/environment';
+
+interface AndroidUpdateManifest {
+  android?: {
+    apkUrl?: string;
+  };
+}
 
 @Component({
   selector: 'app-login',
@@ -21,6 +29,7 @@ export class LoginComponent implements OnInit {
   returnUrl = '/dashboard/welcome';
   showFcmDialog = false;
   readonly isNativePlatform = Capacitor.isNativePlatform();
+  androidApkUrl = 'https://yumdude-partner-updates-191491198352-ap-south-1.s3.ap-south-1.amazonaws.com/yumdude-partner/yumdude-partner-v10-release.apk';
   readonly desktopAppUrl = 'https://yumdude-assets.s3.ap-south-1.amazonaws.com/downloads/YumDude-Restaurant-Setup.exe';
 
   constructor(
@@ -29,7 +38,8 @@ export class LoginComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private pushNotificationService: PushNotificationService,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -41,6 +51,7 @@ export class LoginComponent implements OnInit {
     // Get return url from route parameters — only allow relative URLs to prevent open redirects
     const raw = this.route.snapshot.queryParams['returnUrl'] || '/dashboard/welcome';
     this.returnUrl = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard/welcome';
+    this.loadLatestAndroidApkUrl();
   }
 
   get f() {
@@ -115,6 +126,25 @@ export class LoginComponent implements OnInit {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
       control?.markAsTouched();
+    });
+  }
+
+  private loadLatestAndroidApkUrl(): void {
+    const manifestUrl = environment.androidUpdateManifestUrl;
+    if (!manifestUrl) {
+      return;
+    }
+
+    this.http.get<AndroidUpdateManifest>(manifestUrl).subscribe({
+      next: (manifest) => {
+        const apkUrl = manifest.android?.apkUrl;
+        if (apkUrl) {
+          this.androidApkUrl = apkUrl;
+        }
+      },
+      error: (error) => {
+        console.warn('[login] Could not load latest Android APK link', error);
+      }
     });
   }
 }

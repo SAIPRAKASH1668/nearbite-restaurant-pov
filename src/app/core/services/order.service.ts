@@ -1,7 +1,8 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { BehaviorSubject, Observable, Subscription, interval } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, finalize, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import {
   Order,
@@ -21,7 +22,8 @@ import { SoundService } from './sound.service';
 })
 export class OrderService {
   private readonly API_BASE_URL = environment.apiUrl;
-  private readonly POLLING_INTERVAL = 20000;
+  private readonly WEB_POLLING_INTERVAL = 20000;
+  private readonly NATIVE_WITH_ALARM_SERVICE_POLLING_INTERVAL = 60000;
 
   private ordersSubject = new BehaviorSubject<Order[]>([]);
   public orders$: Observable<Order[]> = this.ordersSubject.asObservable();
@@ -30,6 +32,7 @@ export class OrderService {
   public loading$: Observable<boolean> = this.loadingSubject.asObservable();
 
   private pollingSubscription?: Subscription;
+  private fetchOrdersInFlight = false;
 
   constructor(
     private http: HttpClient,
@@ -53,6 +56,11 @@ export class OrderService {
       return;
     }
 
+    if (this.fetchOrdersInFlight) {
+      return;
+    }
+
+    this.fetchOrdersInFlight = true;
     this.loadingSubject.next(true);
 
     const existingIds = new Set(this.ordersSubject.value.map((order) => order.orderId));
@@ -107,6 +115,10 @@ export class OrderService {
         catchError((error) => {
           this.loadingSubject.next(false);
           throw error;
+        }),
+        finalize(() => {
+          this.fetchOrdersInFlight = false;
+          this.loadingSubject.next(false);
         })
       )
       .subscribe({
@@ -242,9 +254,19 @@ export class OrderService {
   }
 
   private setupPolling(): void {
-    this.pollingSubscription = interval(this.POLLING_INTERVAL).subscribe(() => {
+    this.pollingSubscription = interval(this.getPollingInterval()).subscribe(() => {
       this.fetchOrders();
     });
+  }
+
+  private getPollingInterval(): number {
+    if (Capacitor.isNativePlatform() && Capacitor.isPluginAvailable('OrderPolling')) {
+      // The APK's native foreground service already polls every 20s for alarm reliability.
+      // Keep the WebView sync lighter so authenticated screens stay smooth on Android.
+      return this.NATIVE_WITH_ALARM_SERVICE_POLLING_INTERVAL;
+    }
+
+    return this.WEB_POLLING_INTERVAL;
   }
 
   getOrdersByStatus(status: OrderStatus): Observable<Order[]> {

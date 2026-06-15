@@ -19,8 +19,8 @@ import android.util.Log;
 public class BootReceiver extends BroadcastReceiver {
 
     private static final String TAG = "YumDudeBootReceiver";
-    private static final int BOOT_RESTART_JOB_ID = 7301;
-    private static final int WATCHDOG_JOB_ID = 7302;
+    static final int BOOT_RESTART_JOB_ID = 7301;
+    static final int WATCHDOG_JOB_ID = 7302;
     private static final long WATCHDOG_INTERVAL_MS = 15 * 60 * 1000L;
 
     @Override
@@ -45,6 +45,11 @@ public class BootReceiver extends BroadcastReceiver {
         if (!prefs.getBoolean(OrderPollingService.KEY_POLLING_ACTIVE, false)) {
             Log.d(TAG, "Polling was not active before " + source + " - not restarting");
             cancelRestartJobs(context);
+            return;
+        }
+
+        if (OrderPollingService.isRunning()) {
+            Log.d(TAG, "Polling service already running from " + source + " - skipping restart");
             return;
         }
 
@@ -84,6 +89,12 @@ public class BootReceiver extends BroadcastReceiver {
                 (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
             if (scheduler == null) return;
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                    && scheduler.getPendingJob(BOOT_RESTART_JOB_ID) != null) {
+                Log.d(TAG, "Boot restart job already scheduled from " + source);
+                return;
+            }
+
             JobInfo job = new JobInfo.Builder(
                     BOOT_RESTART_JOB_ID,
                     new ComponentName(context, BootRestartJobService.class))
@@ -104,6 +115,12 @@ public class BootReceiver extends BroadcastReceiver {
             JobScheduler scheduler =
                 (JobScheduler) context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
             if (scheduler == null) return;
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                    && scheduler.getPendingJob(WATCHDOG_JOB_ID) != null) {
+                Log.d(TAG, "Polling watchdog already scheduled from " + source);
+                return;
+            }
 
             JobInfo job = new JobInfo.Builder(
                     WATCHDOG_JOB_ID,

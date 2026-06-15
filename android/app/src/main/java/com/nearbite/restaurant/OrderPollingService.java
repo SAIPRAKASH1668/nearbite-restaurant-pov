@@ -48,6 +48,7 @@ public class OrderPollingService extends Service {
 
     // Static reference so OrderAlarmActivity can stop sound without service binding
     private static OrderPollingService instance;
+    private static volatile boolean running = false;
     // Intent actions
     public static final String ACTION_START = "com.nearbite.restaurant.START_POLLING";
     public static final String ACTION_STOP  = "com.nearbite.restaurant.STOP_POLLING";
@@ -81,6 +82,7 @@ public class OrderPollingService extends Service {
     private PowerManager.WakeLock screenWakeLock; // brief lock to wake screen during alarm
     private MediaPlayer           alarmPlayer;
     private Set<String>           currentAlarmOrderIds = new HashSet<>();
+    private volatile boolean      pollInFlight = false;
 
     // ─────────────────────────────────────────────────────────────────
     // Lifecycle
@@ -90,6 +92,7 @@ public class OrderPollingService extends Service {
     public void onCreate() {
         super.onCreate();
         instance = this;
+        running = true;
         handler = new Handler(Looper.getMainLooper());
         createNotificationChannels();
         acquireWakeLock();
@@ -189,6 +192,7 @@ public class OrderPollingService extends Service {
     public void onDestroy() {
         super.onDestroy();
         instance = null;
+        running = false;
         if (pollRunnable != null) {
             handler.removeCallbacks(pollRunnable);
             pollRunnable = null;
@@ -220,6 +224,11 @@ public class OrderPollingService extends Service {
     // ─────────────────────────────────────────────────────────────────
 
     private void pollOrders() {
+        if (pollInFlight) {
+            Log.d(TAG, "Previous poll still running - skipping this tick");
+            return;
+        }
+
         SharedPreferences prefs = getSharedPreferences(PREF_FILE, MODE_PRIVATE);
         String restaurantId = prefs.getString(KEY_RESTAURANT_ID, null);
         String authToken    = prefs.getString(KEY_AUTH_TOKEN, null);
@@ -234,6 +243,7 @@ public class OrderPollingService extends Service {
         final String baseUrl = apiBaseUrl;
         final String resId   = restaurantId;
 
+        pollInFlight = true;
         new Thread(() -> {
             HttpURLConnection conn = null;
             try {
@@ -262,6 +272,7 @@ public class OrderPollingService extends Service {
                 Log.e(TAG, "Poll error", e);
             } finally {
                 if (conn != null) conn.disconnect();
+                pollInFlight = false;
             }
         }).start();
     }
@@ -560,6 +571,10 @@ public class OrderPollingService extends Service {
     public static void stopAlarmSoundStatic() {
         OrderPollingService s = instance;
         if (s != null) s.dismissCurrentAlarm();
+    }
+
+    static boolean isRunning() {
+        return running && instance != null;
     }
 
     public static class AlarmDismissReceiver extends BroadcastReceiver {
