@@ -27,6 +27,12 @@ interface DateFilterOption {
   days: number;
 }
 
+interface ItemSold {
+  name: string;
+  count: number;
+  pct: number;   // relative to the top-selling item, for the progress bar width
+}
+
 @Component({
   selector: 'app-reports',
   standalone: true,
@@ -41,6 +47,9 @@ export class ReportsComponent implements OnInit {
   // Filtered and displayed orders
   filteredOrders: OrderReport[] = [];
   displayedOrders: OrderReport[] = [];
+
+  // Items-sold breakdown for the current filtered range (desc by qty)
+  itemsSold: ItemSold[] = [];
   
   // Filters
   selectedDateRange: string = '30';
@@ -177,7 +186,10 @@ export class ReportsComponent implements OnInit {
     
     // Calculate stats
     this.calculateStats();
-    
+
+    // Aggregate items sold across the filtered range
+    this.calculateItemsSold();
+
     // Apply sorting
     this.applySorting();
     
@@ -260,6 +272,31 @@ export class ReportsComponent implements OnInit {
     this.stats.deliveryRate = this.stats.totalOrders > 0
       ? (this.stats.deliveredOrders / this.stats.totalOrders) * 100
       : 0;
+  }
+
+  /**
+   * Aggregate quantity sold per item across the filtered orders, excluding
+   * cancelled / refunded orders (not actually sold). Sorted descending by
+   * quantity; `pct` is relative to the top-selling item for the progress bar.
+   */
+  private calculateItemsSold(): void {
+    const counts = new Map<string, number>();
+    for (const order of this.filteredOrders) {
+      if (order.status === OrderStatus.CANCELLED || order.status === OrderStatus.FAILED_INVENTORY) {
+        continue;
+      }
+      for (const item of (order.items || [])) {
+        const name = (item.name || item.itemId || 'Unknown').toString().trim() || 'Unknown';
+        const qty = Number(item.quantity) || 0;
+        if (qty <= 0) continue;
+        counts.set(name, (counts.get(name) || 0) + qty);
+      }
+    }
+    const sorted = Array.from(counts.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+    const max = sorted.length ? sorted[0].count : 0;
+    this.itemsSold = sorted.map(s => ({ ...s, pct: max > 0 ? (s.count / max) * 100 : 0 }));
   }
 
   /**
