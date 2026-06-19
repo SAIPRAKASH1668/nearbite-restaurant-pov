@@ -126,9 +126,6 @@
                 <span class="ord-card-swap-replacement-name">{{ item.name || '—' }}</span>
                 <span class="ord-item-qty">×{{ item.quantity || 1 }}</span>
               </div>
-              <div class="ord-card-swap-more" *ngIf="swapGroup.hiddenAddedCount > 0">
-                +{{ swapGroup.hiddenAddedCount }} more added item{{ swapGroup.hiddenAddedCount !== 1 ? 's' : '' }}
-              </div>
             </div>
           </div>
           <div class="ord-item-row" *ngFor="let item of getOrderCardItems(order)">
@@ -142,12 +139,6 @@
               </span>
             </div>
           </div>
-          <button
-            *ngIf="getHiddenOrderCardItemCount(order) > 0"
-            class="ord-see-more"
-            (click)="expandOrder(order); $event.stopPropagation()">
-            View {{ getHiddenOrderCardItemCount(order) }} more
-          </button>
         </div>
         <ng-template #noCardItems>
           <div class="ord-item-row">

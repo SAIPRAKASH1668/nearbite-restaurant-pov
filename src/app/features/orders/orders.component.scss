@@ -601,12 +601,6 @@
   white-space: nowrap;
 }
 
-.ord-card-swap-more {
-  color: #4338CA;
-  font-size: 0.68rem;
-  font-weight: 800;
-}
-
 .ord-swapped-banner {
   display: flex;
   align-items: center;
@@ -651,21 +645,6 @@
   font-weight: 700;
   color: v.$primary-orange;
   white-space: nowrap;
-}
-
-.ord-see-more {
-  background: transparent;
-  border: none;
-  color: v.$primary-orange;
-  font-size: 0.75rem;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-  font-family: v.$font-family;
-  transition: color 0.12s ease;
-  text-decoration: underline;
-
-  &:hover { color: v.$accent-orange; text-decoration: none; }
 }
 
 // ── Delivery ──────────────────────────────────────────────────────────────────

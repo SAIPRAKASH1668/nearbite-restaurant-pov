@@ -25,7 +25,6 @@ interface OrderEditLine {
 interface OrderCardSwapGroup {
   removedLabel: string;
   addedItems: OrderItem[];
-  hiddenAddedCount: number;
 }
 
 @Component({
@@ -641,25 +640,8 @@ export class OrdersComponent implements OnInit, OnDestroy {
   }
 
   getOrderCardItems(order: Order | null): OrderItem[] {
-    const items = this.getOrderCardSourceItems(order)
+    return this.getOrderCardSourceItems(order)
       .filter(item => !this.getOrderCardSwapReplacementIds(order).has(item.itemId));
-    const visibleLimit = this.getOrderCardVisibleItemLimit(order, items.length);
-
-    return items.slice(0, visibleLimit);
-  }
-
-  getHiddenOrderCardItemCount(order: Order | null): number {
-    const group = this.getOrderCardSwapGroup(order);
-    const items = this.getOrderCardSourceItems(order)
-      .filter(item => !this.getOrderCardSwapReplacementIds(order).has(item.itemId));
-    const visibleLimit = this.getOrderCardVisibleItemLimit(order, items.length);
-
-    return Math.max(0, items.length - visibleLimit) + (group?.hiddenAddedCount || 0);
-  }
-
-  getOrderCardVisibleItemLimit(order: Order | null, itemCount: number): number {
-    const baseLimit = this.getOrderCardSwapGroup(order) ? 2 : 4;
-    return itemCount > baseLimit ? Math.max(1, baseLimit - 1) : baseLimit;
   }
 
   hasOrderCardContent(order: Order | null): boolean {
@@ -680,8 +662,7 @@ export class OrdersComponent implements OnInit, OnDestroy {
 
     return {
       removedLabel: removedLabel || 'unavailable item',
-      addedItems: addedItems.slice(0, 3),
-      hiddenAddedCount: Math.max(0, addedItems.length - 3)
+      addedItems
     };
   }
 
