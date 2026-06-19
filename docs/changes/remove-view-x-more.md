@@ -27,6 +27,13 @@ truncation in swap groups).
 ### `orders.component.scss`
 - Removed the now-unused `.ord-see-more` and `.ord-card-swap-more` rules.
 
+### `orders.component.scss` (follow-up)
+- `.ord-items` had a desktop `height: 148px; overflow: hidden`, which still
+  visually clipped the list to ~4 rows even after the TS/HTML truncation was
+  removed — orders with 5+ items showed only 4. Changed to `min-height: 148px;
+  overflow: visible` so short cards keep a consistent baseline while taller
+  orders grow to show every item. Mobile/tablet baseline relaxed to `min-height: 0`.
+
 ## Notes
 - `expandOrder()` is still used (the "View details" icon button at the card header),
   so it was left intact.
