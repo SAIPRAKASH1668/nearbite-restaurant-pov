@@ -23,6 +23,7 @@ import android.provider.Settings;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -102,10 +103,39 @@ public class OrderPollingService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent != null ? intent.getAction() : null;
 
+        // Promote to foreground as the VERY FIRST thing we do — before touching
+        // SharedPreferences, JobScheduler, or anything else that could throw or be
+        // slow. Once a caller invokes Context.startForegroundService(), Android gives
+        // us only a ~5s window to call startForeground(); missing it (because earlier
+        // work threw or stalled) crashes the whole process with:
+        //   "Context.startForegroundService() did not then call Service.startForeground()"
+        // Only API 34+ requires an explicit foreground service type, and it must be a
+        // subset of android:foregroundServiceType in the manifest (which declares
+        // specialUse). On older versions we MUST use the untyped 2-arg form: passing a
+        // runtime type such as DATA_SYNC there throws IllegalArgumentException
+        // ("foregroundServiceType … is not a subset of … in manifest"), because the
+        // manifest only declares specialUse — a type those versions don't recognise.
+        // That throw trips the startForegroundService() deadline and crashes the app,
+        // which is exactly the failure seen on Android 10 (API 29) and 13 (API 33).
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(FOREGROUND_NOTIF_ID, buildPersistentNotification(),
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+            } else {
+                startForeground(FOREGROUND_NOTIF_ID, buildPersistentNotification());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "startForeground failed — stopping service to avoid crash loop", e);
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
+        // Now that the foreground contract is satisfied, it is safe to stop on demand.
         if (ACTION_STOP.equals(action)) {
             getSharedPreferences(PREF_FILE, MODE_PRIVATE)
                 .edit().putBoolean(KEY_POLLING_ACTIVE, false).apply();
             BootReceiver.cancelRestartJobs(this);
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
             stopSelf();
             return START_NOT_STICKY;
         }
@@ -131,33 +161,12 @@ public class OrderPollingService extends Service {
             }
         }
 
-        // Promote to foreground immediately (Android requirement).
         BootReceiver.scheduleWatchdogJob(this, "service_start");
 
         SharedPreferences currentPrefs = getSharedPreferences(PREF_FILE, MODE_PRIVATE);
         boolean hasPollingCredentials =
             currentPrefs.getString(KEY_RESTAURANT_ID, null) != null
             && currentPrefs.getString(KEY_AUTH_TOKEN, null) != null;
-
-        // Promote to foreground immediately (Android requirement).
-        // On API 29+ (Android 10+) we must pass the foreground service type that
-        // matches the manifest declaration; on API 34+ this is strictly enforced
-        // and the 2-arg variant throws InvalidForegroundServiceTypeException.
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                startForeground(FOREGROUND_NOTIF_ID, buildPersistentNotification(),
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(FOREGROUND_NOTIF_ID, buildPersistentNotification(),
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
-            } else {
-                startForeground(FOREGROUND_NOTIF_ID, buildPersistentNotification());
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "startForeground failed — stopping service to avoid crash loop", e);
-            stopSelf();
-            return START_NOT_STICKY;
-        }
 
         if (ACTION_ALERT_FROM_PUSH.equals(action)) {
             String orderId = intent != null ? intent.getStringExtra("orderId") : null;
