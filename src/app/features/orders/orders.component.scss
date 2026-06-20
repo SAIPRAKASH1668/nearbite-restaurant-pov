@@ -501,12 +501,12 @@
   padding: 0.625rem 0.875rem;
   background: #FAFAF9;
   border-bottom: 1px solid #F0EEEC;
-  min-height: 148px;   // baseline keeps short cards visually consistent…
-  overflow: visible;   // …but taller orders grow so every item is shown (no 4-item clip)
+  height: 148px;       // fixed height — keeps all cards equal regardless of item count
+  overflow: hidden;
 
-  // Mobile/tablet: let items breathe naturally — no fixed baseline
-  @include mobile { min-height: 0; }
-  @include tablet { min-height: 0; }
+  // Mobile/tablet: let items breathe naturally — no fixed clip height
+  @include mobile { height: auto; overflow: visible; }
+  @include tablet { height: auto; overflow: visible; }
 }
 
 .ord-items-lbl {
