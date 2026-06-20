@@ -230,36 +230,6 @@
     </div>
   </div>
 
-  <!-- Items Sold breakdown -->
-  <div class="items-sold-section" *ngIf="!loading && itemsSold.length > 0">
-    <div class="items-sold-header">
-      <h2>Items Sold</h2>
-      <span class="items-sold-sub">{{ itemsSold.length }} items · excludes cancelled</span>
-    </div>
-    <div class="table-container">
-      <table class="data-table items-sold-table">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th class="text-center">Qty Sold</th>
-            <th class="bar-head">Share</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let it of itemsSold">
-            <td class="item-name-col" [title]="it.name">{{ it.name }}</td>
-            <td class="text-center qty-col">{{ it.count }}</td>
-            <td class="bar-col">
-              <div class="bar-track">
-                <div class="bar-fill" [style.width.%]="it.pct"></div>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
   <!-- Order Details Modal -->
   <div class="modal-backdrop" *ngIf="showOrderDetailsModal" (click)="closeOrderDetails()">
     <div class="modal-content" (click)="$event.stopPropagation()" *ngIf="selectedOrder">
