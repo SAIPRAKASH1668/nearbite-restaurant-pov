@@ -7,11 +7,13 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
 public class OrderAlarmActivity extends Activity {
+    private static final String TAG = "YumDudeAlarmActivity";
 
     // Kept so the polling service can dismiss it remotely when orders clear
     private static OrderAlarmActivity instance;
@@ -38,10 +40,6 @@ public class OrderAlarmActivity extends Activity {
         // ── Blur the background on Android 12+ ─────────────────────────
         // Blurs whatever is behind this translucent window (wallpaper, previous
         // app, lock screen) giving a frosted-glass feel to the card overlay.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            getWindow().setBackgroundBlurRadius(24);
-        }
-
         // Acquire screen WakeLock so the display stays on while alarm rings
         PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
         if (pm != null) {
@@ -52,6 +50,7 @@ public class OrderAlarmActivity extends Activity {
         }
 
         setContentView(R.layout.activity_order_alarm);
+        applyBackgroundBlur();
 
         // ── Populate UI ────────────────────────────────────────────────
         String orderId = getIntent().getStringExtra("orderId");
@@ -90,6 +89,16 @@ public class OrderAlarmActivity extends Activity {
     // Locked + PIN/password → Android shows unlock screen, user enters → orders page
     // Not locked            → opens orders page directly
     // ─────────────────────────────────────────────────────────────────
+
+    private void applyBackgroundBlur() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return;
+
+        try {
+            getWindow().setBackgroundBlurRadius(24);
+        } catch (Exception e) {
+            Log.w(TAG, "Background blur unavailable; continuing without it", e);
+        }
+    }
 
     private void launchMainWithOrders() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

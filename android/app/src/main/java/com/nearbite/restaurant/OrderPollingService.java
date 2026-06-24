@@ -446,7 +446,13 @@ public class OrderPollingService extends Service {
             .addAction(0, "Dismiss", dismissIntent);
 
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        if (nm != null) nm.notify(ALARM_NOTIF_ID, nb.build());
+        if (nm != null) {
+            try {
+                nm.notify(ALARM_NOTIF_ID, nb.build());
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to show alarm notification; continuing with alarm sound", e);
+            }
+        }
 
         // ── Ring alarm sound from service process ────────────────────────
         // Fires regardless of screen state, regardless of fullScreenIntent

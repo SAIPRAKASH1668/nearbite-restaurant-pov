@@ -29,7 +29,7 @@ export class LoginComponent implements OnInit {
   returnUrl = '/dashboard/welcome';
   showFcmDialog = false;
   readonly isNativePlatform = Capacitor.isNativePlatform();
-  androidApkUrl = 'https://yumdude-partner-updates-191491198352-ap-south-1.s3.ap-south-1.amazonaws.com/yumdude-partner/yumdude-partner-v10-release.apk';
+  androidApkUrl = 'https://yumdude-partner-updates-191491198352-ap-south-1.s3.ap-south-1.amazonaws.com/yumdude-partner/yumdude-partner-v12-release.apk';
   readonly desktopAppUrl = 'https://yumdude-assets.s3.ap-south-1.amazonaws.com/downloads/YumDude-Restaurant-Setup.exe';
 
   constructor(

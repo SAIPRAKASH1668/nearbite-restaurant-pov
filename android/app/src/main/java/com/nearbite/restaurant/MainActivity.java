@@ -9,10 +9,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.util.Log;
 
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+  private static final String TAG = "MainActivity";
 
   @Override
   public void onCreate(Bundle savedInstanceState) {
@@ -97,7 +99,11 @@ public class MainActivity extends BridgeActivity {
           Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
           Uri.parse("package:" + getPackageName())
         );
-        startActivity(intent);
+        try {
+          startActivity(intent);
+        } catch (Exception e) {
+          Log.w(TAG, "Overlay permission settings unavailable", e);
+        }
       })
       .setNegativeButton("Not now", null)
       .show();
@@ -128,7 +134,11 @@ public class MainActivity extends BridgeActivity {
           Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT,
           Uri.parse("package:" + getPackageName())
         );
-        startActivity(intent);
+        try {
+          startActivity(intent);
+        } catch (Exception e) {
+          Log.w(TAG, "Full-screen intent settings unavailable", e);
+        }
       })
       .setNegativeButton("Not now", null)
       .show();
