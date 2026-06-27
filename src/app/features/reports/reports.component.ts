@@ -564,10 +564,49 @@ export class ReportsComponent implements OnInit {
   }
 
   /**
+   * Build a readable per-order item breakdown, e.g. "2 x Veg Biryani | 1 x Paneer 65 (+ Extra Raita)"
+   */
+  private formatItemsSold(order: Order): string {
+    if (!order.items?.length) return '';
+    return order.items.map(item => {
+      const addOns = item.addOns ?? item.addOnOptions;
+      const addOnText = addOns?.length ? ` (+ ${addOns.map(a => a.name).join(', ')})` : '';
+      return `${item.quantity} x ${item.name}${addOnText}`;
+    }).join(' | ');
+  }
+
+  /**
+   * Aggregate items across all filtered orders into a summary:
+   * total quantity sold, number of orders containing the item, and item revenue.
+   * Aggregated over the exact same orders included in the export (respects active filters).
+   */
+  private buildItemsSummary(): string[][] {
+    const map = new Map<string, { name: string; quantity: number; orders: number; revenue: number }>();
+    this.filteredOrders.forEach(order => {
+      const countedInOrder = new Set<string>();
+      (order.items || []).forEach(item => {
+        const key = item.itemId || item.name;
+        const entry = map.get(key) ?? { name: item.name, quantity: 0, orders: 0, revenue: 0 };
+        const qty = item.quantity || 0;
+        entry.quantity += qty;
+        entry.revenue += ((item.price || 0) + this.getAddonsTotal(item)) * qty;
+        if (!countedInOrder.has(key)) {
+          entry.orders += 1;
+          countedInOrder.add(key);
+        }
+        map.set(key, entry);
+      });
+    });
+    return Array.from(map.values())
+      .sort((a, b) => b.quantity - a.quantity || a.name.localeCompare(b.name))
+      .map(e => [e.name, e.quantity.toString(), e.orders.toString(), e.revenue.toFixed(2)]);
+  }
+
+  /**
    * Export to CSV
    */
   async exportCSV(): Promise<void> {
-    const headers = ['Order ID', 'Date', 'Time', 'Customer Phone', 'Items',
+    const headers = ['Order ID', 'Date', 'Time', 'Customer Phone', 'Items Count', 'Items Sold',
                      'Gross Menu Value', 'Platform Commission', 'Your Coupon Discount', 'Net Earnings', 'Status'];
     const rows = this.filteredOrders.map(order => {
       const rev = (order as any).revenue;
@@ -586,6 +625,7 @@ export class ReportsComponent implements OnInit {
         order.formattedTime,
         order.customerPhone,
         order.itemsCount.toString(),
+        this.formatItemsSold(order),
         order.foodTotal?.toFixed(2) || '0.00',
         commission,
         couponDisc,
@@ -594,10 +634,20 @@ export class ReportsComponent implements OnInit {
       ];
     });
 
-    const csvContent = [
+    // Items summary aggregated across the exported orders
+    const summaryRows = this.buildItemsSummary();
+    const summaryHeaders = ['Item', 'Quantity Sold', 'Orders', 'Item Revenue'];
+
+    const lines: string[] = [
       headers.join(','),
       ...rows.map(row => row.map(cell => this.escapeCsvCell(cell)).join(','))
-    ].join('\n');
+    ];
+    if (summaryRows.length) {
+      lines.push('', '', 'ITEMS SUMMARY');
+      lines.push(summaryHeaders.join(','));
+      lines.push(...summaryRows.map(row => row.map(cell => this.escapeCsvCell(cell)).join(',')));
+    }
+    const csvContent = lines.join('\n');
 
     try {
       await this.fileExportService.exportTextFile(csvContent, {

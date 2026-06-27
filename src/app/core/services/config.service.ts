@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { tap, catchError, map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { RestaurantContextService } from './restaurant-context.service';
 
 export interface GlobalConfig {
   /** Hike thresholds: default, below{N} */
@@ -26,18 +27,29 @@ export class ConfigService {
   private configSubject = new BehaviorSubject<GlobalConfig | null>(null);
   public config$: Observable<GlobalConfig | null> = this.configSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private restaurantContext: RestaurantContextService,
+  ) {}
 
   /**
-   * Fetch global config once per session. Subsequent calls return the cache.
+   * Fetch this restaurant's *effective* config once per session (global config with
+   * per-restaurant overrides — each field uses the restaurant value when set, else
+   * the global value). Subsequent calls return the cache.
    */
   loadConfig(): Observable<GlobalConfig | null> {
     if (this.cachedConfig !== null) {
       return of(this.cachedConfig);
     }
 
+    const restaurantId = this.restaurantContext.getRestaurantId();
+    let params = new HttpParams();
+    if (restaurantId) {
+      params = params.set('restaurantId', restaurantId);
+    }
+
     return this.http
-      .get<{ config: GlobalConfig }>(`${this.API_BASE_URL}/globalconfig`)
+      .get<{ config: GlobalConfig }>(`${this.API_BASE_URL}/effective-config`, { params })
       .pipe(
         map(response => response.config ?? {}),
         tap(config => {
